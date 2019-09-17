@@ -1,11 +1,32 @@
 
-#define IRSENDER              false
+/*
+This sketch uses IRremoteESP8266 library from https://github.com/crankyoldgit/IRremoteESP8266.
+In order to send MIDEA protocol IR message there is change needed in library
+as documented here : https://github.com/crankyoldgit/IRremoteESP8266/issues/887#issuecomment-531314986
+
+Change this line: https://github.com/crankyoldgit/IRremoteESP8266/blob/master/src/IRrecv.h#L402
+
+to:
+
+                   bool strict = false);
+e.g.
+
+#if DECODE_MIDEA
+  bool decodeMidea(decode_results *results, uint16_t nbits = kMideaBits,
+                   bool strict = true);
+#endif
+
+On receiver side example can be used from here: https://github.com/happytm/BatteryNode/blob/master/Double%20Receiver/Double_Receiver.ino
+*/
+#define IRSENDER              true
 #define PROBEREQUESTER        true
 #define SLEEP_SECS 15 * 60 // 15 minutes
 int device = 1;
 
 #if PROBEREQUESTER
 #include <ESP8266WiFi.h>
+
+
 #endif
 
 //============Do not need user configuration from here on============================
@@ -32,15 +53,15 @@ BME280 bme280;
 int temperature = 10;
 int humidity = 20;
 int pressure = 30;
-int Voltage = 40;
+int voltage = 40;
 int light = 50; 
+
+uint8_t irMac[] = {temperature,humidity,pressure,voltage,light,device}; 
+
 int VOLT_LIMIT = 3;
-uint8_t irMac[] = {temperature,humidity,pressure,Voltage,light,device}; 
-
-
 unsigned long lastMillis;
 unsigned long passedMillis;
-
+int ledPin = 12;
 
   
 
@@ -98,18 +119,23 @@ void setup() {
     Serial.println();
     
     
+    
     #if PROBEREQUESTER
-    WiFi.mode(WIFI_STA); // Station mode for esp-now controller
+    //WiFi.mode(WIFI_STA); // Station mode for esp-now controller
   //   wifi_set_opmode (STATION_MODE);
     wifi_set_macaddr(STATION_IF, irMac);
+    struct station_config stationConf;
+    stationConf.bssid_set = 1;  //need not check MAC address of AP
     WiFi.disconnect();
     WiFi.hostname("Livingroom");
     Serial.println();
     #endif
     
-    float Voltage = ESP.getVcc() / (float)1023; // * (float)1.07;
-    Serial.print("Voltage: "); Serial.print(Voltage); Serial.print("  Voltage Expected: "); Serial.println(VOLT_LIMIT);
-    if (Voltage < VOLT_LIMIT)      // if voltage of battery gets to low, the LED wil blink fast.
+    
+    
+    float voltage = ESP.getVcc() / (float)1023; // * (float)1.07;
+    Serial.print("Voltage: "); Serial.print(voltage); Serial.print("  Voltage Expected: "); Serial.println(VOLT_LIMIT);
+    if (voltage < VOLT_LIMIT)      // if voltage of battery gets to low, the LED wil blink fast.
   {
     Serial.println("Warning :- Battery Voltage low please change batteries" );
     Serial.println();
@@ -128,15 +154,15 @@ void setup() {
     Serial.println();
     
     #if PROBEREQUESTER
-    probeRequest();
+   probeRequest();
     #endif
     
     #if IRSENDER
     irsend.begin();
     irSender();
     #endif
-    
-  }
+
+}
 
 //========================Main Loop================================
 
@@ -185,7 +211,7 @@ void readBME280() {
   bme280.settings.pressOverSample = 1;
   bme280.settings.humidOverSample = 1;
   Serial.print("bme280 init="); Serial.println(bme280.begin(), HEX);
-  float temperature = 25;//bme280.readTempC();
+  temperature = 25;//bme280.readTempC();
   humidity = bme280.readFloatHumidity();
   pressure = bme280.readFloatPressure() / 100.0;
   delay(10);
@@ -216,7 +242,7 @@ void gotoSleep() {                            //need connection between GPIO16 a
 //WiFi.scanNetworksAsync(prinScanResult);
 
 //int8_t scanNetworks(bool async = true, bool show_hidden = false, uint8 channel = 0, uint8* ssid = NULL);
-int n = WiFi.scanNetworks(true, true, 6);
+int n = WiFi.scanNetworks(true, true, 1); // find solution for san for specific ssid instead of channel.
 
 #if !IRSENDER
 delay(25); // Minimum delay required to scan networks in async mode if not using IRSENDER 
@@ -233,35 +259,63 @@ uint8_t* BSSIDstr;
 int32_t channel;
 bool isHidden;
 
-//for (int i = 0; i < n; i++)
-//{
+for (int i = 0; i < n; i++)
+{
  
   
- // WiFi.getNetworkInfo(i, ssid, encryptionType, RSSI, BSSIDstr, channel, isHidden);
-  //Serial.printf("%d: %s, Ch:%d (%ddBm) %s %s\n", i + 1, ssid.c_str(), channel, RSSI, encryptionType == ENC_TYPE_NONE ? "open" : "", isHidden ? "hidden" : "");
+  WiFi.getNetworkInfo(i, ssid, encryptionType, RSSI, BSSIDstr, channel, isHidden);
+  Serial.printf("%d: %s, Ch:%d (%ddBm) %s %s\n", i + 1, ssid.c_str(), channel, RSSI, encryptionType == ENC_TYPE_NONE ? "open" : "", isHidden ? "hidden" : "");
   delay(10);
-//}
+}
 
 */
-
+ 
  String ssid;
  Serial.println();
  Serial.print("This Device MAC ID is: ");
  Serial.println(WiFi.macAddress());
  Serial.print("This Device Name is: ");
  Serial.println(WiFi.hostname());
- Serial.print("Gateway MAC ID is: ");
+ Serial.print("Message received from Controller is: ");
  Serial.println(WiFi.BSSIDstr(0));
+ Serial.println(WiFi.BSSIDstr(0)[0]);
+ Serial.println(WiFi.BSSIDstr(0)[1]);
+ Serial.println(WiFi.BSSIDstr(0)[2]);
+ Serial.println(WiFi.BSSIDstr(0)[3]);
+ Serial.println(WiFi.BSSIDstr(0)[4]);
+ Serial.println(WiFi.BSSIDstr(0)[5]);
+ Serial.println(WiFi.BSSIDstr(0)[6]);
+ Serial.println(WiFi.BSSIDstr(0)[7]);
+ Serial.println(WiFi.BSSIDstr(0)[8]);
+ Serial.println(WiFi.BSSIDstr(0)[9]);
+ Serial.println(WiFi.BSSIDstr(0)[10]);
+ Serial.println(WiFi.BSSIDstr(0)[11]);
+ Serial.println(WiFi.BSSIDstr(0)[12]);
+ Serial.println(WiFi.BSSIDstr(0)[13]);
+ Serial.println(WiFi.BSSIDstr(0)[14]);
+ Serial.println(WiFi.BSSIDstr(0)[15]);
+ Serial.println(WiFi.BSSIDstr(0)[16]);
+ 
  Serial.print("Gateway Name is: ");
  Serial.println(WiFi.SSID(0));
  Serial.print("Gateway Channel is: ");
  Serial.println(WiFi.channel(0));
-    
+ 
+ if (WiFi.BSSIDstr(0)[16] == '1')  {
+        Serial.print("Message received from Controller: ");
+        if (WiFi.BSSIDstr(0)[0] == '3')  {
+          Serial.print("GPIO,");
+          Serial.print(ledPin);
+          Serial.print(",");
+          Serial.print(WiFi.BSSIDstr(0)[15]);
+        }
+      }
+
 
 
 
  Serial.println();
- WiFi.scanDelete();
+ //WiFi.scanDelete();
  passedMillis = millis() - lastMillis;
  Serial.print("Time spent on Probe Request: "); 
  Serial.println(passedMillis);
@@ -269,7 +323,11 @@ bool isHidden;
  Serial.println();
  
  delay(10);
+
+
+ 
 }
+
 #endif
 
 #if IRSENDER
@@ -310,7 +368,5 @@ void irSender()   {
     lastMillis = millis();
     Serial.println();
     //delay(10);
-}      
+}
 #endif
-
- 
