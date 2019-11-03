@@ -59,8 +59,9 @@
 /*
  * Your WiFi config here
  */
-char ssid[] = "ssid";     // your network SSID (name)
-char pass[] = "password"; // your network password
+char ssid[] = "HTM1";     // your network SSID (name)
+char pass[] = "kb1henna"; // your network password
+char gateway[] = "ESP"; // your gateway name
 //bool WiFiAP = false;      // Do yo want the ESP as AP?
 #endif
  
@@ -84,7 +85,7 @@ int msg3 = 10;
 int msg4 = 10;
 int msg5 = 10; 
 int VOLT_LIMIT = 3;
-uint8_t mac[6] = {50, 10, 20, 30, 40, 01};
+uint8_t mac[6] = {50, 10, 20, 30, 60, 01};
 //uint8_t mac[6] = {msg1, msg2, msg3, msg4, msg5, device}; 
 
 extern "C" void preinit() {
@@ -340,6 +341,7 @@ void startWiFiClient()
   
   Serial.println("WiFi connected");
   Serial.println("IP address: " + WiFi.localIP().toString());
+  WiFi.softAP(gateway, "<notused>", 7, 0, 0);
 }
 #endif
 
@@ -396,3 +398,4 @@ void probeToirSender()   {
     
   }
 }
+
