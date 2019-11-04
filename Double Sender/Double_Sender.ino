@@ -2,25 +2,21 @@
   This sketch uses IRremoteESP8266 library from https://github.com/crankyoldgit/IRremoteESP8266.
   In order to send MIDEA protocol IR message there is change needed in library
   as documented here : https://github.com/crankyoldgit/IRremoteESP8266/issues/887#issuecomment-531314986
-
   Change this line: https://github.com/crankyoldgit/IRremoteESP8266/blob/master/src/IRrecv.h#L402
-
   to:
-
                    bool strict = false);
   e.g.
-
   #if DECODE_MIDEA
   bool decodeMidea(decode_results *results, uint16_t nbits = kMideaBits,
                    bool strict = true);
   #endif
-
   On receiver side example can be used from here: https://github.com/happytm/BatteryNode/blob/master/Double%20Receiver/Double_Receiver.ino
 */
+
+//ADC_MODE(ADC_VCC); //vcc read-mode
 #define IRSENDER              false
 #define PROBEREQUESTER        true
 #define SLEEP_SECS 15 * 60 // 15 minutes
-int device = 1;
 
 #if PROBEREQUESTER
 #include <ESP8266WiFi.h>
@@ -37,22 +33,30 @@ int device = 1;
 //#include <IRutils.h>
 #endif
 
-ADC_MODE(ADC_VCC); //vcc read-mode
-uint8 ssid[32] = "ESP_Controller";
-int apChannel = 7;
-int temperature = 10;
-int humidity = 20;
-int pressure = 90;
-int voltage = 80;
-int light = 70;
+
+uint8 gateway[32] = "ESP";   // This name has to be same as main controller's ssid.
+int apChannel = 7;       // This channel has to be same as main controller's channel.
+int device = 1;
+int temperature;
+int humidity;
+int pressure;
+int voltage;
+int light;
 
 uint8_t irMac[] = {temperature, humidity, pressure, voltage, light, device};
+/*
+int value1;
+int value2;
+int value3;
+int value4;
+int value5;
 
+uint8_t fakeMac[] = {value1, value2, value3, value4, value5, device};
+*/
+int ledPin = 12;
 int VOLT_LIMIT = 3;
 unsigned long lastMillis;
 unsigned long passedMillis;
-int ledPin = 12;
-
 
 //====================IR defines starts============================
 
@@ -77,7 +81,7 @@ uint64_t myMac =
 
 void setup() {
 
-  sensorValues();
+  sensorValues1();
   Serial.begin(115200);
   Serial.println();
   Serial.print("Milliseconds passed before setup: ");
@@ -137,6 +141,9 @@ void loop() {
 
   // put your code here to run in loop or move to setup to run oncce.
 
+  //sensorValues2();
+  //delay(25);
+  
 #if PROBEREQUESTER
   probeRequest();
 #endif
@@ -166,13 +173,41 @@ void gotoSleep() {                            //need connection between GPIO16 a
 #if PROBEREQUESTER
 //=========================Probe request function starts===========
 
-void sensorValues()     {
+void sensorValues1()     {
 
   temperature = random(90);
+  humidity = random(100);
+  pressure = random(120);
+  voltage = random(100);
+  light = random(100);
   irMac[0] = temperature;
+  irMac[1] = humidity;
+  irMac[2] = pressure;
+  irMac[3] = voltage;
+  irMac[4] = light;
+ 
   wifi_set_macaddr(STATION_IF, irMac);
   
 }
+
+/*
+void sensorValues2()     {
+
+  value1 = random(10);
+  value2 = random(10);
+  value3 = random(10);
+  value4 = random(10);
+  value5 = random(10);
+  fakeMac[0] = value1;
+  fakeMac[1] = value2;
+  fakeMac[2] = value3;
+  fakeMac[3] = value4;
+  fakeMac[4] = value5;
+  wifi_set_macaddr(STATION_IF, fakeMac);
+  
+}
+*/
+
 
 void probeRequest()  {
   Serial.println("Starting Probe sender");
@@ -180,7 +215,7 @@ void probeRequest()  {
   Serial.println();
  
   //int8_t scanNetworks(bool async = true, bool show_hidden = false, uint8 channel = 0, uint8* ssid = NULL);
-  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) ssid);
+  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
 
 #if !IRSENDER
   delay(25); // Minimum delay of 25 required to scan networks in async mode if not using IRSENDER
@@ -274,3 +309,4 @@ void irSender()   {
   //delay(10);
 }
 #endif
+
