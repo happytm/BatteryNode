@@ -54,21 +54,15 @@
 #if MQTTBROKER
 #include "uMQTTBroker.h"
 
-
-
 /*
  * Your WiFi config here
  */
-char ssid[] = "HTM1";     // your network SSID (name)
-char pass[] = "kb1henna"; // your network password
+char ssid[] = "";     // your network SSID (name)
+char pass[] = ""; // your network password
 char gateway[] = "ESP"; // your gateway name
 //bool WiFiAP = false;      // Do yo want the ESP as AP?
 #endif
  
-#include <ESP8266WiFi.h>
-
-
-
 #include <Arduino.h>
 #include <IRsend.h>
 #include <IRrecv.h>
@@ -131,11 +125,12 @@ myMQTTBroker myBroker;
 
 
 int unit = 1;
-int temperature = 10;
-int humidity = 20;
-int pressure = 30;
-int voltage = 40;
-int light = 50; 
+
+int temperature;
+int humidity;
+int pressure;
+int voltage;
+int light; 
 
 uint8_t probeData[] = {temperature,humidity,pressure,voltage,light,unit}; 
 
@@ -189,6 +184,9 @@ volatile boolean buttonPressed;
 
 void setup() {
 
+  
+
+
   irrecv.enableIRIn();  // Start up the IR receiver.
   irsend.begin();       // Start up the IR sender.
   //probeToirSender();
@@ -231,7 +229,7 @@ void setup() {
   //Serial.println(WiFi.SSID());
   Serial.println();
  
-  
+    WiFi.persistent(false);
     probeRequestPrintHandler = WiFi.onSoftAPModeProbeRequestReceived(&onProbeRequest);
 
 //////////////////////////////////////////////////////////////////
@@ -299,19 +297,7 @@ void loop() {
       serialPrintUint64(results.value, HEX);  // Should be your 48bit MAC Address in Decimal (Base 10).
       Serial.println();
     
-///////////////////////////////////////////////////////////////////////////
-#if MQTTBROKER
- /*
- * Publish the counter value as String
- */
-  myBroker.publish("broker/sensorData", (String)temperature++);
-   
-  // wait a second
-  delay(1000);
-#endif
-//////////////////////////////////////////////////////////////////////////////
-        
-  }
+}
   
   
    
@@ -368,34 +354,51 @@ void probeToirSender()   {
   
   if (dataReceived.mac[5] == 0x01) {
     
-
     Serial.print("Probe Request:- ");
     Serial.print(" Device ID:  ");
     Serial.print(dataReceived.mac[5],DEC);
-    int unit = (dataReceived.mac[5],DEC);
+    unit = dataReceived.mac[5];
     Serial.print(" Temperature:  ");
     Serial.print(dataReceived.mac[0],DEC);
-    int temperature = 85;//(dataReceived.mac[0],DEC);
+    temperature = dataReceived.mac[0];
     Serial.print(" Humidity:  ");
     Serial.print(dataReceived.mac[1],DEC);
-    int humidity = (dataReceived.mac[1],DEC);
+    humidity = dataReceived.mac[1];
     Serial.print(" Pressure:  ");
     Serial.print(dataReceived.mac[2],DEC);
-    int pressure = (dataReceived.mac[2],DEC);
+    pressure = dataReceived.mac[2];
     Serial.print(" Battery:  ");
     Serial.print(dataReceived.mac[3],DEC);
-    int voltage = (dataReceived.mac[3],DEC);
+    voltage = dataReceived.mac[3];
     Serial.print(" Light:  ");
     Serial.println(dataReceived.mac[4],DEC);
-    int light = (dataReceived.mac[4],DEC);
-    delay(10);
-    Serial.print("This Device MAC ID is: ");
-    
- 
-  } else {
+    light = dataReceived.mac[4];
+    mqttPublish();
+   
+ } else {
     
     //Serial.println("Waiting for Data............");
     
   }
 }
+
+///////////////////////////////////////////////////////////////////////////
+#if MQTTBROKER
+void mqttPublish()    {
+   
+ myBroker.publish("SensorData/unit/", (String)unit);
+ myBroker.publish("SensorData/temperature/", (String)temperature);
+ myBroker.publish("SensorData/humidity/", (String)humidity);
+ myBroker.publish("SensorData/pressure/", (String)pressure);
+ myBroker.publish("SensorData/voltage/", (String)voltage);
+ myBroker.publish("SensorData/light/", (String)light);
+  
+ // wait a second
+
+//delay(1000);
+}
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
+     
 
