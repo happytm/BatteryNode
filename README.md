@@ -1,3 +1,7 @@
+Low battery powered ESP8266 devices using Adhoc Network protocol described by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker.
+
+
+
 # uMQTTBroker
 MQTT Broker library for ESP8266 Arduino
 
