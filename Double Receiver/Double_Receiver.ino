@@ -52,7 +52,7 @@
  
 #include <ESP8266WiFi.h>
 #if MQTTBROKER
-#include "uMQTTBroker.h"
+#include "uMQTTBroker.h"     // Library at https://github.com/martin-ger/uMQTTBroker
 
 /*
  * Your WiFi config here
