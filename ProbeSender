@@ -176,8 +176,8 @@ void probeRequest()  {
  
   //int8_t scanNetworks(bool async = true, bool show_hidden = false, uint8 channel = 0, uint8* ssid = NULL);
   int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
-  delay(25); // Minimum delay of 25 required to scan networks in async mode if not using IRSENDER
-
+  // delay(25); // Minimum delay of 25 required to scan networks in async mode if not using IRSENDER
+  yield();      // with yield() data is sent within 85 milliseconds.
    
    //if (WiFi.macAddress()[16] == '1')  {     //match device number here
 
@@ -247,6 +247,6 @@ void probeRequest()  {
   lastMillis = millis();
   Serial.println();
 
-  delay(10);    // minimum delay of 10 required here.
+ // delay(10);    // minimum delay of 10 required here.
 
 }
