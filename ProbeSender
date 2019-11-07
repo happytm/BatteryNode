@@ -41,7 +41,7 @@ void setup() {
   sensorValues1();
   if ((WiFi.macAddress()[16]) == '1')  {     //match device number here
   
-  probeRequest();
+  // probeRequest();
   
  
   Serial.print("Milliseconds passed before setup: ");
@@ -177,7 +177,7 @@ void probeRequest()  {
   //int8_t scanNetworks(bool async = true, bool show_hidden = false, uint8 channel = 0, uint8* ssid = NULL);
   int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
   // delay(25); // Minimum delay of 25 required to scan networks in async mode if not using IRSENDER
-  yield();      // with yield() data is sent within 85 milliseconds.
+  yield();      // with yield() data is sent within 75 milliseconds.
    
    //if (WiFi.macAddress()[16] == '1')  {     //match device number here
 
