@@ -35,15 +35,16 @@ void setup() {
  // WiFi.disconnect();
   WiFi.scanDelete();
   Serial.begin(115200);
-  Serial.println();
+/*  Serial.println();
   Serial.print("Device ID: ");
   Serial.println(WiFi.macAddress()[16]);
-  sensorValues1();
+*/  sensorValues1();
+
   if ((WiFi.macAddress()[16]) == '1')  {     //match device number here
-  
-  // probeRequest();
-  
- 
+    
+  probeRequest();
+   
+ /*
   Serial.print("Milliseconds passed before setup: ");
   Serial.println(millis());
   lastMillis = millis();
@@ -51,16 +52,14 @@ void setup() {
   delay(1);
   WiFi.hostname("Livingroom");
   Serial.println();
-  } else {
+*/  } else {
     
     Serial.println("Let me try again to get sensor data........................................");
     ESP.restart();
   }
- 
-  Serial.print("Milliseconds passed before setup: ");
-  Serial.println(millis());
-  lastMillis = millis();
-  Serial.println();
+
+ //if (WiFi.BSSIDstr(0)[16] == '1')  { } else { ESP.restart(); }  //match last digit of gateway's mac id here.
+  
   delay(1);
   
   
@@ -77,7 +76,7 @@ void setup() {
     Serial.println("Warning :- Battery Voltage low please change batteries" );
     Serial.println();
   }
-
+/*
   Serial.println("Setup finished");
   
   passedMillis = millis() - lastMillis;
@@ -86,7 +85,7 @@ void setup() {
   Serial.println();
   lastMillis = millis();
   Serial.println();
-
+*/
 }   // Setup ends here
 
 //========================Main Loop================================
@@ -107,7 +106,7 @@ void loop() {
   Serial.print(SLEEP_SECS / 60);
   Serial.println(" Minutes");
   
-   delay(500);         //disable delay when deep sleep activated.
+   delay(5000);         //disable delay when deep sleep activated.
    Serial.println("Going to Deep Sleep..........................");
    ESP.restart();
    //ESP.deepSleep(0); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
@@ -170,18 +169,18 @@ void gotoSleep() {      //need connection between GPIO16 and reset pin of ESP826
 
 
 void probeRequest()  {
-  Serial.println("Starting Probe sender");
+ /* Serial.println("Starting Probe sender");
   Serial.println("Sending sensor data over Probe request protocol to Master Node");
   Serial.println();
- 
+ */
   //int8_t scanNetworks(bool async = true, bool show_hidden = false, uint8 channel = 0, uint8* ssid = NULL);
   int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
-  // delay(25); // Minimum delay of 25 required to scan networks in async mode if not using IRSENDER
-  yield();      // with yield() data is sent within 75 milliseconds.
+ // delay(35); // Minimum delay of around 35 required if message is to be received from gateway
+  yield(); // deactivate delay above and activate yield if message is not expected from gateway to speed up.     
    
    //if (WiFi.macAddress()[16] == '1')  {     //match device number here
 
-   if (WiFi.BSSIDstr(0)[16] == '1')  {     //match device number here
+   if (WiFi.BSSIDstr(0)[16] == '1')  {     //match last digit of gateway's mac id here.
     String ssid;
     Serial.println();
     Serial.print("This Device MAC ID is: ");
@@ -208,11 +207,14 @@ void probeRequest()  {
     Serial.print(WiFi.BSSIDstr(0)[13]);
     Serial.println(WiFi.BSSIDstr(0)[14]);
     Serial.print(WiFi.BSSIDstr(0)[15]);
-    Serial.print(WiFi.BSSIDstr(0)[16]);
-    */
+    */  
+    Serial.print("Last digit of Gateway's Mac ID:   ");
+    Serial.println(WiFi.BSSIDstr(0)[16]);
+    
 
     Serial.print("Last digit of MAC ID: ");
     Serial.print(WiFi.macAddress()[16]);
+    
     Serial.println();
 
     Serial.print("Gateway Name is: ");
@@ -248,5 +250,7 @@ void probeRequest()  {
   Serial.println();
 
  // delay(10);    // minimum delay of 10 required here.
+
+}
 
 }
