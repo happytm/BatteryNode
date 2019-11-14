@@ -2,7 +2,7 @@
 
 Low battery powered ESP8266 devices using Adhoc Network protocol described by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker.
 
-My testing shows 6 bytes (5 different sensor's data + device indentifier using 1 byte)  of sensor data is moved within 60 milliseconds on average.
+My testing shows 6 bytes (5 different sensor's data + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds.
 
 Most suitable use cases - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
