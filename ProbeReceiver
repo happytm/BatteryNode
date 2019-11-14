@@ -1,74 +1,73 @@
 #define  MQTTBROKER           true
- 
+
 #include <ESP8266WiFi.h>
 #if MQTTBROKER
-#include "uMQTTBroker.h"    // Library at https://github.com/martin-ger/uMQTTBroker
+#include "uMQTTBroker.h"
 
-/*
- * Your WiFi config here
- */
-char ssid[] = "";     // your network SSID (name)
-char pass[] = ""; // your network password
+char ssid[] = "HTM1";     // your network SSID (name)
+char pass[] = "kb1henna"; // your network password
 char gateway[] = "ESP"; // your gateway name
-//bool WiFiAP = false;      // Do yo want the ESP as AP?
+
 #endif
 
 // ==================== start of TUNEABLE PARAMETERS ====================
 
-int VOLT_LIMIT = 3;
-
-int unit = 1;
-
+int device;
 int temperature;
 int humidity;
 int pressure;
 int voltage;
-int light; 
+int light;
+//int openClose = 0;    // 0 or 1
+//int level;            // 0 to 255
+//int presence = 0;     // 0 or 1
+//int motion = 0;       // 0 to 6 (0=no motion, 1=up, 2=down, 3=right, 4=left, 5=on, 6=off).
 
-uint8_t probeData[] = {temperature,humidity,pressure,voltage,light,unit}; 
+//uint8_t probeData[] = {temperature, humidity, pressure, voltage, light, unit};
 
+int value1;
+int value2;
+int value3;
+int value4;
+int value5;
+int value6;
 
-int device = 1;
-int msg1;
-int msg2;
-int msg3;
-int msg4;
-int msg5 = 11; 
-uint8_t mac[6] = {50, 10, 20, 30, msg5, 01};
-//uint8_t mac[6] = {msg1, msg2, msg3, msg4, msg5, device}; 
+uint8_t mac[6] = {19,01,25,30,01,01};
+//uint8_t mac[6] = {19,01,250,value4,value5,01};
+//uint8_t mac[] = {value1, value2, value3, value4, value5, value6};
 
 extern "C" void preinit() {
-wifi_set_opmode(STATIONAP_MODE);
-wifi_set_macaddr(SOFTAP_IF, mac);
+  wifi_set_opmode(STATIONAP_MODE);
+  wifi_set_macaddr(SOFTAP_IF, mac);
 }
 
 
 /*/////////////////////////////////////////////////////////////////
- * Custom broker class with overwritten callback functions
- */
+   Custom broker class with overwritten callback functions
+*/
 
 
 #if MQTTBROKER
- 
+
 class myMQTTBroker: public uMQTTBroker
 {
-public:
+  public:
     virtual bool onConnect(IPAddress addr, uint16_t client_count) {
-      Serial.println(addr.toString()+" connected");
+      Serial.println(addr.toString() + " connected");
       return true;
     }
-    
+
     virtual bool onAuth(String username, String password) {
-      Serial.println("Username/Password: "+username+"/"+password);
+      Serial.println("Username/Password: " + username + "/" + password);
       return true;
     }
-    
+
     virtual void onData(String topic, const char *data, uint32_t length) {
-      char data_str[length+1];
+      char data_str[length + 1];
       os_memcpy(data_str, data, length);
       data_str[length] = '\0';
-      
-      Serial.println("received topic '"+topic+"' with data '"+(String)data_str+"'");
+
+      Serial.println("received topic '" + topic + "' with data '" + (String)data_str + "'");
     }
 };
 
@@ -77,75 +76,90 @@ myMQTTBroker myBroker;
 #endif
 /////////////////////////////////////////////////////////////////////
 
-
-
-
 WiFiEventHandler probeRequestPrintHandler;
-volatile boolean buttonPressed;
+//volatile boolean buttonPressed;
 
 void setup() {
-
-  //messageValues();
-
+  
   Serial.begin(115200);
   Serial.println();
 
- // WiFi.persistent(false);
+  // WiFi.persistent(false);
 
   Serial.println("MQTT Gateway");
   Serial.println();
   Serial.print("This Device MAC ID is: ");
   Serial.println(WiFi.macAddress());
- 
+
   WiFi.hostname("Controller");
   Serial.print("This Device's Host Name is: ");
   Serial.println(WiFi.hostname());
   Serial.print("This Device is connected to  AP MAC: ");
   Serial.println(WiFi.BSSIDstr());
-  
+
   Serial.println();
  
-    WiFi.persistent(false);
-    probeRequestPrintHandler = WiFi.onSoftAPModeProbeRequestReceived(&onProbeRequest);
-
-//////////////////////////////////////////////////////////////////
+  WiFi.persistent(false);
+  probeRequestPrintHandler = WiFi.onSoftAPModeProbeRequestReceived(&onProbeRequest);
+  delay(1);
+  wifi_set_macaddr(SOFTAP_IF, mac); 
+  
+////////////////////////////////
 #if MQTTBROKER
- // Connect to a WiFi network
+  // Connect to a WiFi network
   startWiFiClient();
 
-    // Start the broker
+  // Start the broker
   Serial.println("Starting MQTT broker");
   myBroker.init();
 
-/*
- * Subscribe to anything
- */
+  /*
+     Subscribe to anything
+  */
   myBroker.subscribe("#");
 #endif
-  
-////////////////////////////////////////////////////////////////////
 
- 
+  ////////////////////////////////////////////////////////////////////
+
+
 }  //END OF SETUP
 
 
-void loop() {}
+void loop() {
 
+  value1 = 10;  //random(25);
+  value2 = 20;  //random(256);
+  value3 = 30;  //random(256);
+  value4 = 40;  //random(256);
+  value5 = random(256);
+  value6 = 01;
+  mac[0] = value1;
+  mac[1] = value2;
+  mac[2] = value3;
+  mac[3] = value4;
+  mac[4] = value5;
+  mac[5] = value6;
+
+  wifi_set_macaddr(SOFTAP_IF, mac);
+
+  yield();
+
+}  // End of main loop.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if MQTTBROKER
 void startWiFiClient()
 {
-  Serial.println("Connecting to "+(String)ssid);
+  Serial.println("Connecting to " + (String)ssid);
   WiFi.begin(ssid, pass);
-  
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("");
-  
+
   Serial.print("WiFi connected to: ");
   Serial.println(WiFi.SSID());
   Serial.println("IP address: " + WiFi.localIP().toString());
@@ -155,58 +169,65 @@ void startWiFiClient()
 
 ////////////////////////////////////////////////////////////////////////////
 
-
-void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived) {
-  
- 
-  if (dataReceived.mac[5] == 0x01) {
-    
-    Serial.print("Probe Request:- ");
-    Serial.print(" Device ID:  ");
-    Serial.print(dataReceived.mac[5],DEC);
-    unit = dataReceived.mac[5];
-    Serial.print(" Temperature:  ");
-    Serial.print(dataReceived.mac[0],DEC);
-    temperature = dataReceived.mac[0];
-    Serial.print(" Humidity:  ");
-    Serial.print(dataReceived.mac[1],DEC);
-    humidity = dataReceived.mac[1];
-    Serial.print(" Pressure:  ");
-    Serial.print(dataReceived.mac[2],DEC);
-    pressure = dataReceived.mac[2];
-    Serial.print(" Battery:  ");
-    Serial.print(dataReceived.mac[3],DEC);
-    voltage = dataReceived.mac[3];
-    Serial.print(" Light:  ");
-    Serial.println(dataReceived.mac[4],DEC);
-    light = dataReceived.mac[4];
-    mqttPublish();
-   
- } else {
-    
-    //Serial.println("Waiting for Data............");
-    
-  }
-}
-
-
-
-
 ///////////////////////////////////////////////////////////////////////////
 #if MQTTBROKER
 void mqttPublish()    {
-   
- myBroker.publish("SensorData/unit/", (String)unit);
- myBroker.publish("SensorData/temperature/", (String)temperature);
- myBroker.publish("SensorData/humidity/", (String)humidity);
- myBroker.publish("SensorData/pressure/", (String)pressure);
- myBroker.publish("SensorData/voltage/", (String)voltage);
- myBroker.publish("SensorData/light/", (String)light);
-  
- // wait a second
 
-//delay(1000);
+  myBroker.publish("SensorData/device/", (String)device);
+  myBroker.publish("SensorData/temperature/", (String)temperature);
+  myBroker.publish("SensorData/humidity/", (String)humidity);
+  myBroker.publish("SensorData/pressure/", (String)pressure);
+  myBroker.publish("SensorData/voltage/", (String)voltage);
+  myBroker.publish("SensorData/light/", (String)light);
+
+  // wait a second
+
+  //delay(1000);
 }
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+ 
+  
+void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived) {
+    
+  if (dataReceived.mac[0] == 6 || dataReceived.mac[0] == 16 || dataReceived.mac[0] == 26 || dataReceived.mac[0] == 36 || dataReceived.mac[0] == 46 || dataReceived.mac[0] == 56 || dataReceived.mac[0] == 66 || dataReceived.mac[0] == 76 || dataReceived.mac[0] == 86 || dataReceived.mac[0] == 96 || dataReceived.mac[0] == 106 || dataReceived.mac[0] == 116 || dataReceived.mac[0] == 126 || dataReceived.mac[0] == 136 || dataReceived.mac[0] == 146 || dataReceived.mac[0] == 156 || dataReceived.mac[0] == 166 || dataReceived.mac[0] == 176 || dataReceived.mac[0] == 186 || dataReceived.mac[0] == 196 || dataReceived.mac[0] == 206 || dataReceived.mac[0] == 216 || dataReceived.mac[0] == 226 || dataReceived.mac[0] == 236 || dataReceived.mac[0] == 246) // only accept data from certain devices.
+  {
+    
+    Serial.print("Probe Request:- ");
+    Serial.print(" Device ID:  ");
+    Serial.print(dataReceived.mac[0], DEC);
+    device = dataReceived.mac[0];
+    Serial.print(" Temperature:  ");
+    Serial.print(dataReceived.mac[1], DEC);
+    temperature = dataReceived.mac[1];
+    Serial.print(" Humidity:  ");
+    Serial.print(dataReceived.mac[2], DEC);
+    humidity = dataReceived.mac[2];
+    Serial.print(" Pressure:  ");
+    Serial.print(dataReceived.mac[3], DEC);
+    pressure = dataReceived.mac[3];
+    pressure = pressure * 4;
+    Serial.print(" Battery:  ");
+    Serial.print(dataReceived.mac[4], DEC);
+    voltage = dataReceived.mac[4];
+    voltage = voltage * 2;
+    
+    Serial.print(" Light:  ");
+    Serial.println(dataReceived.mac[5], DEC);
+    light = dataReceived.mac[5];
+    if (voltage < 295)      // if voltage of battery gets to low, print the warning below.
+  {
+    myBroker.publish("SensorData/warning", "Battery Low");
+    Serial.println("**************Warning :- Battery Voltage low please change batteries********************" );
+    Serial.println();
+  }  
+    mqttPublish();
+
+  } else {
+
+    //Serial.println("Waiting for Data............");
+
+  }
+}
+
