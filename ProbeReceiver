@@ -4,8 +4,8 @@
 #if MQTTBROKER
 #include "uMQTTBroker.h"
 
-char ssid[] = "HTM1";     // your network SSID (name)
-char pass[] = "kb1henna"; // your network password
+char ssid[] = "";     // your network SSID (name)
+char pass[] = ""; // your network password
 char gateway[] = "ESP"; // your gateway name
 
 #endif
