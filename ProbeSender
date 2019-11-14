@@ -1,27 +1,29 @@
 ADC_MODE(ADC_VCC); //vcc read-mode
 #define SLEEP_SECS 15 * 60 // 15 minutes
 
+#define DUPLEX      true   // true if two way communication required with controller (around 150 milliseconds as opposed to 60 milliseonds if false).
+
 uint8 gateway[32] = "ESP";   // This name has to be same as main controller's ssid.
-int apChannel = 7;       // This channel has to be same as main controller's channel.
-int device = 1;
+int apChannel = 7;           // This channel has to be same as main controller's channel & AP where main controller is connected for internet.
+// use any of following for devie ID ending with 6.
+// 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
+int device = 36;    // device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
 int temperature;
 int humidity;
 int pressure;
 int voltage;
 int light;
+//int openClose = 0;    // 0 or 1
+//int level;            // 0 to 255
+//int presence = 0;     // 0 or 1
+//int motion = 0;       // 0 to 6 (0=no motion, 1=up, 2=down, 3=right, 4=left, 5=on, 6=off).
 
-uint8_t fakeMac[] = {temperature, humidity, pressure, voltage, light, device};
-/*
-int value1;
-int value2;
-int value3;
-int value4;
-int value5;
+uint8_t fakeMac[] = {device, temperature, humidity, pressure, voltage, light};
 
-uint8_t fakeMac2[] = {value1, value2, value3, value4, value5, device};
-*/
 int ledPin = 12;
-int VOLT_LIMIT = 3;
+//int lowVolt = 0;     
+//int highVolt = 330;   // highest voltage of battery used multiply by 100.
+int warnVolt = 130;    // Start warning when battery level goes below 2.60 volts (260/2 = 130).         
 unsigned long lastMillis;
 unsigned long passedMillis;
 
@@ -35,71 +37,65 @@ void setup() {
  // WiFi.disconnect();
   WiFi.scanDelete();
   Serial.begin(115200);
-/*  Serial.println();
-  Serial.print("Device ID: ");
-  Serial.println(WiFi.macAddress()[16]);
-*/  sensorValues1();
-
-  if ((WiFi.macAddress()[16]) == '1')  {     //match device number here
-    
+  
+  sensorValues1();
   probeRequest();
-   
- /*
-  Serial.print("Milliseconds passed before setup: ");
-  Serial.println(millis());
-  lastMillis = millis();
-  Serial.println();
-  delay(1);
-  WiFi.hostname("Livingroom");
-  Serial.println();
-*/  } else {
-    
-    Serial.println("Let me try again to get sensor data........................................");
-    ESP.restart();
-  }
-
- //if (WiFi.BSSIDstr(0)[16] == '1')  { } else { ESP.restart(); }  //match last digit of gateway's mac id here.
   
-  delay(1);
-  
-  
-  WiFi.hostname("Livingroom");
-  Serial.println();
-  
-  
-  
-  
-  float voltage = ESP.getVcc() / (float)1023; // * (float)1.07;
-  Serial.print("Voltage: "); Serial.print(voltage); Serial.print("  Voltage Expected: "); Serial.println(VOLT_LIMIT);
-  if (voltage < VOLT_LIMIT)      // if voltage of battery gets to low, the LED wil blink fast.
-  {
-    Serial.println("Warning :- Battery Voltage low please change batteries" );
+#if DUPLEX
+ delay(60);  // Minimum 60 milliseonds delay required to receive message from controller reliably.
+ 
+ if (WiFi.BSSIDstr(0)[16] == '1')  {   //match last digit of gateway's mac id with this devices's ID here.
+ 
     Serial.println();
-  }
-/*
-  Serial.println("Setup finished");
+    Serial.print("This Device MAC ID is: ");
+    Serial.println(WiFi.macAddress());
+    Serial.print("This Device Name is: ");
+    Serial.println(WiFi.hostname());
+    Serial.print("Gateway Name is: ");
+    Serial.println(WiFi.SSID(0));
+    Serial.print("Gateway Channel is: ");
+    Serial.println(WiFi.channel(0));
+    Serial.print("Message sent to Controller is: ");
+    Serial.println(WiFi.macAddress());
+    Serial.print("Message received from Controller is: ");
+    Serial.println(&WiFi.BSSIDstr(0)[0]);
+    
+    if (WiFi.BSSIDstr(0)[0] == '0')  {
+      Serial.print("GPIO,");
+      Serial.print(ledPin);
+      Serial.print(",");
+      Serial.println(WiFi.BSSIDstr(0)[15]);
+    }
+
+    if (WiFi.BSSIDstr(0)[16] == '1')  {
+      Serial.println("I will wake up next time with WiFi, OTA enabled and deepsleep disabled");
+      Serial.println("Define some features here to activate wifi  & disable deepsleep when unit wakes up next time then restart the ESP.");
+      // ESP.restart();
+    }
+    
   
-  passedMillis = millis() - lastMillis;
-  Serial.print("Time spent on setup: ");
-  Serial.println(passedMillis);
+  } else { 
+    Serial.println("Message from controller did not arrive, let me try again to get message data........................................");
+    ESP.restart(); 
+    
+    }  
+#endif
+  
+  delay(1);
+ 
+  WiFi.hostname("Livingroom");
   Serial.println();
-  lastMillis = millis();
-  Serial.println();
-*/
-}   // Setup ends here
+  }  
+  
+  // Setup ends here
 
 //========================Main Loop================================
 
 void loop() {
 
- 
-   //sensorValues2();
-  //delay(25);
-  sensorValues1();
   probeRequest();
   yield();
-  if ((WiFi.macAddress()[16]) == '1')  {     //match device number here
-   
+ 
   Serial.print("Total time I spent before going to sleep: ");
   Serial.println(millis());
   Serial.print("I will wakeup in: ");
@@ -110,13 +106,7 @@ void loop() {
    Serial.println("Going to Deep Sleep..........................");
    ESP.restart();
    //ESP.deepSleep(0); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
-  } else {
-    
-    Serial.println("Let me try again to get sensor data........................................");
-    
-  }
-  
-}
+ }
 
 //=========================Main Loop ends==========================
 
@@ -125,36 +115,30 @@ void sensorValues1()     {
 
   temperature = random(90);
   humidity = random(100);
-  pressure = random(120);
-  voltage = random(100);
-  light = random(100);
-  fakeMac[0] = temperature;
-  fakeMac[1] = humidity;
-  fakeMac[2] = pressure;
-  fakeMac[3] = voltage;
-  fakeMac[4] = light;
+  pressure = random(1024);
+  pressure = pressure / 4;
+ // voltage = random(100);
+  float voltage = ESP.getVcc() / (float)1023 * 50; // * (float)1.07;
+  //voltage = map(voltage, lowVolt, highVolt, 0, 100);
+  
+  Serial.print("Voltage: "); Serial.print(voltage); Serial.print("  Minimum Voltage Required: "); Serial.println(warnVolt);
+  if (voltage < warnVolt)      // if voltage of battery gets to low, print the warning below.
+  {
+    Serial.println("Warning :- Battery Voltage low please change batteries" );
+    Serial.println();
+  }
  
+  light = random(100);
+  //fakeMac[0] = device;
+  fakeMac[1] = temperature;
+  fakeMac[2] = humidity;
+  fakeMac[3] = pressure;
+  fakeMac[4] = voltage;
+  fakeMac[5] = light;
   wifi_set_macaddr(STATION_IF, fakeMac);
   
 }
 
-/*
-void sensorValues2()     {
-
-  value1 = random(10);
-  value2 = random(10);
-  value3 = random(10);
-  value4 = random(10);
-  value5 = random(10);
-  fakeMac2[0] = value1;
-  fakeMac2[1] = value2;
-  fakeMac2[2] = value3;
-  fakeMac2[3] = value4;
-  fakeMac2[4] = value5;
-  wifi_set_macaddr(STATION_IF, fakeMac2);
-  
-}
-*/
 
 void gotoSleep() {      //need connection between GPIO16 and reset pin of ESP8266
   // add some randomness to avoid collisions with multiple devices
@@ -169,78 +153,16 @@ void gotoSleep() {      //need connection between GPIO16 and reset pin of ESP826
 
 
 void probeRequest()  {
- /* Serial.println("Starting Probe sender");
+/*
+  Serial.println("Starting Probe sender");
   Serial.println("Sending sensor data over Probe request protocol to Master Node");
   Serial.println();
  */
   //int8_t scanNetworks(bool async = true, bool show_hidden = false, uint8 channel = 0, uint8* ssid = NULL);
   int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
- // delay(35); // Minimum delay of around 35 required if message is to be received from gateway
-  yield(); // deactivate delay above and activate yield if message is not expected from gateway to speed up.     
-   
-   //if (WiFi.macAddress()[16] == '1')  {     //match device number here
-
-   if (WiFi.BSSIDstr(0)[16] == '1')  {     //match last digit of gateway's mac id here.
-    String ssid;
-    Serial.println();
-    Serial.print("This Device MAC ID is: ");
-    Serial.println(WiFi.macAddress());
-    Serial.print("This Device Name is: ");
-    Serial.println(WiFi.hostname());
-    Serial.print("Message sent to Controller is: ");
-    Serial.println(WiFi.macAddress());
-    Serial.print("Message received from Controller is: ");
-    Serial.println(&WiFi.BSSIDstr(0)[0]);
-  /*  Serial.print(WiFi.BSSIDstr(0)[0]);
-    Serial.print(WiFi.BSSIDstr(0)[1]);
-    Serial.println(WiFi.BSSIDstr(0)[2]);
-    Serial.print(WiFi.BSSIDstr(0)[3]);
-    Serial.print(WiFi.BSSIDstr(0)[4]);
-    Serial.println(WiFi.BSSIDstr(0)[5]);
-    Serial.print(WiFi.BSSIDstr(0)[6]);
-    Serial.print(WiFi.BSSIDstr(0)[7]);
-    Serial.println(WiFi.BSSIDstr(0)[8]);
-    Serial.print(WiFi.BSSIDstr(0)[9]);
-    Serial.print(WiFi.BSSIDstr(0)[10]);
-    Serial.println(WiFi.BSSIDstr(0)[11]);
-    Serial.print(WiFi.BSSIDstr(0)[12]);
-    Serial.print(WiFi.BSSIDstr(0)[13]);
-    Serial.println(WiFi.BSSIDstr(0)[14]);
-    Serial.print(WiFi.BSSIDstr(0)[15]);
-    */  
-    Serial.print("Last digit of Gateway's Mac ID:   ");
-    Serial.println(WiFi.BSSIDstr(0)[16]);
-    
-
-    Serial.print("Last digit of MAC ID: ");
-    Serial.print(WiFi.macAddress()[16]);
-    
-    Serial.println();
-
-    Serial.print("Gateway Name is: ");
-    Serial.println(WiFi.SSID(0));
-    Serial.print("Gateway Channel is: ");
-    Serial.println(WiFi.channel(0));
-
-    Serial.print("Message received from Controller: ");
-    if (WiFi.BSSIDstr(0)[0] == '3')  {
-      Serial.print("GPIO,");
-      Serial.print(ledPin);
-      Serial.print(",");
-      Serial.println(WiFi.BSSIDstr(0)[15]);
-    }
-
-    if (WiFi.BSSIDstr(0)[16] == '1')  {
-      Serial.print("I will wake up next time with WiFi, OTA enabled and deepsleep disabled");
-      // Define some features here to activate wifi  & disable deepsleep when unit wakes up next time then restart the ESP.
-      // ESP.restart();
-    }
-
   
- }
+  yield(); 
    
- 
-
   Serial.println();
   WiFi.scanDelete();
   passedMillis = millis() - lastMillis;
@@ -248,9 +170,4 @@ void probeRequest()  {
   Serial.println(passedMillis);
   lastMillis = millis();
   Serial.println();
-
- // delay(10);    // minimum delay of 10 required here.
-
 }
-
-
