@@ -22,7 +22,11 @@ int light;
 //int level;            // 0 to 255
 //int presence = 0;     // 0 or 1
 //int motion = 0;       // 0 to 6 (0=no motion, 1=up, 2=down, 3=right, 4=left, 5=on, 6=off).
-
+/*
+ Predefined sensor type table is below:
+ volatage = 16, temperature = 26, humidity= 36, pressure= 46, light= 56, OpenClose = 66,
+ level = 76, presence = 86, motion = 96 etc.
+ */ 
 
 int sensorType1;
 int sensorType2;
@@ -30,18 +34,19 @@ int sensorType3;
 int sensorType4;
 int sensorType5;
 
+
 //uint8_t probeData[] = {temperature, humidity, pressure, voltage, light, unit};
 
-int value1;
-int value2;
-int value3;
-int value4;
-int value5;
-int value6;
+int command1;
+int command2;
+int command3;
+int command4;
+int command5;
+int command6;
 
-uint8_t mac[6] = {19,01,25,30,01,01};
+//uint8_t mac[6] = {19,01,25,30,01,01};
 //uint8_t mac[6] = {19,01,250,value4,value5,01};
-//uint8_t mac[] = {value1, value2, value3, value4, value5, value6};
+uint8_t mac[6] = {command1, command2, command3, command4, command5, command6};
 
 extern "C" void preinit() {
   wifi_set_opmode(STATIONAP_MODE);
@@ -134,18 +139,18 @@ void setup() {
 
 void loop() {
 
-  value1 = 10;  //random(25);
-  value2 = 20;  //random(256);
-  value3 = 30;  //random(256);
-  value4 = 40;  //random(256);
-  value5 = random(256);
-  value6 = 01;
-  mac[0] = value1;
-  mac[1] = value2;
-  mac[2] = value3;
-  mac[3] = value4;
-  mac[4] = value5;
-  mac[5] = value6;
+  command1 = 10;  //random(25);
+  command2 = 20;  //random(256);
+  command3 = 30;  //random(256);
+  command4 = 40;  //random(256);
+  command5 = random(256);
+  command6 = 01;
+  mac[0] = command1;
+  mac[1] = command2;
+  mac[2] = command3;
+  mac[3] = command4;
+  mac[4] = command5;
+  mac[5] = command6;
 
   wifi_set_macaddr(SOFTAP_IF, mac);
 
@@ -179,14 +184,33 @@ void startWiFiClient()
 ///////////////////////////////////////////////////////////////////////////
 #if MQTTBROKER
 void mqttPublish()    {
-  
-  
-  myBroker.publish("SensorData/device/", (String)device);
-  myBroker.publish("SensorData/voltage/", (String)voltage);
-  myBroker.publish("SensorData/temperature/", (String)temperature);
-  myBroker.publish("SensorData/humidity/", (String)humidity);
-  myBroker.publish("SensorData/pressure/", (String)pressure);
-  myBroker.publish("SensorData/light/", (String)light);
+/*
+ 
+ Predefined sensor type table is below:
+ volatage = 16, temperature = 26, humidity= 36, pressure= 46, light= 56, OpenClose = 66,
+ level = 76, presence = 86, motion = 96 etc.
+ */ 
+
+ char topic1[100];
+ sprintf(topic1,"%s%i%s%i%s", "Sensordata/", device, "/", device, "/");
+ char topic2[100];
+ sprintf(topic2,"%s%i%s%i%s", "Sensordata/", device, "/", sensorType1, "/");
+  char topic3[100];
+ sprintf(topic3,"%s%i%s%i%s", "Sensordata/", device, "/", sensorType2, "/");
+ char topic4[100];
+ sprintf(topic4,"%s%i%s%i%s", "Sensordata/", device, "/", sensorType3, "/");
+  char topic5[100];
+ sprintf(topic5,"%s%i%s%i%s", "Sensordata/", device, "/", sensorType4, "/");
+ char topic6[100];
+ sprintf(topic6,"%s%i%s%i%s", "Sensordata/", device, "/", sensorType5, "/");
+ 
+ // myBroker.publish(topic1, (String)device);
+ // myBroker.publish("SensorData/device/", (String)device);
+  myBroker.publish(topic2, (String)voltage);
+  myBroker.publish(topic3, (String)temperature);
+  myBroker.publish(topic4, (String)humidity);
+  myBroker.publish(topic5, (String)pressure);
+  myBroker.publish(topic6, (String)light);
 
   // wait a second
 
@@ -194,9 +218,11 @@ void mqttPublish()    {
 }
 
 void mqttPublish1()    {
+
   
   
-  myBroker.publish("SensorData/device/", (String)device);
+  
+ // myBroker.publish("SensorData/device/", (String)device);
   myBroker.publish("SensorType/", (String)sensorType1);
   myBroker.publish("SensorType/", (String)sensorType2);
   myBroker.publish("SensorType/", (String)sensorType3);
@@ -237,9 +263,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
     Serial.print(" Light:  ");
     Serial.println(dataReceived.mac[5]);
     sensorType5 = (dataReceived.mac[5]);
-   
-    mqttPublish1();
-
+    
   }
   
   if (dataReceived.mac[0] == 6 || dataReceived.mac[0] == 16 || dataReceived.mac[0] == 26 || dataReceived.mac[0] == 36 || dataReceived.mac[0] == 46 || dataReceived.mac[0] == 56 || dataReceived.mac[0] == 66 || dataReceived.mac[0] == 76 || dataReceived.mac[0] == 86 || dataReceived.mac[0] == 96 || dataReceived.mac[0] == 106 || dataReceived.mac[0] == 116 || dataReceived.mac[0] == 126 || dataReceived.mac[0] == 136 || dataReceived.mac[0] == 146 || dataReceived.mac[0] == 156 || dataReceived.mac[0] == 166 || dataReceived.mac[0] == 176 || dataReceived.mac[0] == 186 || dataReceived.mac[0] == 196 || dataReceived.mac[0] == 206 || dataReceived.mac[0] == 216 || dataReceived.mac[0] == 226 || dataReceived.mac[0] == 236 || dataReceived.mac[0] == 246) // only accept data from certain devices.
@@ -284,4 +308,3 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
   }
   
 }
-
