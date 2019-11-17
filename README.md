@@ -6,7 +6,39 @@ My testing shows 6 bytes (5 different sensor's data + device indentifier using 1
 
 Most suitable use cases - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
+Required Hardware Links:
 
+ESP8266:
+
+https://www.ebay.com/itm/ESP8266-ESP-12E-Wifi-Serial-Wireless-Transceiver-Remote-Port-Network-Development/323838950930?hash=item4b664e3e12:g:BZcAAOSw72JdCyNR
+
+DC-DC buck regulator:
+
+https://www.ebay.com/itm/10PCS-HT7333-A-7333-A-HT7333-HT7333A-1-TO92-Low-Power-Consumption-v-K7T/323963188059?hash=item4b6db5f35b:g:mIYAAOSwLWhbTbMp
+
+Coin Cell battery:
+
+https://www.ebay.com/itm/16-pcs-LIR2450-Li-ion-3-6V-Volt-Rechargeable-Button-Cell-Coin-Battery-US-Stock/153292477462?hash=item23b0f19416:g:P6cAAOSwAuNW6njZ
+
+Battery holder:
+
+https://www.ebay.com/itm/PCB-Hole-Plugging-Type-CR-LIR2450-Button-Cell-Battery-Holder-5-Pcs-Black-J7J1/253626265024?epid=1549407330&hash=item3b0d4dadc0:g:mW4AAOSw-W9a-9m~
+
+Solar Cell:
+
+https://www.ebay.com/itm/10pcs-5V-30mA-Micro-Mini-Power-Solar-Cells-Panel-Board-Set-For-DIY-Toy-53-30mm/352673192324?_trkparms=aid%3D555018%26algo%3DPL.SIM%26ao%3D1%26asc%3D61112%26meid%3D200eec1edfcf4fbcbb5b66d5e3fa5118%26pid%3D100005%26rk%3D3%26rkt%3D12%26mehot%3Dpf%26sd%3D333302663283%26itm%3D352673192324%26pmt%3D1%26noa%3D0%26pg%3D2047675&_trksid=p2047675.c100005.m1851
+
+Battery charger:
+
+https://www.ebay.com/itm/2X-1A-5V-TP4056-Lithium-Battery-Charging-Module-USB-Board-Electronic-Componen-LL/372528382545?hash=item56bc6c0251:g:UHIAAOSwmRNauwg0
+
+USB connectors:
+
+https://www.ebay.com/itm/5-10-20Pcs-USB2-0-Type-A-Plug-4-pin-Male-Female-Adapter-Connector-Plastic-Cover/183819336730?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649
+
+https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LEDs-Night-Light-USB-Lamp-for-PC-Laptop-Reading/233145266453?var=532628409387&hash=item36488a7115:g:Cl8AAOSwnDRcctLK
+
+https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-for-PC-Laptop-Reading-YDF/283574068369?hash=item420654e491&var&_trkparms=ispr%3D1&enc=AQAEAAADQKvsXIZtBqdkfsZsMtzFbFsbX3WcW5fmB%2Fx7ZbaZTyext08DotvCxRVjaZ6YwURjfcf59trbU5xcCNlTsKXviwRVaYBpDsthwh6vfd%2FLBouQzW46TvMRdyocf5bQ2%2F2rFJ8ux4CNElpH6dfmSdZDX0GfPKI09XyV6j2O7QsgRrTTsXkHKg2balQEebFXcWbQzc0fz%2BevUeTKhTBvboIt8OflVYDVO74G9XZnEd4i6GMo9sHa2gG0Y31ISoo2w0AMc0NpcpZDwXENd2%2BwMn2UIcsv%2FRgWcDToFjPntxfCPqpQL4eOAkDM2Vlup3liKhLNwc2XBWyHeEeqHWXNgocpA0ZTzkNo11%2Fj2ERjj%2FJbdD2meaDbiKnf0oydXOkLPnHbW3hAMMfqhGlojNhpuMxy%2Bx2REEOlfyEpeIElp4CygbpbUOANi4pWQAHDe5LX2p6TF0jmpRimytt48Mi%2FKQZSx2KeNFrPIb31RdLXfxb7MajCUBqm8%2BZwVnQu9LrywIB6C7jf7Wa7PESjCPiY7Bo6cUy3Wdmiry0z7a40VLYdjoAEgSse5TIKxZH%2FcV%2BbMOviW4WPCswEW5BySiMUNXrgN4KOpPmYhoBkyzCFMOK%2B3a3nk8WBbLS4F0dAbdlv2nDyLmuK05L39ky3v2yvmxfxMAX4JSvx0w1P4IABXl6zg30EiPg85Wm6GZjxtZDnlMuWuvOvGWEQQRmJ7Sams0nsEt5PwiXtA%2B5oqF0jWrumzvuYa%2F80aEp9b5HAQc5ugYJiBP7efX%2BdrMVOhu41r8tZXKDlX1IrsWmEJvU2ng7FJLwM%2FXiiUqZ14fvm04tmaJNOnv42aydTFsvDihWKMRx9JMxb4S%2BXIknbjvSebdeqBBq2WieSt%2F8OwcwfdiyoSQ6DvbDKZL4W7%2FAgrBnHHm%2FygJ9hT1h%2BE2uoPAYnkzNYvtuG60qzoSUxcFQIQQPxfc5Wukhvw2%2F5m5%2FdDtyttNqfm6iZlYCJTzTHDXSERO81PV6VaXgpGIEiPamQtG2%2FlIcRjehaux7VZ0Jma0Hdnfu2PeCbC%2F2XV1XOIBRBJFMzicQ55BYjQ5TdGyz3QxxZin3QIyWKzOyY0JR7UbthiLm%2Bwhk%3D&checksum=283574068369a6003252f5bd4b51818e8b067c33d9f6
 
 # uMQTTBroker
 MQTT Broker library for ESP8266 Arduino
