@@ -16,6 +16,10 @@ DC-DC buck regulator:
 
 https://www.ebay.com/itm/10PCS-HT7333-A-7333-A-HT7333-HT7333A-1-TO92-Low-Power-Consumption-v-K7T/323963188059?hash=item4b6db5f35b:g:mIYAAOSwLWhbTbMp
 
+Lifepo4 battery (Buck regulator above not needed, can not be charge from solar using TP-4056 directly):
+
+https://www.ebay.com/itm/8Pcs-Soshine-3-2V-LiFePO4-10440-AAA-Battery-UM4-FR03-E92-280mAh-Rechargeable-37/163902644062?hash=item26295bdf5e:g:AksAAOSwed9doUB1
+
 Coin Cell battery:
 
 https://www.ebay.com/itm/16-pcs-LIR2450-Li-ion-3-6V-Volt-Rechargeable-Button-Cell-Coin-Battery-US-Stock/153292477462?hash=item23b0f19416:g:P6cAAOSwAuNW6njZ
