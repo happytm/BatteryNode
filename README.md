@@ -1,4 +1,4 @@
-# Low Power coin cell sensors
+# Low Power coin low cost sensors Network
 
 Low battery powered ESP8266 devices using Adhoc Network protocol described by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker.
 
