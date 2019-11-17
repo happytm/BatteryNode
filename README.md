@@ -32,6 +32,32 @@ Battery charger:
 
 https://www.ebay.com/itm/2X-1A-5V-TP4056-Lithium-Battery-Charging-Module-USB-Board-Electronic-Componen-LL/372528382545?hash=item56bc6c0251:g:UHIAAOSwmRNauwg0
 
+Environment sensor:
+
+https://www.ebay.com/itm/Temperature-and-Pressure-BME280-Sensor-Module-Voltage1-71V-3-6V/323861991809?hash=item4b67add181:g:H7UAAOSwDYxbvcJ6
+
+Presene sensor:
+
+https://www.ebay.com/itm/5Pcs-RCWL-0516-Microwave-Radar-Sensor-Human-Body-Induction-Switch-Module-Output/192292834493?epid=24018078027&hash=item2cc58bccbd:g:peAAAOSwGY1ZppCB
+
+Distance sensor:
+
+https://www.ebay.com/itm/1PC-Ultrasonic-Module-HC-SR04-Distance-Measuring-Transducer-Sensor-for-Arduino/192696689086?hash=item2cdd9e21be:g:dioAAOSw3IVdgFfz
+
+Soil moisture sensor:
+
+https://www.ebay.com/itm/Analog-Capacitive-Soil-Moisture-Sensor-V1-2-Corrosion-Resistant-With-Cable-Wire/202321853501?epid=14021158393&hash=item2f1b527c3d:g:3QIAAOSwiHRbrt5k
+
+Door/Window sensor:
+
+https://www.ebay.com/itm/5PCS-SW-460-Tilt-Sensor-Electronic-Vibration-Sensor-Switch-Precise-CF-NEW/141975960158?hash=item210e6d3a5e:g:eEQAAOSwj0NUkX7K
+
+https://www.ebay.com/itm/10PCS-SW-100-Electronic-Vibration-Sensor-Switch-Tilt-Sensor-for-Arduin-NMCA/283596557033?_trkparms=aid%3D555018%26algo%3DPL.SIM%26ao%3D1%26asc%3D61112%26meid%3D5f4c53935c40422c92e36ef62365cbb3%26pid%3D100005%26rk%3D1%26rkt%3D12%26mehot%3Dsb%26sd%3D132947034808%26itm%3D283596557033%26pmt%3D1%26noa%3D0%26pg%3D2047675&_trksid=p2047675.c100005.m1851
+
+https://www.ebay.com/itm/20Pcs-vibration-switch-shock-vibration-sensor-shaked-switch-5-5mm-5-5mm-18ODHVXI/392521864551?_trkparms=aid%3D555018%26algo%3DPL.SIM%26ao%3D1%26asc%3D61112%26meid%3D68cbba8061bc4e4fb0bc521bd469c8aa%26pid%3D100005%26rk%3D1%26rkt%3D12%26mehot%3Dco%26sd%3D362797773253%26itm%3D392521864551%26pmt%3D1%26noa%3D0%26pg%3D2047675&_trksid=p2047675.c100005.m1851
+
+https://www.ebay.com/itm/5pcs-A3144-A3144E-OH3144E-Hall-Effect-Sensor-SWITCHES-TO-92UA-3pin-SIP-NEW-CF/141975967989?hash=item210e6d58f5:g:P4AAAOSw54xUYBLp
+
 USB connectors:
 
 https://www.ebay.com/itm/5-10-20Pcs-USB2-0-Type-A-Plug-4-pin-Male-Female-Adapter-Connector-Plastic-Cover/183819336730?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649
