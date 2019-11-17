@@ -36,6 +36,10 @@ Environment sensor:
 
 https://www.ebay.com/itm/Temperature-and-Pressure-BME280-Sensor-Module-Voltage1-71V-3-6V/323861991809?hash=item4b67add181:g:H7UAAOSwDYxbvcJ6
 
+Light/Color/Gesture/Proximity sensor:
+
+https://www.ebay.com/itm/1pcs-GY-9960-3-3-APDS-9960-RGB-Infrared-IR-Gesture-Sensor-Motion-Direction-Recog/183447396095?hash=item2ab6511eff:g:LQoAAOSwbQZbfmeH
+
 Presene sensor:
 
 https://www.ebay.com/itm/5Pcs-RCWL-0516-Microwave-Radar-Sensor-Human-Body-Induction-Switch-Module-Output/192292834493?epid=24018078027&hash=item2cc58bccbd:g:peAAAOSwGY1ZppCB
