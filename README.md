@@ -8,9 +8,14 @@ Most suitable use cases - Weather Station, Door/Window sensor, Water/Oil tank le
 
 Tested with following MQTT front end software:
 
-MQTT Dash :      https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US
-MQTT Dashboard : https://play.google.com/store/apps/details?id=com.thn.iotmqttdashboard&hl=en_US
-IOT MQTT Panel : https://play.google.com/store/apps/details?id=snr.lab.iotmqttpanel.prod&hl=en_US
+MQTT Dash :      
+https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US
+
+MQTT Dashboard : 
+https://play.google.com/store/apps/details?id=com.thn.iotmqttdashboard&hl=en_US
+
+IOT MQTT Panel : 
+https://play.google.com/store/apps/details?id=snr.lab.iotmqttpanel.prod&hl=en_US
 
 Required Hardware Links:
 
