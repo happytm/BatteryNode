@@ -1,4 +1,4 @@
-# Low Power low cost sensors IOT Network
+# Low Power low cost sensors, standalone IOT Network (could be used with any android or ios MQTT front end software).
 
 Low battery powered ESP8266 devices using Adhoc Network protocol described by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker.
 
