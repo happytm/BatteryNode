@@ -1,6 +1,6 @@
-# Low Power low cost sensors, standalone IOT Network (could be used with any android or ios MQTT front end software).
+# Very simple Low Power low cost sensors, Standalone IOT Network (could be used with any android or ios MQTT front end software).
 
-Low battery powered ESP8266 devices using Adhoc Network protocol described by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker.
+Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker.
 
 My testing shows 6 bytes (5 different sensor's data + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds.
 
