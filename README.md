@@ -22,51 +22,51 @@ https://play.google.com/store/apps/details?id=snr.lab.iotmqttpanel.prod&hl=en_US
 
 https://www.ebay.com/itm/ESP8266-ESP-12E-Wifi-Serial-Wireless-Transceiver-Remote-Port-Network-Development/323838950930?hash=item4b664e3e12:g:BZcAAOSw72JdCyNR
 
-DC-DC buck regulator:
+### DC-DC buck regulator:
 
 https://www.ebay.com/itm/10PCS-HT7333-A-7333-A-HT7333-HT7333A-1-TO92-Low-Power-Consumption-v-K7T/323963188059?hash=item4b6db5f35b:g:mIYAAOSwLWhbTbMp
 
-Lifepo4 battery (Buck regulator above not needed, can not be charge from solar using TP-4056 directly):
+### Lifepo4 battery (Buck regulator above not needed, can not be charge from solar using TP-4056 directly):
 
 https://www.ebay.com/itm/8Pcs-Soshine-3-2V-LiFePO4-10440-AAA-Battery-UM4-FR03-E92-280mAh-Rechargeable-37/163902644062?hash=item26295bdf5e:g:AksAAOSwed9doUB1
 
-Coin Cell battery:
+### Coin Cell battery:
 
 https://www.ebay.com/itm/16-pcs-LIR2450-Li-ion-3-6V-Volt-Rechargeable-Button-Cell-Coin-Battery-US-Stock/153292477462?hash=item23b0f19416:g:P6cAAOSwAuNW6njZ
 
-Battery holder:
+### Battery holder:
 
 https://www.ebay.com/itm/PCB-Hole-Plugging-Type-CR-LIR2450-Button-Cell-Battery-Holder-5-Pcs-Black-J7J1/253626265024?epid=1549407330&hash=item3b0d4dadc0:g:mW4AAOSw-W9a-9m~
 
-Solar Cell:
+### Solar Cell:
 
 https://www.ebay.com/itm/10pcs-5V-30mA-Micro-Mini-Power-Solar-Cells-Panel-Board-Set-For-DIY-Toy-53-30mm/352673192324?_trkparms=aid%3D555018%26algo%3DPL.SIM%26ao%3D1%26asc%3D61112%26meid%3D200eec1edfcf4fbcbb5b66d5e3fa5118%26pid%3D100005%26rk%3D3%26rkt%3D12%26mehot%3Dpf%26sd%3D333302663283%26itm%3D352673192324%26pmt%3D1%26noa%3D0%26pg%3D2047675&_trksid=p2047675.c100005.m1851
 
-Battery charger:
+### Battery charger:
 
 https://www.ebay.com/itm/2X-1A-5V-TP4056-Lithium-Battery-Charging-Module-USB-Board-Electronic-Componen-LL/372528382545?hash=item56bc6c0251:g:UHIAAOSwmRNauwg0
 
-Environment sensor:
+### Environment sensor:
 
 https://www.ebay.com/itm/Temperature-and-Pressure-BME280-Sensor-Module-Voltage1-71V-3-6V/323861991809?hash=item4b67add181:g:H7UAAOSwDYxbvcJ6
 
-Light/Color/Gesture/Proximity sensor:
+### Light/Color/Gesture/Proximity sensor:
 
 https://www.ebay.com/itm/1pcs-GY-9960-3-3-APDS-9960-RGB-Infrared-IR-Gesture-Sensor-Motion-Direction-Recog/183447396095?hash=item2ab6511eff:g:LQoAAOSwbQZbfmeH
 
-Presene sensor:
+### Presene sensor:
 
 https://www.ebay.com/itm/5Pcs-RCWL-0516-Microwave-Radar-Sensor-Human-Body-Induction-Switch-Module-Output/192292834493?epid=24018078027&hash=item2cc58bccbd:g:peAAAOSwGY1ZppCB
 
-Distance sensor:
+### Distance sensor:
 
 https://www.ebay.com/itm/1PC-Ultrasonic-Module-HC-SR04-Distance-Measuring-Transducer-Sensor-for-Arduino/192696689086?hash=item2cdd9e21be:g:dioAAOSw3IVdgFfz
 
-Soil moisture sensor:
+### Soil moisture sensor:
 
 https://www.ebay.com/itm/Analog-Capacitive-Soil-Moisture-Sensor-V1-2-Corrosion-Resistant-With-Cable-Wire/202321853501?epid=14021158393&hash=item2f1b527c3d:g:3QIAAOSwiHRbrt5k
 
-Door/Window sensor:
+### Door/Window sensor:
 
 https://www.ebay.com/itm/5PCS-SW-460-Tilt-Sensor-Electronic-Vibration-Sensor-Switch-Precise-CF-NEW/141975960158?hash=item210e6d3a5e:g:eEQAAOSwj0NUkX7K
 
@@ -76,7 +76,7 @@ https://www.ebay.com/itm/20Pcs-vibration-switch-shock-vibration-sensor-shaked-sw
 
 https://www.ebay.com/itm/5pcs-A3144-A3144E-OH3144E-Hall-Effect-Sensor-SWITCHES-TO-92UA-3pin-SIP-NEW-CF/141975967989?hash=item210e6d58f5:g:P4AAAOSw54xUYBLp
 
-USB connectors:
+### USB connectors:
 
 https://www.ebay.com/itm/5-10-20Pcs-USB2-0-Type-A-Plug-4-pin-Male-Female-Adapter-Connector-Plastic-Cover/183819336730?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649
 
