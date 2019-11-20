@@ -6,7 +6,7 @@ My testing shows 6 bytes (5 different sensor's data + device indentifier using 1
 
 Most suitable use cases - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
-## Tested with following MQTT front end software:
+## Tested with following MQTT front end GUI client software:
 
 MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US
 
