@@ -6,7 +6,7 @@ My testing shows 6 bytes (5 different sensor's data + device indentifier using 1
 
 Most suitable use cases - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
-Tested with following MQTT front end software:
+## Tested with following MQTT front end software:
 
 MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US
 
@@ -16,9 +16,9 @@ https://play.google.com/store/apps/details?id=com.thn.iotmqttdashboard&hl=en_US
 IOT MQTT Panel : 
 https://play.google.com/store/apps/details?id=snr.lab.iotmqttpanel.prod&hl=en_US
 
-Required Hardware Links:
+## Required Hardware Links:
 
-ESP8266:
+### ESP8266:
 
 https://www.ebay.com/itm/ESP8266-ESP-12E-Wifi-Serial-Wireless-Transceiver-Remote-Port-Network-Development/323838950930?hash=item4b664e3e12:g:BZcAAOSw72JdCyNR
 
