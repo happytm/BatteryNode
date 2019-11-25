@@ -1,11 +1,38 @@
+//Data exchange time in simulated sensors mode (no sensors physically connected).
+//Duplex mode =  134 milliseconds, One way = 52 milliseonds.
+
 ADC_MODE(ADC_VCC); //vcc read-mode
 //#define SLEEP_SECS 15 * 60 // 15 minutes
 
-#define DUPLEX    true   // true if two way communication required with controller (around 150 milliseconds as opposed to 60 milliseonds if false).
+#define DUPLEX    true    // true if two way communication required with controller (around 130 milliseconds of uptime as opposed to 60 milliseonds if false).
+
+//##########################################################
+
+# if DUPLEX 
+// CRC function used to ensure data validity
+uint32_t calculateCRC32(const uint8_t *data, size_t length);
+
+
+
+// Structure which will be stored in RTC memory.
+// First field is CRC32, which is calculated based on the
+// rest of structure contents.
+// Any fields can go after CRC32.
+// We use byte array as an example.
+struct {
+  uint32_t crc32;
+  byte data[6];
+} rtcData;
+#endif
+//###########################################################
+
 
 uint8 gateway[32] = "ESP";   // This name has to be same as main controller's ssid.
 int apChannel = 7;           // This channel has to be same as main controller's channel & AP where main controller is connected for internet.
-int sleepTime = 100;         // Sleep time in seconds 
+int sleepTime = 100;         // Sleep time in seconds.
+
+
+ 
 // use any of following for devie ID ending with 6.
 // 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
 
@@ -23,28 +50,37 @@ int light;
 //int motion = 0;       // 0 to 6 (0=no motion, 1=up, 2=down, 3=right, 4=left, 5=on, 6=off).
 
 uint8_t sensorData[6] = {device, voltage, temperature, humidity, pressure, light};
-uint8_t sensorType[6] = {device, 6, 16, 26, 36, 46}; // Change last 4 bytes according to sensot type used.
+
+
+
+int sensorType1;// = 16;
+int sensorType2;// = 26;
+int sensorType3;// = 36;
+int sensorType4;// = 46;
+
+uint8_t sensorType[6] = {device, 6, sensorType1, sensorType2, sensorType3, sensorType4}; // Change last 4 bytes according to sensot type used.
 // Predefined sensor types table is below:
 // volatage = 6, temperature = 16, humidity= 26, pressure= 36, light= 46, OpenClose = 56,
 // level = 66, presence = 76, motion = 86 etc.
 
-//uint8_t securityCode[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at controller to compare.
-int receivedDevice;
-int receivedCommand;  // digitalwrite, analogwrite, pin setup etc.
-int pinNumber;              // gpio pin number 1 to 16
-int pinValue;         // 0 or 1 in case of digitalwrte or 0 to 255 in case of analogwrite.
-int setSleeptime;  // 0 to 255 command to set sleep time variable in minutes for this device.
-int setDefines;    // Set Defines (whether to run ertain code to run WiFi & OTA options etc.).
+//uint8_t securityCode[6] = {device, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at controller to compare.
 
-int ledPin = 12;
+int receivedDevice;
+int receivedCommand;  // digitalwrite, analogwrite, digitalRead, analogRead, neopixel, pin setup etc.
+int pinNumber;        // gpio pin number 1 to 5 & 12 to 16.
+int pinValue;         // 0 or 1 in case of digitalwrte, 0 to 255 in case of analogwrite or 0 to 255in case of pwm value for RED neopixel.
+int extraValue1;      // 0 to 255 - Set pwm value for GREEN neopixel.
+int extraValue2;      //0 to 255 - Set pwm value for BLUE neopixel.
+
+//int ledPin = 12;
 //int lowVolt = 0;
 //int highVolt = 330;   // highest voltage of battery used multiply by 100.
 int warnVolt = 130;    // Start warning when battery level goes below 2.60 volts (260/2 = 130).
 unsigned long lastMillis;
 unsigned long passedMillis;
 
-
 #include <ESP8266WiFi.h>
+
 
 
 //============Do not need user configuration from here on============================
@@ -52,16 +88,57 @@ unsigned long passedMillis;
 void setup() {
   
   // WiFi.disconnect();
- // WiFi.scanDelete();
+  WiFi.scanDelete();  //remove previous scan data from memory
   Serial.begin(115200);
+  Serial.println(&WiFi.BSSIDstr(0)[0]);
  /*
   wifi_set_macaddr(STATION_IF, securityCode);
   probeRequest();
   Serial.print("Security Code sent to controller: ");
   Serial.println(WiFi.macAddress());
   */
+  
+// Read struct from RTC memory
+if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
+    
+    //Serial.println("Read: ");
+    //printMemory();
+    Serial.println();
+    uint32_t crcOfData = calculateCRC32((uint8_t*) &rtcData.data[0], sizeof(rtcData.data));
+    Serial.print("CRC32 of data: ");
+    Serial.println(crcOfData, HEX);
+    Serial.print("CRC32 read from RTC: ");
+    Serial.println(rtcData.crc32, HEX);
+    if (crcOfData != rtcData.crc32) {
+      Serial.println("CRC32 in RTC memory doesn't match CRC32 of data. Data is probably invalid!");
+    } else {
+      Serial.println("CRC32 check ok, data is probably valid.");
+     
+    }
+  }
+    int sensorType1;// = 16;
+    int sensorType2;// = 26;
+    int sensorType3;// = 36;
+    int sensorType4;// = 46;
+
+    sensorType1 = rtcData.data[1] ;
+    sensorType2 = rtcData.data[2] ;
+    sensorType3 = rtcData.data[3] ;
+    sensorType4 = rtcData.data[4] ;
+
+    uint8_t sensorType[6] = {device, 6, sensorType1, sensorType2, sensorType3, sensorType4}; // Change last 4 bytes according to sensot type used.
+    
+    Serial.print("Sensor Type 1 : ");
+    Serial.println(sensorType1);
+    Serial.print("Sensor Type 2 : ");
+    Serial.println(sensorType2);
+    Serial.print("Sensor Type 3 : ");
+    Serial.println(sensorType3);
+    Serial.print("Sensor Type 4 : ");
+    Serial.println(sensorType4);
+    
   wifi_set_macaddr(STATION_IF, sensorType);
-   probeRequest();
+  probeRequest();
   Serial.print("sensorType values sent to controller: ");
   Serial.println(WiFi.macAddress());
   
@@ -77,7 +154,7 @@ void setup() {
   
 //  if (WiFi.BSSIDstr(0)[16] == '1')  {   //match last digit of gateway's mac id with this devices's ID here.
   if (receivedDevice == device)  {   //match first byte of gateway's mac id with this devices's ID here.
-
+    
     Serial.println();
     Serial.print("This Device MAC ID is: ");
     Serial.println(WiFi.macAddress());
@@ -89,30 +166,122 @@ void setup() {
     Serial.println(WiFi.channel(0));
     Serial.print("Message sent to Controller is: ");
     Serial.println(WiFi.macAddress());
-    Serial.print("Message received from Controller is: ");
+    Serial.print("Message received from Controller (HEX format)is: ");
     Serial.println(&WiFi.BSSIDstr(0)[0]);
     
     uint8_t* receivedData[6]=  {WiFi.BSSID(0)};
-   
+    Serial.println("Message (DEC format): ");
+    
     receivedDevice = WiFi.BSSID(0)[0];
+    Serial.print("Received Device: ");
     Serial.println(receivedDevice);
     receivedCommand = WiFi.BSSID(0)[1];
+    Serial.print("receivedCommand: ");
     Serial.println(receivedCommand);
     pinNumber = WiFi.BSSID(0)[2];
+    Serial.print("pinNumber: ");
     Serial.println(pinNumber);
     pinValue = WiFi.BSSID(0)[3];
+    Serial.print("pinValue: ");
     Serial.println(pinValue);
-    setSleeptime = WiFi.BSSID(0)[4];
-    Serial.println(setSleeptime);
-    setDefines = WiFi.BSSID(0)[5];
-    Serial.println(setDefines);
+    extraValue1 = WiFi.BSSID(0)[4];
+    Serial.print("extraValue1: ");
+    Serial.println(extraValue1);
+    extraValue2 = WiFi.BSSID(0)[5];
+    Serial.print("extraValue2: ");
+    Serial.println(extraValue2);
+    
+//############################################################
+
+ 
+  // Generate new data set for the struct
+ // for (size_t i = 0; i < sizeof(rtcData.data); i++) {
+   if (receivedDevice = device)   {
+     if (receivedCommand == 6)      {
+    rtcData.data[1] = pinNumber;
+    rtcData.data[2] = pinValue;
+    rtcData.data[3] = extraValue1;
+    rtcData.data[4] = extraValue2;
+     }
+   }
+
+   // Update CRC32 of data
+  rtcData.crc32 = calculateCRC32((uint8_t*) &rtcData.data[0], sizeof(rtcData.data));
+  // Write struct to RTC memory
+  if (ESP.rtcUserMemoryWrite(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
+   // Serial.println("Write: ");
   
+    Serial.println();
+  }
+
+    
+    if (sensorType1 == 16 || sensorType1 == 26 || sensorType1 == 36 || 
+        sensorType2 == 16 || sensorType2 == 26 || sensorType2 == 36 || 
+        sensorType3 == 16 || sensorType3 == 26 || sensorType3 == 36 || 
+        sensorType4 == 16 || sensorType4 == 26 || sensorType4 == 36) 
+        
+   {             
+     #define BMX280   true
+     Serial.println();
+     Serial.println("Activate code for BME280");    
+    }  
+    
+    if (sensorType1 == 46 || sensorType2 == 46 || sensorType3 == 46 || sensorType4 == 46)  
+    
+    {
+    #define APDS9960   true
+    Serial.println("Activate code for APDS9960");
+    } 
+    
+    if (sensorType1 == 56 || sensorType2 == 56 || sensorType3 == 56 || sensorType4 == 56)  
+    {
+    #define HALLSENSOR   true  
+    Serial.println("Activate code for OpenClose hall sensor");
    
-      
+    
+    } 
+    
+    if (sensorType1 == 66 || sensorType2 == 66 || sensorType3 == 66 || sensorType4 == 66)  
+    {
+    #define DISTANCESENSOR(HCSR04)   true
+    Serial.println("Activate code for distance sensor");
+    
+    
+     } 
      
+     if (sensorType1 == 76 || sensorType2 == 76 || sensorType3 == 76 || sensorType4 == 76)  
+    {
+    #define PRESENCESENSOR   true  
+    Serial.println("Activate code for presene sensor");
+    
+    
+     } 
+
+     if (sensorType1 == 86 || sensorType2 == 86 || sensorType3 == 86 || sensorType4 == 86)  
+    {
+    #define RCWL-0516   true
+    Serial.println("Activate code for motion sensor");
+    
+
+       }    
+
+     if (sensorType1 == 96 || sensorType2 == 96 || sensorType3 == 96 || sensorType4 == 96)  
+    {
+    #define SOMESENSOR   true
+    Serial.println("Activate code for some other sensor");
+    Serial.println();
+
+       }  
+       
+  
+  
+
+//###############################################################
+
+    
   } else {
     Serial.println("Message from controller did not arrive, let me try again to get message data........................................");
-    ESP.restart();
+   // ESP.restart();
 
    }
 
@@ -122,6 +291,7 @@ void setup() {
   
   WiFi.hostname("Livingroom");
   Serial.println();
+  
 }
 
 // Setup ends here
@@ -130,60 +300,14 @@ void setup() {
 
 void loop() {
 
+  receiveCommand();
+
+  //  wifi_set_macaddr(STATION_IF, sensorType);
+  //  probeRequest();
+  //  sensorValues();
   //  probeRequest();
   //  yield();
-   #if DUPLEX
- 
-   if (pinNumber >= 0 && pinNumber <= 5)   {
-     
-     if (pinValue >= 2 && pinValue <= 256) { 
-     
-      Serial.print("analogWrite");
-      Serial.print("(");
-      Serial.print(pinNumber);
-      Serial.print(",");
-      Serial.print(pinValue);
-      Serial.println(");");
-      Serial.println();
-      Serial.println();
-      
-        } else if (pinValue == 0 || pinValue == 1)  {
    
-      Serial.print("digitalWrite");
-      Serial.print("(");
-      Serial.print(pinNumber);
-      Serial.print(",");
-      Serial.print(pinValue);
-      Serial.println(");");
-      Serial.println();
-      Serial.println();
-        }
-    } else if (pinNumber >= 11 && pinNumber <= 16) {
-        
-      if (pinValue >= 2 && pinValue <= 256) { 
-     
-      Serial.print("analogWrite");
-      Serial.print("(");
-      Serial.print(pinNumber);
-      Serial.print(",");
-      Serial.print(pinValue);
-      Serial.println(");");
-      Serial.println();
-      Serial.println();
-      
-        } else if (pinValue == 0 || pinValue == 1)  {
-    
-      Serial.print("digitalWrite");
-      Serial.print("(");
-      Serial.print(pinNumber);
-      Serial.print(",");
-      Serial.print(pinValue);
-      Serial.println(");");
-      Serial.println();
-      Serial.println();
-        }
-    }
-    #endif
 
   Serial.print("Total time I spent before going to sleep: ");
   Serial.println(millis());
@@ -261,3 +385,100 @@ void probeRequest()  {
   lastMillis = millis();
   Serial.println();
 }
+
+#if DUPLEX
+void receiveCommand()   {
+
+if (receivedDevice = device)   {
+  
+   if ((pinNumber >= 1 && pinNumber <= 5) || (pinNumber >= 12 && pinNumber <= 16))   { 
+    if (receivedCommand == 1)    {
+
+      if (pinValue == 1) 
+      { 
+      digitalWrite(pinNumber, HIGH);
+      Serial.print("digitalWrite");
+      Serial.print("(");
+      Serial.print(pinNumber);
+      Serial.print(",");
+      Serial.print(pinValue);
+      Serial.println(");");
+      Serial.println();
+      Serial.println();
+      } else if (pinValue == 0) 
+      {
+      digitalWrite(pinNumber, LOW);
+      Serial.print("digitalWrite");
+      Serial.print("(");
+      Serial.print(pinNumber);
+      Serial.print(",");
+      Serial.print(pinValue);
+      Serial.println(");");
+      Serial.println();
+      Serial.println();
+      } else 
+      {
+      analogWrite(pinNumber, pinValue);
+      Serial.print("analogWrite");
+      Serial.print("(");
+      Serial.print(pinNumber);
+      Serial.print(",");
+      Serial.print(pinValue);
+      Serial.println(");");
+      Serial.println();
+      Serial.println(); 
+      }
+    }  
+  /*
+   } else if (receivedCommand == 2)    {
+      // TO DO - write code for neopixel
+      analogWrite(pinNumber, pinValue);
+      Serial.print("analogWrite");
+      Serial.print("(");
+      Serial.print(pinNumber);
+      Serial.print(",");
+      Serial.print(pinValue);
+      Serial.println(");");
+      Serial.println();
+      Serial.println();
+      } 
+      */
+  } else {
+    
+  if (receivedCommand == 7) { apChannel = pinNumber; Serial.print("Access Point Channel: "); Serial.println(apChannel);
+  } else if (receivedCommand == 8) { sleepTime = pinNumber; Serial.print("Sleep Time Seonds: "); Serial.println(sleepTime);
+  } else if  (receivedCommand == 9)                                                                                                                                                                                                                                                                                                                            {
+            
+            
+            // TO DO
+
+
+            
+         }
+    
+      }    
+    }
+   }
+  #endif
+
+//###############################################################
+#if DUPLEX
+ uint32_t calculateCRC32(const uint8_t *data, size_t length) {
+  uint32_t crc = 0xffffffff;
+  while (length--) {
+    uint8_t c = *data++;
+    for (uint32_t i = 0x80; i > 0; i >>= 1) {
+      bool bit = crc & 0x80000000;
+      if (c & i) {
+        bit = !bit;
+      }
+      crc <<= 1;
+      if (bit) {
+        crc ^= 0x04c11db7;
+      }
+    }
+  }
+  return crc;
+}
+#endif
+
