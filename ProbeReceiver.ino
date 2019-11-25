@@ -17,8 +17,8 @@
 */
 int apChannel = 7;
 char apssid[] = "ESP";
-char ssid[] = "HTM1";     // your network SSID (name)
-char pass[] = "kb1henna"; // your network password
+char ssid[] = "";     // your network SSID (name)
+char pass[] = ""; // your network password
 //bool WiFiAP = false;      // Do yo want the ESP as AP?
 
 int device;
