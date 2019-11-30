@@ -1,14 +1,17 @@
-# Very simple Low Power low cost sensors, Standalone IOT Network (could be used with any android or ios MQTT front end software).
+# Very simple DIY Low Power low cost sensors, Standalone IOT Network (could be used with any android or ios MQTT front end software).
 
 Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker.
 
-My testing shows 6 bytes (5 different sensor's data + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds.
+This code create small standalone network (possibly 25) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network fashion.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
 
-Most suitable use cases - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
+My testing shows 6 bytes (4 different sensor's data + battery voltage using 1 byte + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
+
+Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
+
 
 ## Tested with following MQTT front end GUI client software:
 
-MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US
+MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US (preffered).
 
 MQTT Dashboard : 
 https://play.google.com/store/apps/details?id=com.thn.iotmqttdashboard&hl=en_US
@@ -26,7 +29,7 @@ https://www.ebay.com/itm/ESP8266-ESP-12E-Wifi-Serial-Wireless-Transceiver-Remote
 
 https://www.ebay.com/itm/10PCS-HT7333-A-7333-A-HT7333-HT7333A-1-TO92-Low-Power-Consumption-v-K7T/323963188059?hash=item4b6db5f35b:g:mIYAAOSwLWhbTbMp
 
-### Lifepo4 battery (Buck regulator above not needed, can not be charge from solar using TP-4056 directly):
+### Lifepo4 battery (Buck regulator above not needed, can not be charged from solar using TP-4056 directly):
 
 https://www.ebay.com/itm/8Pcs-Soshine-3-2V-LiFePO4-10440-AAA-Battery-UM4-FR03-E92-280mAh-Rechargeable-37/163902644062?hash=item26295bdf5e:g:AksAAOSwed9doUB1
 
