@@ -1,85 +1,123 @@
-//Data exchange time in simulated sensors mode (no sensors physically connected).
-//Duplex mode =  134 milliseconds, One way = 52 milliseonds.
+/*
+Data exchange time in simulated sensors mode (no sensors physically connected).
+Duplex mode =  134 milliseconds, One way = 52 milliseonds.
+/************************************************************
+        Command structure:  (commands are issued via MQTT payload with topic name "command/"
 
+        Command1 = Device ID Number -       device ID must be 2 digits end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+                                            use any of following for devie ID ending with 6.
+                                            06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
+
+        Command2 = Command type  -     value 1 to 9 is reserved for following commands(must have 0 as first digit):
+                                       
+                                       01 = digitalWright or analogWrite.
+                                            Example command payload 36/01/00 0r 01/ for digitalWrite.
+                                            Example command payload 36/01/02 to 256/ for analogWrite.
+                                       02 = digitalRead.
+                                            Example command payload 36/02/01 to 05 or 12 to 16/ 
+                                       03 = analogRead, 
+                                       04=  Reserved, 
+                                       05 = Neopixel etc.
+                                            Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
+                                       06 = change sensoor types.First byte must be target device id and 
+                                            second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be changed according to hardware setup.
+                                            Example command payload 36/06/16/26/36/46/.
+                                      
+                                       07 = change apChannel, 
+                                       08 = change sleeptime. 
+                                            Example command payload 36/08/00 to 255/ (Sleep Time in minutes).  
+                                       09 = Activate alternative code for OTA,Wifimanager ETC.
+                                            Example command payload 36/09/00 or 01/(01 to activate alternative Code).
+                                           
+                                            value 10 to 20 is reserved for following commands:
+                                       10 = change define DUPLEX, 11 = change define SEURITY, 12 = change define OTA, 13 = change define uMQTTBROKER etc.
+                                   
+        Command3 = Command  pinNumber  -    pinNumber in case of command type 01 to 04 above. Neopixel LED number in case of command type 05.
+                                            Predefined number to represent value of command type 11 to 20 above.
+                                            00 or 01 to represent false/or true for defines in case of command type 21 to 30. 
+                                                        
+        Command4 = Command pinValue  -      00 or 255 in case of command type 01 (digitalWrite & analogWrite)  or RED neopixel value in case of command type 05.
+        
+        Command5 = Command extraValue1  -   00 to 255 for GREEN neopixel in case of command type 05                        
+                                            or sensorType value in case of command 06.
+        Command6 = Command extraValue1  -   00 to 255 for BLUE neopixel in case of command type 05 
+                                            or sensorType value in case of command 06. 
+                                   
+        *************************************************************/
+
+    
 ADC_MODE(ADC_VCC); //vcc read-mode
-//#define SLEEP_SECS 15 * 60 // 15 minutes
 
-#define DUPLEX    true    // true if two way communication required with controller (around 130 milliseconds of uptime as opposed to 60 milliseonds if false).
 
-//##########################################################
+#define DUPLEX            true    // true if two way communication required with controller (around 130 milliseconds of uptime as opposed to 60 milliseonds if false).
 
-# if DUPLEX 
+
+#if DUPLEX
+/*
+#define BME280SENSOR      false    // Temperature, Humidity & pressure.
+#define APDS9960SENSOR    false    // Light or Gesture.
+#define PHOTOSENSOR       false    // Light.
+#define OPENCLOSESENSOR   true     // Hall sensor,reed switch,ball switch or mercury switch.
+#define HCSR04SENSOR      false    // Distance.
+#define PIRSENSOR         true     // Presence detection alarm.
+#define RCWL0516SENSOR    true     // Presence detection alarm.
+*/
+
 // CRC function used to ensure data validity
 uint32_t calculateCRC32(const uint8_t *data, size_t length);
-
-
 
 // Structure which will be stored in RTC memory.
 // First field is CRC32, which is calculated based on the
 // rest of structure contents.
 // Any fields can go after CRC32.
 // We use byte array as an example.
+
 struct {
   uint32_t crc32;
   byte data[6];
+  int sleepTime;
+  int enableOTA = 0;
+  
 } rtcData;
 #endif
-//###########################################################
-
 
 uint8 gateway[32] = "ESP";   // This name has to be same as main controller's ssid.
 int apChannel = 7;           // This channel has to be same as main controller's channel & AP where main controller is connected for internet.
-int sleepTime = 100;         // Sleep time in seconds.
+int sleepTime;// = 100;         // Sleep time in seconds.
+int enableOTA;
 
-
- 
 // use any of following for devie ID ending with 6.
 // 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
 
-int device = 36;    // device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+int device = 36;    // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+//uint8_t securityCode[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at controller to compare.
 
-// Values to be sent to Gateway
-int voltage;
-int temperature;
-int humidity;
-int pressure;
-int light;
-//int openClose = 0;    // 0 or 1
-//int level;            // 0 to 255
-//int presence = 0;     // 0 or 1
-//int motion = 0;       // 0 to 6 (0=no motion, 1=up, 2=down, 3=right, 4=left, 5=on, 6=off).
-
-uint8_t sensorData[6] = {device, voltage, temperature, humidity, pressure, light};
-
-
-
-int sensorType1;// = 16;
-int sensorType2;// = 26;
-int sensorType3;// = 36;
-int sensorType4;// = 46;
+    
+int sensorType1 = 16;// Predefined sensor type table is below:
+int sensorType2 = 26;// volatage = 6, temperature = 16, humidity= 26,
+int sensorType3 = 36;// pressure= 36, light= 46, OpenClose = 56, level = 66,
+int sensorType4 = 46;// presence = 76, motion = 86, rain = 96 etc.
 
 uint8_t sensorType[6] = {device, 6, sensorType1, sensorType2, sensorType3, sensorType4}; // Change last 4 bytes according to sensot type used.
-// Predefined sensor types table is below:
-// volatage = 6, temperature = 16, humidity= 26, pressure= 36, light= 46, OpenClose = 56,
-// level = 66, presence = 76, motion = 86 etc.
+    
 
-//uint8_t securityCode[6] = {device, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at controller to compare.
+// Values to be sent to Gateway
+
+uint8_t sensorData[6];  // = {device, voltage, temperature, humidity, pressure, light};
 
 int receivedDevice;
 int receivedCommand;  // digitalwrite, analogwrite, digitalRead, analogRead, neopixel, pin setup etc.
-int pinNumber;        // gpio pin number 1 to 5 & 12 to 16.
-int pinValue;         // 0 or 1 in case of digitalwrte, 0 to 255 in case of analogwrite or 0 to 255in case of pwm value for RED neopixel.
-int extraValue1;      // 0 to 255 - Set pwm value for GREEN neopixel.
-int extraValue2;      //0 to 255 - Set pwm value for BLUE neopixel.
+int pinNumber;        // gpio pin number 1 to 5 & 12 to 16 or value for sensorType 3.
+int pinValue;         // 0 or 1 in case of digitalwrte, 0 to 255 in case of analogwrite or value for RED neopixel or value for sensorType 4.
+int extraValue1;      // 0 to 255 - value for GREEN neopixel or value for sensorType 5.
+int extraValue2;      // 0 to 255 - value for BLUE neopixel or value for sensorType 6.
 
-//int ledPin = 12;
-//int lowVolt = 0;
-//int highVolt = 330;   // highest voltage of battery used multiply by 100.
 int warnVolt = 130;    // Start warning when battery level goes below 2.60 volts (260/2 = 130).
 unsigned long lastMillis;
 unsigned long passedMillis;
 
 #include <ESP8266WiFi.h>
+
 
 
 
@@ -91,13 +129,14 @@ void setup() {
   WiFi.scanDelete();  //remove previous scan data from memory
   Serial.begin(115200);
   Serial.println(&WiFi.BSSIDstr(0)[0]);
- /*
+
+/* 
   wifi_set_macaddr(STATION_IF, securityCode);
   probeRequest();
   Serial.print("Security Code sent to controller: ");
   Serial.println(WiFi.macAddress());
-  */
-  
+ */ 
+#if DUPLEX
 // Read struct from RTC memory
 if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
     
@@ -116,18 +155,24 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
      
     }
   }
-    int sensorType1;// = 16;
-    int sensorType2;// = 26;
-    int sensorType3;// = 36;
-    int sensorType4;// = 46;
 
-    sensorType1 = rtcData.data[1] ;
-    sensorType2 = rtcData.data[2] ;
-    sensorType3 = rtcData.data[3] ;
-    sensorType4 = rtcData.data[4] ;
-
-    uint8_t sensorType[6] = {device, 6, sensorType1, sensorType2, sensorType3, sensorType4}; // Change last 4 bytes according to sensot type used.
+   /* int sensorType1;// = Predefined sensor type table is below:
+    int sensorType2;// = volatage = 6, temperature = 16, humidity= 26,
+    int sensorType3;// = pressure= 36, light= 46, OpenClose = 56, level = 66,
+    int sensorType4;// = presence = 76, motion = 86, rain = 96 etc.
+    */
     
+    sensorType[2] = rtcData.data[1] ;
+    sensorType[3] = rtcData.data[2] ;
+    sensorType[4] = rtcData.data[3] ;
+    sensorType[5] = rtcData.data[4] ;
+    sleepTime = rtcData.data[7];
+    enableOTA = rtcData.data[12];  // 0 or 1
+  /*  
+    uint8_t sensorType[6] = {device, 6, sensorType1, sensorType2, sensorType3, sensorType4}; // Change last 4 bytes according to sensot type used.
+ */
+ #endif   
+ /*   
     Serial.print("Sensor Type 1 : ");
     Serial.println(sensorType1);
     Serial.print("Sensor Type 2 : ");
@@ -136,16 +181,16 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
     Serial.println(sensorType3);
     Serial.print("Sensor Type 4 : ");
     Serial.println(sensorType4);
-    
+   */ 
   wifi_set_macaddr(STATION_IF, sensorType);
   probeRequest();
-  Serial.print("sensorType values sent to controller: ");
+  Serial.print("Sensor Type values sent to controller: ");
   Serial.println(WiFi.macAddress());
   
   sensorValues();
   probeRequest();
-  //Serial.print("Sensor values sent to controller: ");
-  //Serial.println(WiFi.macAddress());
+  Serial.print("Sensors values sent to controller: ");
+  Serial.println(WiFi.macAddress());
 
 #if DUPLEX
   delay(60);  // Minimum 60 milliseonds delay required to receive message from controller reliably.
@@ -193,7 +238,7 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
     
 //############################################################
 
- 
+
   // Generate new data set for the struct
  // for (size_t i = 0; i < sizeof(rtcData.data); i++) {
    if (receivedDevice = device)   {
@@ -202,7 +247,20 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
     rtcData.data[2] = pinValue;
     rtcData.data[3] = extraValue1;
     rtcData.data[4] = extraValue2;
-     }
+     } else if (receivedCommand == 8) {
+      rtcData.data[7] = pinNumber;
+      Serial.print("Sleep Time in minutes: ");
+      Serial.println(sleepTime);
+      } else if (receivedCommand == 9) {
+      rtcData.data[12] = pinNumber;
+      Serial.print("OTA Enable status: ");
+      Serial.println(enableOTA);
+         if (enableOTA == 1) {
+           Serial.print("Run code to acctivate OTA: ");
+           sleepTime = 1;
+           }
+      
+      }
    }
 
    // Update CRC32 of data
@@ -220,59 +278,57 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
         sensorType3 == 16 || sensorType3 == 26 || sensorType3 == 36 || 
         sensorType4 == 16 || sensorType4 == 26 || sensorType4 == 36) 
         
-   {             
-     #define BMX280   true
+   {           
+     #define BME280SENSOR   true
      Serial.println();
-     Serial.println("Activate code for BME280");    
-    }  
+     Serial.println("Activate code for BME280");
+     
+         }  
     
     if (sensorType1 == 46 || sensorType2 == 46 || sensorType3 == 46 || sensorType4 == 46)  
     
     {
-    #define APDS9960   true
+    #define APDS9960SENSOR   true
     Serial.println("Activate code for APDS9960");
+   
     } 
     
     if (sensorType1 == 56 || sensorType2 == 56 || sensorType3 == 56 || sensorType4 == 56)  
     {
-    #define HALLSENSOR   true  
-    Serial.println("Activate code for OpenClose hall sensor");
-   
+    #define OPENCLOSESENSOR   true  
+    Serial.println("Activate code for OpenClose sensor");
     
     } 
     
     if (sensorType1 == 66 || sensorType2 == 66 || sensorType3 == 66 || sensorType4 == 66)  
     {
-    #define DISTANCESENSOR(HCSR04)   true
+    #define HCSR04SENSOR   true
     Serial.println("Activate code for distance sensor");
-    
     
      } 
      
      if (sensorType1 == 76 || sensorType2 == 76 || sensorType3 == 76 || sensorType4 == 76)  
     {
-    #define PRESENCESENSOR   true  
-    Serial.println("Activate code for presene sensor");
-    
+    #define PIRSENSOR   true  
+    Serial.println("Activate code for presene detection sensor");
     
      } 
 
      if (sensorType1 == 86 || sensorType2 == 86 || sensorType3 == 86 || sensorType4 == 86)  
     {
-    #define RCWL-0516   true
-    Serial.println("Activate code for motion sensor");
+    #define RCWL0516SENSOR   true
+    Serial.println("Activate code for presence detection sensor");
     
-
        }    
 
      if (sensorType1 == 96 || sensorType2 == 96 || sensorType3 == 96 || sensorType4 == 96)  
     {
-    #define SOMESENSOR   true
-    Serial.println("Activate code for some other sensor");
+    #define PHOTOSENSOR   true
+    Serial.println("Activate code for light sensor");
     Serial.println();
-
-       }  
+         }  
        
+    sleepTime = 1; Serial.print("Sleep Time Secconds: "); Serial.println(sleepTime);
   
   
 
@@ -285,40 +341,45 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
 
    }
 
+ 
 #endif
 
   delay(1);
   
-  WiFi.hostname("Livingroom");
-  Serial.println();
-  
-}
-
-// Setup ends here
+}      // Setup ends here
 
 //========================Main Loop================================
 
 void loop() {
-
+#if DUPLEX
   receiveCommand();
+#endif
+ 
 
-  //  wifi_set_macaddr(STATION_IF, sensorType);
-  //  probeRequest();
-  //  sensorValues();
-  //  probeRequest();
-  //  yield();
    
-
-  Serial.print("Total time I spent before going to sleep: ");
-  Serial.println(millis());
-  Serial.print("I will wakeup in: ");
-  Serial.print(sleepTime);
-  Serial.println(" Seconds");
-
-  delay(5000);         //disable delay when deep sleep activated.
-  Serial.println("Going to Deep Sleep..........................");
-  ESP.restart();
+  if (enableOTA == 1) {
+    
+    Serial.println("waiting for OTA update..........................");
+ 
+    delay(50000);         //wait for some time to get OTA update.
+    
+    ESP.restart();
   //ESP.deepSleep(0); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
+  
+  } else {
+    Serial.print("Total time I spent before going to sleep: ");
+    Serial.println(millis());
+    Serial.print("I will wakeup in: ");
+    Serial.print(sleepTime);
+    Serial.println(" Seconds");
+
+  
+    delay(5000);         //disable delay when deep sleep activated.
+    Serial.println("Going to Deep Sleep..........................");
+ 
+    ESP.restart();
+  //ESP.deepSleep(0); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
+  }
 }
 
 //=========================Main Loop ends==========================
@@ -338,17 +399,12 @@ void sensorValues()     {
     Serial.println();
   }
 
-  temperature = random(90);
-  humidity = random(100);
-  pressure = random(1024);
-  pressure = pressure / 4;
-  light = random(100);
-  //sensorData[0] = device;
+  sensorData[0] = device;
   sensorData[1] = voltage;
-  sensorData[2] = temperature;
-  sensorData[3] = humidity;
-  sensorData[4] = pressure;
-  sensorData[5] = light;
+  sensorData[2] = random(90);         //temperature;
+  sensorData[3] = random(100);        //humidity;
+  sensorData[4] = random(1024) / 4;   //pressure;
+  sensorData[5] = random(100);        //light;
   wifi_set_macaddr(STATION_IF, sensorData);
 
 }
@@ -356,10 +412,10 @@ void sensorValues()     {
 
 void gotoSleep() {      //need connection between GPIO16 and reset pin of ESP8266
   // add some randomness to avoid collisions with multiple devices
-  int sleepSecs = sleepTime;// + ((uint8_t)RANDOM_REG32/2);
-  Serial.printf("Up for %i ms, going to sleep for %i secs...\n", millis(), sleepSecs);
-  ESP.deepSleep(sleepSecs * 1000000, RF_NO_CAL);
-  ////ESP.deepSleep( SLEEPTIME, WAKE_RF_DISABLED );
+  sleepTime = sleepTime;// + ((uint8_t)RANDOM_REG32/2);
+  Serial.printf("Up for %i ms, going to sleep for %i seconds...\n",millis(), sleepTime);
+  ESP.deepSleep(sleepTime, RF_NO_CAL);
+  ////ESP.deepSleep( sleepTime, WAKE_RF_DISABLED );
 }
 
 
@@ -446,7 +502,7 @@ if (receivedDevice = device)   {
   } else {
     
   if (receivedCommand == 7) { apChannel = pinNumber; Serial.print("Access Point Channel: "); Serial.println(apChannel);
-  } else if (receivedCommand == 8) { sleepTime = pinNumber; Serial.print("Sleep Time Seonds: "); Serial.println(sleepTime);
+  } else if (receivedCommand == 8) { sleepTime = pinNumber; Serial.print("Sleep Time minutes: "); Serial.println(sleepTime);
   } else if  (receivedCommand == 9)                                                                                                                                                                                                                                                                                                                            {
             
             
