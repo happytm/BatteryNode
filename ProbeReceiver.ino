@@ -16,7 +16,7 @@
    Your WiFi config here
 */
 int apChannel = 7;
-char apssid[] = "ESP";
+char gateway[] = "ESP";
 char ssid[] = "your_ssid";     // your network SSID (name)
 char pass[] = "your_password"; // your network password
 
@@ -198,7 +198,7 @@ void startWiFiClient()
 void startWiFiAP()
 {
 
-  WiFi.softAP(apssid, "<notused>", apChannel, 1, 0);   //(gateway, "<notused>", 7, 1, 0) for hidden SSID.
+  WiFi.softAP(gateway, "<notused>", apChannel, 1, 0);   //(gateway, "<notused>", 7, 1, 0) for hidden SSID.
   Serial.println("AP started");
   Serial.println("IP address: " + WiFi.softAPIP().toString());
 }
