@@ -1,8 +1,8 @@
 # Very simple DIY Low Power low cost sensors, Standalone IOT Network (could be used with any android or ios MQTT front end software).
 
-Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker.
+Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker. OTA (over the air) web update and wifi management is implemented with excellent AutoConnect library at https://github.com/Hieromon/AutoConnect.
 
-This code create small standalone network (possibly 25) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network fashion.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
+This code create small standalone network (possibly 25) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network topology.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
 
 My testing shows 6 bytes (4 different sensor's data + battery voltage using 1 byte + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
 
