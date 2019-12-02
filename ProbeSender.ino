@@ -43,8 +43,32 @@ Duplex mode =  134 milliseconds, One way = 52 milliseonds.
         Command6 = Command extraValue1  -   00 to 255 for BLUE neopixel in case of command type 05 
                                             or sensorType value in case of command 06. 
                                    
-        *************************************************************/
-
+**********************************************************************/
+/*
+  WebUpdate.ino, Example for the AutoConnect library.
+  Copyright (c) 2018, Hieromon Ikasamo
+  https://github.com/Hieromon/AutoConnect
+  This example is an implementation of a lightweight update feature
+  that updates the ESP8266's firmware from your web browser. It embeds
+  ESP8266HTTPUpdateServer into the AutoConnect menu and can invoke the
+  firmware update UI via a Web browser.
+  You need a compiled sketch binary file to the actual update and can
+  retrieve it using Arduino-IDE menu: [Sketck] -> [Export compiled binary].
+  Then you will find the .bin file in your sketch folder. Select the.bin
+  file on the update UI page to update the firmware.
+  Notes:
+  1. To experience this example, your client OS needs to be running a
+  service that can respond to multicast DNS.
+  For Mac OSX support is built in through Bonjour already.
+  For Linux, install Avahi.
+  For Windows10, available since Windows10 1803(April 2018 Update/RS4).
+  2. If you receive an error as follows:
+  Update error: ERROR[11]: Invalid bootstrapping state, reset ESP8266 before updating.
+  You need reset the module before sketch running.
+  Refer to https://hieromon.github.io/AutoConnect/faq.html#hang-up-after-reset for details.
+  This software is released under the MIT License.
+  https://opensource.org/licenses/MIT
+*/
     
 ADC_MODE(ADC_VCC); //vcc read-mode
 
@@ -116,7 +140,74 @@ int warnVolt = 130;    // Start warning when battery level goes below 2.60 volts
 unsigned long lastMillis;
 unsigned long passedMillis;
 
+
 #include <ESP8266WiFi.h>
+
+#if DUPLEX
+#if defined(ARDUINO_ARCH_ESP8266)
+//#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266HTTPUpdateServer.h>
+#define HOSTIDENTIFY  "esp8266"
+#define mDNSUpdate(c)  do { c.update(); } while(0)
+using WebServerClass = ESP8266WebServer;
+using HTTPUpdateServerClass = ESP8266HTTPUpdateServer;
+#elif defined(ARDUINO_ARCH_ESP32)
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+#include "HTTPUpdateServer.h"
+#define HOSTIDENTIFY  "esp32"
+#define mDNSUpdate(c)  do {} while(0)
+using WebServerClass = WebServer;
+using HTTPUpdateServerClass = HTTPUpdateServer;
+#endif
+#include <WiFiClient.h>
+#include <AutoConnect.h>
+
+// This page for an example only, you can prepare the other for your application.
+static const char AUX_AppPage[] PROGMEM = R"(
+{
+  "title": "Hello world",
+  "uri": "/",
+  "menu": true,
+  "element": [
+    {
+      "name": "caption",
+      "type": "ACText",
+      "value": "<h2>Hello, world</h2>",
+      "style": "text-align:center;color:#2f4f4f;padding:10px;"
+    },
+    {
+      "name": "content",
+      "type": "ACText",
+      "value": "In this page, place the custom web page handled by the sketch application."
+    }
+  ]
+}
+)";
+
+// Fix hostname for mDNS. It is a requirement for the lightweight update feature.
+static const char* host = HOSTIDENTIFY "-webupdate";
+#define HTTP_PORT 80
+
+// ESP8266WebServer instance will be shared both AutoConnect and UpdateServer.
+WebServerClass  httpServer(HTTP_PORT);
+
+#define USERNAME "user"   //*< Replace the actual username you want */
+#define PASSWORD "pass"   //*< Replace the actual password you want */
+// Declare AutoConnectAux to bind the HTTPWebUpdateServer via /update url
+// and call it from the menu.
+// The custom web page is an empty page that does not contain AutoConnectElements.
+// Its content will be emitted by ESP8266HTTPUpdateServer.
+HTTPUpdateServerClass httpUpdater;
+AutoConnectAux  update("/update", "Update");
+
+// Declare AutoConnect and the custom web pages for an application sketch.
+AutoConnect     portal(httpServer);
+AutoConnectAux  hello;
+#endif
 
 
 
@@ -235,8 +326,6 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
     extraValue2 = WiFi.BSSID(0)[5];
     Serial.print("extraValue2: ");
     Serial.println(extraValue2);
-    
-//############################################################
 
 
   // Generate new data set for the struct
@@ -255,12 +344,34 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
       rtcData.data[12] = pinNumber;
       Serial.print("OTA Enable status: ");
       Serial.println(enableOTA);
-         if (enableOTA == 1) {
-           Serial.print("Run code to acctivate OTA: ");
-           sleepTime = 1;
-           }
       
+         if (pinNumber == 1) {
+           Serial.print("Run code to acctivate OTA");
+           
+           //sleepTime = 1;
+             
+   
+  // Prepare the ESP8266HTTPUpdateServer
+  // The /update handler will be registered during this function.
+     httpUpdater.setup(&httpServer, USERNAME, PASSWORD);
+
+  // Load a custom web page for a sketch and a dummy page for the updater.
+     hello.load(AUX_AppPage);
+     portal.join({ hello, update });
+
+  if (portal.begin()) {
+    if (MDNS.begin(host)) {
+        MDNS.addService("http", "tcp", HTTP_PORT);
+        Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", host);
+       
+      
+      
+    }
+    else
+      Serial.println("Error setting up MDNS responder");
       }
+     }
+    }
    }
 
    // Update CRC32 of data
@@ -328,20 +439,17 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
     Serial.println();
          }  
        
-    sleepTime = 1; Serial.print("Sleep Time Secconds: "); Serial.println(sleepTime);
-  
-  
+    sleepTime = 1; Serial.print("Sleep Time Secconds: ");
+    Serial.println(sleepTime);
 
-//###############################################################
 
-    
   } else {
     Serial.println("Message from controller did not arrive, let me try again to get message data........................................");
    // ESP.restart();
 
    }
 
- 
+   
 #endif
 
   delay(1);
@@ -351,22 +459,28 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
 //========================Main Loop================================
 
 void loop() {
-#if DUPLEX
-  receiveCommand();
-#endif
- 
 
-   
-  if (enableOTA == 1) {
+#if DUPLEX
     
-    Serial.println("waiting for OTA update..........................");
- 
-    delay(50000);         //wait for some time to get OTA update.
+    receiveCommand();
+
     
-    ESP.restart();
-  //ESP.deepSleep(0); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
+     if (receivedDevice == 36 && receivedCommand == 9 && pinNumber == 1) {
+     // Sketches the application here.
+
+      // Invokes mDNS::update and AutoConnect::handleClient() for the menu processing.
+      mDNSUpdate(MDNS);
+      portal.handleClient();
+      delay(1);
   
-  } else {
+    
+      Serial.println("waiting for OTA update..........................");
+      Serial.print("Log in at this IP to load new firmware: ");
+      Serial.println(WiFi.localIP().toString());
+ #endif
+      
+    } else {
+      
     Serial.print("Total time I spent before going to sleep: ");
     Serial.println(millis());
     Serial.print("I will wakeup in: ");
@@ -380,8 +494,7 @@ void loop() {
     ESP.restart();
   //ESP.deepSleep(0); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
   }
-}
-
+}     // end of main loop.
 //=========================Main Loop ends==========================
 
 
@@ -517,7 +630,6 @@ if (receivedDevice = device)   {
    }
   #endif
 
-//###############################################################
 #if DUPLEX
  uint32_t calculateCRC32(const uint8_t *data, size_t length) {
   uint32_t crc = 0xffffffff;
@@ -537,4 +649,3 @@ if (receivedDevice = device)   {
   return crc;
 }
 #endif
-
