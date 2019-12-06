@@ -1,6 +1,5 @@
 /*
    uMQTTBroker demo for Arduino (C++-style)
-
    The program defines a custom broker class with callbacks,
    starts it, subscribes locally to anything, and publishs a topic every second.
    Try to connect from a remote client and publish something - the console will show this as well.
@@ -16,11 +15,13 @@
    Your WiFi config here
 */
 int apChannel = 7;
-char gateway[] = "ESP";
-char ssid[] = "your_ssid";     // your network SSID (name)
-char pass[] = "your_password"; // your network password
+char* room = "Livingroom";
+char apssid[] = "ESP";
+char ssid[] = "yourssid";     // your network SSID (name)
+char pass[] = "yourpassword"; // your network password
+//bool WiFiAP = false;      // Do yo want the ESP as AP?
 
-int receivedDevice;
+int device;
 float voltage;
 
 int sensorValue1;     
@@ -28,13 +29,12 @@ int sensorValue2;
 int sensorValue3;     
 int sensorValue4;     
 
-uint8_t securityCode[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at remote sensors to compare.
+//uint8_t securityCode[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at remote sensors to compare.
 
 uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
 uint8_t PresencePerson2[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #2.
 uint8_t PresencePerson3[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #3.
 uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #4.
-
 
 /*  Predefined sensor type table is below:
   volatage = 6, temperature = 16, humidity= 26, pressure= 36, light= 46, 
@@ -53,12 +53,7 @@ char topic3[50];
 char topic4[50];
 char topic5[50];
 char topic6[50];
-char topic7[50];
-char topic8[50];
-char topic9[50];
-char topic10[50];
-char topic11[50];
-char topic12[50];
+
 
 int command1 = 36;
 int command2 = 0;
@@ -111,7 +106,7 @@ class myMQTTBroker: public uMQTTBroker
 
       if (topic == "command/")   {
 
-        /************************************************************
+       /************************************************************
         Command structure:  (commands are issued via MQTT payload with topic name "command/"
 
         Command1 = Device ID Number -       device ID must be 2 digits end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
@@ -153,8 +148,8 @@ class myMQTTBroker: public uMQTTBroker
         Command6 = Command extraValue1  -   00 to 255 for BLUE neopixel in case of command type 05 
                                             or sensorType value in case of command 06. 
                                    
-        *************************************************************/
-        command1 = atoi(&data[0]);
+*************************************************************/
+       command1 = atoi(&data[0]);
         Serial.println(command1);
         command2 = atoi(&data[3]);
         Serial.println(command2);
@@ -198,7 +193,7 @@ void startWiFiClient()
 void startWiFiAP()
 {
 
-  WiFi.softAP(gateway, "<notused>", apChannel, 1, 0);   //(gateway, "<notused>", 7, 1, 0) for hidden SSID.
+  WiFi.softAP(apssid, "<notused>", apChannel, 0, 0);   //(gateway, "<notused>", 7, 1, 0) for hidden SSID.
   Serial.println("AP started");
   Serial.println("IP address: " + WiFi.softAPIP().toString());
 }
@@ -232,7 +227,7 @@ void setup()
 
 void loop()
 {
- 
+
 }
 
 
@@ -245,12 +240,13 @@ void mqttPublish()    {
   */
 
 
-  sprintf(topic1, "%s%i%s%i%s", "Sensordata/", receivedDevice, "/", receivedDevice, "/");
-  sprintf(topic2, "%s%i%s%i%s", "Sensordata/", receivedDevice, "/", sensorType1, "/");
-  sprintf(topic3, "%s%i%s%i%s", "Sensordata/", receivedDevice, "/", sensorType2, "/");
-  sprintf(topic4, "%s%i%s%i%s", "Sensordata/", receivedDevice, "/", sensorType3, "/");
-  sprintf(topic5, "%s%i%s%i%s", "Sensordata/", receivedDevice, "/", sensorType4, "/");
-  sprintf(topic6, "%s%i%s%i%s", "Sensordata/", receivedDevice, "/", sensorType5, "/");
+  sprintf(topic1, "%s%i%s%i%s", "Sensordata/", device, "/", device, "/");
+  sprintf(topic2, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType1, "/");
+  sprintf(topic3, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType2, "/");
+  sprintf(topic4, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType3, "/");
+  sprintf(topic5, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType4, "/");
+  sprintf(topic6, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType5, "/");
+  
 
 
   // myBroker.publish(topic1, (String)device);
@@ -261,6 +257,8 @@ void mqttPublish()    {
   myBroker.publish(topic5, (String)sensorValue3);
   myBroker.publish(topic6, (String)sensorValue4);
   
+  
+
   // wait a second
 
   delay(5000);
@@ -268,39 +266,22 @@ void mqttPublish()    {
 
 void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived) {
      
-      receivedDevice = dataReceived.mac[0];
-
+      
       if (dataReceived.mac[0] == PresencePerson1[0] && dataReceived.mac[1] == PresencePerson1[1] && dataReceived.mac[2] == PresencePerson1[2]) 
       {  // write code to match MAC ID of cell phone to predefined variable and store presence/absense in new variable.
          Serial.println("################ Person 1 arrived ###################### ");
          myBroker.publish("Sensordata/Person1/", "Home");
-         
-         } 
+       if (dataReceived.rssi > -50) 
+      {  // write code to match MAC ID of cell phone to predefined variable and store presence/absense in new variable.
+         myBroker.publish("Sensordata/Person1/in/", room);
       
-      if (dataReceived.mac[0] == PresencePerson2[0] && dataReceived.mac[1] == PresencePerson2[1] && dataReceived.mac[2] == PresencePerson2[2]) 
-      {  
-         Serial.println("################ Person 2 arrived ###################### ");
-         myBroker.publish("Sensordata/Person2/", "Home");
-      } 
-
-      if (dataReceived.mac[0] == PresencePerson3[0] && dataReceived.mac[1] == PresencePerson3[1] && dataReceived.mac[2] == PresencePerson3[2]) 
-      {  
-         Serial.println("################ Person 3 arrived ###################### ");
-         myBroker.publish("Sensordata/Person3/", "Home");
-      } 
-
-      if (dataReceived.mac[0] == PresencePerson4[0] && dataReceived.mac[1] == PresencePerson4[1] && dataReceived.mac[2] == PresencePerson4[2]) 
-      {  
-         Serial.println("################ Person 4 arrived ###################### ");
-         myBroker.publish("Sensordata/Person4/", "Home");
-      } 
-           
-    
-        
+       } 
+      }
+ 
      if (dataReceived.mac[0] == 6 || dataReceived.mac[0] == 16 || dataReceived.mac[0] == 26 || dataReceived.mac[0] == 36 || dataReceived.mac[0] == 46 || dataReceived.mac[0] == 56 || dataReceived.mac[0] == 66 || dataReceived.mac[0] == 76 || dataReceived.mac[0] == 86 || dataReceived.mac[0] == 96 || dataReceived.mac[0] == 106 || dataReceived.mac[0] == 116 || dataReceived.mac[0] == 126 || dataReceived.mac[0] == 136 || dataReceived.mac[0] == 146 || dataReceived.mac[0] == 156 || dataReceived.mac[0] == 166 || dataReceived.mac[0] == 176 || dataReceived.mac[0] == 186 || dataReceived.mac[0] == 196 || dataReceived.mac[0] == 206 || dataReceived.mac[0] == 216 || dataReceived.mac[0] == 226 || dataReceived.mac[0] == 236 || dataReceived.mac[0] == 246) // only accept data from certain devices.
       {
-        
-        sendCommand();
+     
+    sendCommand();
 
       if (dataReceived.mac[1] == 6) // only accept data from device with voltage as a sensor type at byte 1.
   {
@@ -312,16 +293,17 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
       
     }
 
-    Serial.print("Signal Strength of remote sensor: ");
-    Serial.println(dataReceived.rssi); 
-    myBroker.publish("Sensordata/Signal/", (String)dataReceived.rssi);
+      Serial.print("Signal Strength of remote sensor: ");
+      Serial.println(dataReceived.rssi); 
+      myBroker.publish("Sensordata/Signal/", (String)dataReceived.rssi);
 
-   
-        
+
+
     Serial.print("Probe Request:- ");
+    
     Serial.print(" Device ID:  ");
     Serial.print(dataReceived.mac[0], DEC);
-    receivedDevice = dataReceived.mac[0];
+    device = dataReceived.mac[0];
     
     Serial.print(" Voltage:  ");
     Serial.print(dataReceived.mac[1], DEC);
@@ -344,8 +326,8 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
     Serial.print(" Sensor 4:  ");
     Serial.println(dataReceived.mac[5], DEC);
     sensorValue4 = dataReceived.mac[5];
-       
-  
+    
+    
     if (voltage < 295)      // if voltage of battery gets to low, print the warning below.
     {
         #if MQTTBROKER
@@ -370,8 +352,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
  //Serial.println("Waiting for Data............");
 
   }
- 
-}
+ }
 
 void sendCommand()  {
   /*
@@ -389,7 +370,4 @@ void sendCommand()  {
   mac[5] = command6;
 
   wifi_set_macaddr(SOFTAP_IF, mac);
-
-
-
 }
