@@ -6,6 +6,8 @@ This code create small standalone network (possibly 25) of battery powered esp82
 
 My testing shows 6 bytes (4 different sensor's data + battery voltage using 1 byte + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
 
+Presene detection is implemented in ProbeReceiver sketch.
+
 Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
 
