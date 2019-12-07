@@ -4,9 +4,11 @@ Low battery powered ESP8266 devices using Adhoc Network protocol described (insp
 
 This code create small standalone network (possibly 25) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network topology.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
 
-My testing shows 6 bytes (4 different sensor's data + battery voltage using 1 byte + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
+My testing shows 12 bytes (4 different sensor's data + battery voltage using 1 byte + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
 
 Presene detection is implemented in ProbeReceiver sketch.
+
+### To use the code 2 ESP8266 devices are required.One device use ProbeReceiver.ino sketch and another device use ProbeSender.ino code.The wifi channel number of your home access point (fixed) , ProbeReceiver and ProbeSender has to be same in order to have least amount of time to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required and if presence detection (or user's location finder) is required then your mobile phone's MAC id is also required.     
 
 Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
