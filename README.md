@@ -8,7 +8,52 @@ My testing shows 12 bytes (4 different sensor's data + battery voltage using 1 b
 
 Presene detection is implemented in ProbeReceiver sketch.
 
-### To use the code 2 ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver.ino sketch and another device (sleeping most of the time and battery powered) use ProbeSender.ino code.There can be as many as 25 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your home access point (fixed) , ProbeReceiver and ProbeSender devices has to be same in order to have least amount of time consumed to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app and if presence detection (or user's location finder within the home) is required then user's mobile phone's MAC id is also required.     
+### Installation
+
+To use the code 2 ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver.ino sketch and another device (sleeping most of the time and battery powered) use ProbeSender.ino code.There can be as many as 25 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your home access point (fixed) , ProbeReceiver and ProbeSender devices has to be same in order to have least amount of time consumed to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app and if presence detection (or user's location finder within the home) is required then user's mobile phone's MAC id is also required.
+
+### Command to control any remote devices on network by publishing MQTT messages via any MQTT client app
+
+Command structure:  (commands are issued via MQTT payload with topic name "command/"
+        
+      Command1 = Device ID Number -    device ID must be 2 digits ending with 2,6,A or E. 
+                                       use any of following for devie ID ending with 6.
+                                       06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246.
+      
+      Command2 = Command type  -       value 1 to 9 is reserved for following commands(must have 0 as first digit):
+                                       
+                                       01 = digitalWright or analogWrite.
+                                            Example command payload 36/01/00 0r 01/ for digitalWrite.
+                                            Example command payload 36/01/02 to 256/ for analogWrite.
+                                       02 = digitalRead.
+                                            Example command payload 36/02/01 to 05 or 12 to 16/ 
+                                       03 = analogRead, 
+                                       04 =  Reserved, 
+                                       05 = Neopixel etc.
+                                            Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
+                                       06 = change sensoor types.First byte must be target device id and 
+                                            second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be                                               changed according to hardware setup.
+                                            Example command payload 36/06/16/26/36/46/.
+                                      
+                                       07 = change apChannel, 
+                                       08 = change sleeptime. 
+                                            Example command payload 36/08/00 to 255/ (Sleep Time in minutes).  
+                                       09 = Activate alternative code for OTA,Wifimanager ETC.
+                                            Example command payload 36/09/00 or 01/(01 to activate alternative Code).
+                                           
+                                            value 10 to 20 is reserved for following commands:
+                                       10 = change define DUPLEX, 11 = change define SEURITY, 12 = change define OTA, 13 = change define                                             uMQTTBROKER etc.
+                                   
+        Command3 = Command  pinNumber   -   pinNumber in case of command type 01 to 04 above. Neopixel LED number in case of command                                                 type 05.
+                                            Predefined number to represent value of command type 11 to 20 above.
+                                            00 or 01 to represent false/or true for defines in case of command type 21 to 30. 
+                                                        
+        Command4 = Command pinValue     -   00 or 255 in case of command type 01 (digitalWrite & analogWrite)  or RED neopixel value in                                             case of command type 05.
+        
+        Command5 = Command extraValue1  -   00 to 255 for GREEN neopixel in case of command type 05                        
+                                            or sensorType value in case of command 06.
+        Command6 = Command extraValue1  -   00 to 255 for BLUE neopixel in case of command type 05 
+                                            or sensorType value in case of command 06. 
 
 Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
