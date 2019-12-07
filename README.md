@@ -12,9 +12,11 @@ Presene detection is implemented in ProbeReceiver sketch.
 
 To use the code 2 ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver.ino sketch and another device (sleeping most of the time and battery powered) use ProbeSender.ino code.There can be as many as 25 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your home access point (fixed) , ProbeReceiver and ProbeSender devices has to be same in order to have least amount of time consumed to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app and if presence detection (or user's location finder within the home) is required then user's mobile phone's MAC id is also required.
 
-### Command to control any remote devices on network by publishing MQTT messages via any MQTT client app
+### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app
 
 Command structure:  (commands are issued via MQTT payload with topic name "command/"
+      
+      Paylod format as below:
         
       Command1 = Device ID Number -    device ID must be 2 digits ending with 2,6,A or E. 
                                        use any of following for devie ID ending with 6.
