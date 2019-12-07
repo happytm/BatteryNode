@@ -8,7 +8,7 @@ My testing shows 12 bytes (4 different sensor's data + battery voltage using 1 b
 
 Presene detection is implemented in ProbeReceiver sketch.
 
-### To use the code 2 ESP8266 devices are required.One device use ProbeReceiver.ino sketch and another device use ProbeSender.ino code.The wifi channel number of your home access point (fixed) , ProbeReceiver and ProbeSender has to be same in order to have least amount of time to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required and if presence detection (or user's location finder) is required then your mobile phone's MAC id is also required.     
+### To use the code 2 ESP8266 devices are required.One device use ProbeReceiver.ino sketch and another device use ProbeSender.ino code.The wifi channel number of your home access point (fixed) , ProbeReceiver and ProbeSender has to be same in order to have least amount of time consumed to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app and if presence detection (or user's location finder) is required then your mobile phone's MAC id is also required.     
 
 Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
