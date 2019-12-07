@@ -1,4 +1,4 @@
-# Very simple DIY Low Power low cost sensors, Standalone IOT Network (could be used with any android or ios MQTT front end software).
+# Very simple DIY Low Power low cost sensors, Standalone IOT Network (could be used with any android or ios MQTT front end dashboard client software).
 
 Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker and very well explained at https://www.youtube.com/watch?v=0K9q4IuB_oA&t=9s. OTA (over the air) web update and wifi management is implemented with excellent AutoConnect library at https://github.com/Hieromon/AutoConnect.
 
