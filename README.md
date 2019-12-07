@@ -1,16 +1,20 @@
 # Very simple DIY Low Power low cost sensors, Standalone IOT Network (could be used with any android or ios MQTT front end dashboard client software).
 
-Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc and excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker and very well explained at https://www.youtube.com/watch?v=0K9q4IuB_oA&t=9s. OTA (over the air) web update and wifi management is implemented with excellent AutoConnect library at https://github.com/Hieromon/AutoConnect.
+Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc. 
 
-This code create small standalone network (possibly 25) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network topology.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
+Excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker and very well explained at https://www.youtube.com/watch?v=0K9q4IuB_oA&t=9s. 
 
-My testing shows 12 bytes (4 different sensor's data + battery voltage using 1 byte + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
+OTA (over the air) web update and wifi management is implemented with excellent AutoConnect library at https://github.com/Hieromon/AutoConnect.
 
-Presene detection is implemented in ProbeReceiver sketch.
+This code create small standalone network (maximum of 100) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network topology.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
+
+My testing shows 12 bytes (4 different sensor's data + battery voltage using 1 byte + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow ?). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
+
+Presene detection & user locater within home is implemented in ProbeReceiver sketch.
 
 ### Installation
 
-To use the code 2 ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver.ino sketch and another device (sleeping most of the time and battery powered) use ProbeSender.ino code.There can be as many as 25 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your home access point (fixed) , ProbeReceiver and ProbeSender devices has to be same in order to have least amount of time consumed to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app and if presence detection (or user's location finder within the home) is required then user's mobile phone's MAC id is also required.
+To use the code 2 ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver.ino sketch and another device (sleeping most of the time and battery powered) use ProbeSender.ino code.There can be as many as 100 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your home access point (fixed) , ProbeReceiver and ProbeSender devices has to be same in order to have least amount of time consumed to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.If presence detection (or user's location finder within the home) is required then user's mobile phone's MAC id is also required.
 
 ### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX true in ProbeSender.ino code)
 
