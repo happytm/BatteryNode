@@ -4,7 +4,7 @@ Low battery powered ESP8266 devices using Adhoc Network protocol described (insp
 
 Excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker and very well explained at https://www.youtube.com/watch?v=0K9q4IuB_oA&t=9s. 
 
-OTA (over the air) web update and wifi management is implemented with excellent AutoConnect library at https://github.com/Hieromon/AutoConnect.
+OTA (over the air) web update and wifi management is implemented with excellent AutoConnect library at https://github.com/Hieromon/AutoConnect. The device will first try to auto update firmware via Github if it fails toupdate it will start AutoConnect web GUI to update firmware & wifi settings via browser.
 
 This code create small standalone network (maximum of 100) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network topology.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
 
