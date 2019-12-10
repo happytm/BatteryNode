@@ -491,7 +491,7 @@ void loop() {
              
              
             Serial.print("Running code to acctivate OTA");
-           
+             #define AUTOCONNECT       true
             //sleepTime = 1;
              
    
