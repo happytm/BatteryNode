@@ -118,7 +118,7 @@ uint32_t calculateCRC32(const uint8_t *data, size_t length);
 
 struct {
   uint32_t crc32;
-  byte data[4];           // 4 bytes of data for 4 sensor types.
+  byte data[6];           // 4 bytes of data for 4 sensor types.
   
   int deviceMode;         // 0 for regular, 1 for autupdate and 2 for AutoConnect.
   int devceIP;            // last part of this device's fixed IP
@@ -294,15 +294,6 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
      }
   } 
 
-   
-     // Update CRC32 of data
-     rtcData.crc32 = calculateCRC32((uint8_t*) &rtcData.data[0], sizeof(rtcData.data));
-     // Write struct to RTC memory
-    if (ESP.rtcUserMemoryWrite(0, (uint32_t*) &rtcData, sizeof(rtcData))) 
-     {
-   // Serial.println("Write: ");
-      Serial.println();
-     }
 
     sensorType[2] = rtcData.data[1] ;
     sensorType[3] = rtcData.data[2] ;
@@ -413,7 +404,14 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
     ESP.restart();
     }
 
-   
+    // Update CRC32 of data
+     rtcData.crc32 = calculateCRC32((uint8_t*) &rtcData.data[0], sizeof(rtcData.data));
+     // Write struct to RTC memory
+    if (ESP.rtcUserMemoryWrite(0, (uint32_t*) &rtcData, sizeof(rtcData))) 
+     {
+   // Serial.println("Write: ");
+      Serial.println();
+     }
 
     if (sensorType1 == 16 || sensorType1 == 26 || sensorType1 == 36 || 
         sensorType2 == 16 || sensorType2 == 26 || sensorType2 == 36 || 
@@ -811,3 +809,4 @@ void sendStatus() {
   return crc;
 }
 #endif
+
