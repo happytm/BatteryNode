@@ -17,8 +17,8 @@ int wifiChannel = 7;
 char* room = "Livingroom";
 int rssiThreshold = -50; // Adjust according to signal strength by trial & error.
 char gateway[] = "ESP";
-char ssid[] = "ssid";     // your network SSID (name)
-char pass[] = "password"; // your network password
+char ssid[] = "myAP";     // your network SSID (name)
+char pass[] = ""; // your network password
 
 int device;
 float voltage;
@@ -181,7 +181,7 @@ WiFiEventHandler probeRequestPrintHandler;
 
 void startWiFiClient()
 {
-  Serial.println("Connecting to " + (String)ssid);
+  Serial.println("Connecting to " + (String)ssid + " with fixed WiFi Channel set to " + (String)wifiChannel + " & SoftAP SSID set to " + gateway);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pass);
 
@@ -190,9 +190,7 @@ void startWiFiClient()
     Serial.print(".");
   }
   Serial.println("");
-
-  Serial.println("WiFi connected");
-  Serial.println("IP address: " + WiFi.localIP().toString());
+  Serial.println("WiFi connected to " + (String)ssid + " with IP address: " + WiFi.localIP().toString());
 }
 
 void startWiFiAP()
@@ -200,8 +198,7 @@ void startWiFiAP()
 
   WiFi.softAP(gateway, "<notused>", wifiChannel, 0, 0);   //(gateway, "<notused>", 7, 1, 0) for hidden SSID.
   // if above is hidden the presence detection stop working. To be resolved.
-  Serial.println("AP started");
-  Serial.println("IP address: " + WiFi.softAPIP().toString());
+  Serial.println("AP started with IP address: " + WiFi.softAPIP().toString() + " & SSID " + gateway);
 }
 
 void setup()
@@ -260,6 +257,7 @@ void mqttPublish()    {
   myBroker.publish(topic4, (String)sensorValue2);
   myBroker.publish(topic5, (String)sensorValue3);
   myBroker.publish(topic6, (String)sensorValue4);
+  
   myBroker.publish(topic8, (String)statusValue1);
   myBroker.publish(topic9, (String)statusValue2);
   myBroker.publish(topic10, (String)statusValue3);
@@ -301,7 +299,10 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
       sensorType3 = (dataReceived.mac[3]);
       sensorType4 = (dataReceived.mac[4]);
       sensorType5 = (dataReceived.mac[5]);
-
+      #if MQTTBROKER
+      mqttPublish();
+      #endif
+      
     } else if (dataReceived.mac[3] == wifiChannel)
 
     {
@@ -310,12 +311,16 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
        statusValue3 = (dataReceived.mac[3]);
        statusValue4 = (dataReceived.mac[4]);
        statusValue5 = (dataReceived.mac[5]);
+       #if MQTTBROKER
+       mqttPublish();
+       #endif
      }
 
     Serial.print("Signal Strength of remote sensor: ");
     Serial.println(dataReceived.rssi);
+    #if MQTTBROKER
     myBroker.publish("Sensordata/Signal/", (String)dataReceived.rssi);
-
+    #endif
 
 
     Serial.print("Probe Request:- ");
@@ -362,9 +367,9 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
     }
 
     if (dataReceived.mac[1] > 115 && dataReceived.mac[1] < 180)  {
-#if MQTTBROKER
-      mqttPublish();
-#endif
+
+      
+
 
     }
     //}
