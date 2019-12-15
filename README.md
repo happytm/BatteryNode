@@ -159,7 +159,11 @@ https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-f
 
 ###To do:
 
--Implement this code for ESP32 for long distance communication like this - https://www.youtube.com/watch?v=yCLb2eItDyE
+-Implement this code for ESP32 for lora like long distance communication like following:
+ - https://www.youtube.com/watch?v=yCLb2eItDyE
+ - https://www.youtube.com/watch?v=2rujjTOPIRU
+ - https://www.youtube.com/watch?v=PUppoaePi3A
+ 
 
 
 # uMQTTBroker
