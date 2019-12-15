@@ -163,6 +163,8 @@ https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-f
  - https://www.youtube.com/watch?v=yCLb2eItDyE
  - https://www.youtube.com/watch?v=2rujjTOPIRU
  - https://www.youtube.com/watch?v=PUppoaePi3A
+ - https://github.com/jnogues/ESP32-Long-Range-WiFi
+ 
  
 
 
