@@ -2,6 +2,7 @@
 
 Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc. 
 
+
 Excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker and very well explained at https://www.youtube.com/watch?v=0K9q4IuB_oA&t=9s. 
 
 The device will first try to auto update firmware via Github if specific .bin file is available.
@@ -155,6 +156,10 @@ https://www.ebay.com/itm/5-10-20Pcs-USB2-0-Type-A-Plug-4-pin-Male-Female-Adapter
 https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LEDs-Night-Light-USB-Lamp-for-PC-Laptop-Reading/233145266453?var=532628409387&hash=item36488a7115:g:Cl8AAOSwnDRcctLK
 
 https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-for-PC-Laptop-Reading-KVD/254324352827?var=553856471722&hash=item3b36e9a73b:m:mu0g_K_W0-MeXBHUvm8kxKA
+
+###To do:
+
+-Implement this code for ESP32 for long distance communication like this - https://www.youtube.com/watch?v=yCLb2eItDyE
 
 
 # uMQTTBroker
