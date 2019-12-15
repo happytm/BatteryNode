@@ -124,8 +124,9 @@ struct {
   int devceIP;            // last part of this device's fixed IP
   int wifiChannel;        // WiFi Channel for this device. 
   int sleepTime;          // Sleep time in minutes.
-  int requestStatus;
-  int duplexStatus;
+  int requestStatus;      // 1 or 0 for true or false
+  int duplexStatus;       // 1 or 0 for true or false
+  int upTime;             // device uptime in milliseconds.
   
 } rtcData;
 #endif
@@ -134,7 +135,7 @@ struct {
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 
-#define binFile "https://raw.githubusercontent.com/happytm/BatteryNode/master/senderFirmware.bin"
+#define binFile "https://raw.githubusercontent.com/happytm/BatteryNode/master/sender.bin"
 #define BOOT_AFTER_UPDATE    false
 HTTPClient http;
 
@@ -156,21 +157,22 @@ int wifiChannel = 7;        // WiFi Channel for this device.
 int sleepTime = 1;          // Sleep time in minutes.
 int requestStatus;
 int duplexStatus;
+int upTime;                  // = rtcData.data[60];
 
 // Status values to be sent to Gateway
 
 uint8_t deviceStatus[6];  // {device, deviceMode, deviceIP, wifiChannel, sleepTime, random(255)}
-
-
-int sensorType1 = 16;// Predefined sensor type table is below:
-int sensorType2 = 26;// volatage = 6, temperature = 16, humidity= 26,
-int sensorType3 = 36;// pressure= 36, light= 46, OpenClose = 56, level = 66,
-int sensorType4 = 46;// presence = 76, motion = 86, rain = 96 etc.
+int sensorType1 = 36;// Predefined sensor type table is below:
+int sensorType2 = 06;// Predefined sensor type table is below:
+int sensorType3 = 26;// volatage = 6, temperature = 16, humidity= 26,
+int sensorType4 = 36;// pressure= 36, light= 46, OpenClose = 56, level = 66,
+int sensorType5 = 66;// presence = 76, motion = 86, rain = 96 etc.
+int sensorType6 = 46;// volatage = 6, temperature = 16, humidity= 26,
 
 
 // Sensor types to be sent to Gateway
 
-uint8_t sensorType[6] = {device, 6, sensorType1, sensorType2, sensorType3, sensorType4}; // Change last 4 bytes according to sensot type used.
+uint8_t sensorType[6] = {sensorType1, sensorType2, sensorType3, sensorType4, sensorType5, sensorType6}; // Change last 4 bytes according to sensot type used.
 
 // Sensor values to be sent to Gateway
 
@@ -267,7 +269,8 @@ void setup() {
   WiFi.scanDelete();  //remove previous scan data from memory
   Serial.begin(115200);
   //Serial.println(&WiFi.BSSIDstr(0)[0]);
-
+             
+           
 /* 
   wifi_set_macaddr(STATION_IF, securityCode);
   probeRequest();
@@ -278,8 +281,11 @@ void setup() {
 // Read struct from RTC memory
 if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) 
   {
-   //Serial.println("Read: ");
-    //printMemory();
+    
+    
+    
+    Serial.println("Read: ");
+    printMemory();
     Serial.println();
     uint32_t crcOfData = calculateCRC32((uint8_t*) &rtcData.data[0], sizeof(rtcData.data));
     Serial.print("CRC32 of data: ");
@@ -294,13 +300,12 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
      }
   } 
 
-
-    sensorType[2] = rtcData.data[1] ;
-    sensorType[3] = rtcData.data[2] ;
-    sensorType[4] = rtcData.data[3] ;
-    sensorType[5] = rtcData.data[4] ;
-  
- 
+    sensorType[0] = rtcData.data[0] ;
+    sensorType[1] = rtcData.data[1] ;
+    sensorType[2] = rtcData.data[2] ;
+    sensorType[3] = rtcData.data[3] ;
+    sensorType[4] = rtcData.data[4] ;
+    sensorType[5] = rtcData.data[5] ;       
  #endif   
  
   wifi_set_macaddr(STATION_IF, sensorType);
@@ -371,32 +376,35 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
      
    if (receivedCommand == 6)      
    {
-              rtcData.data[1] = pinNumber;
-              rtcData.data[2] = pinValue;
-              rtcData.data[3] = extraValue1;
-              rtcData.data[4] = extraValue2;
+              rtcData.data[0] = receivedDevice;
+              rtcData.data[1] = receivedCommand;
+              rtcData.data[2] = pinNumber;
+              rtcData.data[3] = pinValue;
+              rtcData.data[4] = extraValue1;
+              rtcData.data[5] = extraValue2;
     
     } else if (receivedCommand == 7) 
            {
-              rtcData.data[12] = pinNumber;
-              wifiChannel = rtcData.data[12];
+              rtcData.data[6] = pinNumber;
+              wifiChannel = rtcData.data[6];
               Serial.print("WiFi Channel set to: ");
               Serial.println(wifiChannel);
      
      } else if (receivedCommand == 8 && pinNumber != 0) 
             {
-               rtcData.data[20] = pinNumber;    // Save sleep time in minutes.
-               sleepTime = rtcData.data[20];    // Set sleep tme in minutes. 
+               rtcData.data[7] = pinNumber;    // Save sleep time in minutes.
+               sleepTime = rtcData.data[7];    // Set sleep tme in minutes. 
                Serial.print("Sleep Time in minutes: ");
                Serial.println(sleepTime);
       
-      } else if (receivedCommand == 9) 
+     } else if (receivedCommand == 9) 
              {
-               rtcData.data[28] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
-               deviceMode = rtcData.data[28];     // Set device mode.
+               rtcData.data[8] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+               deviceMode = rtcData.data[8];     // Set device mode.
                Serial.print("Device Mode set to: ");
                Serial.println(deviceMode);    
               }
+      
       
   }  else 
     {
@@ -481,31 +489,34 @@ if (receivedDevice == device)  {
    if (receivedCommand == 9) 
     {
       otaControl();
+      upTime = (millis() + 10);  // Estimated 10 milliseconds added to account for next process in loop.
+      sendStatus();
       
     } else if (receivedCommand == 8 && pinNumber != 0) 
             {
-               rtcData.data[20] = pinNumber;    // Save sleep time in minutes.
-               sleepTime = rtcData.data[20];    // Set sleep tme in minutes. 
+               rtcData.data[7] = pinNumber;    // Save sleep time in minutes.
+               sleepTime = rtcData.data[7];    // Set sleep tme in minutes. 
                Serial.print("Sleep Time in minutes: ");
                Serial.println(sleepTime);
       
-    } else if (receivedCommand == 10 && pinNumber == 1) 
+    } else if (receivedCommand == 10) 
              {
-               rtcData.data[36] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
-               device = rtcData.data[36];     // Set device mode.
+               rtcData.data[9] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+               device = rtcData.data[9];     // Set device mode.
                Serial.print("Device ID set to: ");
                Serial.println(device);    
               
 
     } else if (receivedCommand == 11 && pinNumber == 1) 
              {
+               upTime = (millis() + 10);  // Estimated 10 milliseconds added to account for next process in loop.
                sendStatus();
               
     } else if (receivedCommand == 12 && pinNumber == 1) 
              {
-               rtcData.data[52] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
-               duplexStatus = rtcData.data[52];     // Set device mode.
-               Serial.print("Device Mode set to: ");
+               rtcData.data[11] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+               duplexStatus = rtcData.data[11];     // Set device mode.
+               Serial.print("Device duplex mode set to: ");
                Serial.println(duplexStatus);    
               } 
  }
@@ -513,9 +524,10 @@ if (receivedDevice == device)  {
 #endif
             Serial.print("Total time I spent before going to sleep: ");
             Serial.println(millis());
+            rtcData.data[12] = millis();
             Serial.print("I will wakeup in: ");
             Serial.print(sleepTime);
-            Serial.println(" Miinutes");
+            Serial.println(" Minutes");
 
   
          //   delay(5000);         //disable delay when deep sleep activated.
@@ -681,7 +693,7 @@ if (receivedDevice = device)   {
             Serial.println("waiting for OTA update..........................");
             Serial.print("Log in at this IP within 5 minutes to load new firmware: ");
             Serial.println(WiFi.localIP().toString());
-            delay(60000 * 5);
+            delay(60000 * 2);
 
       }
 
@@ -691,7 +703,7 @@ void otaControl()
 
 #if AUTOOTA
   deviceMode = pinNumber;
-  rtcData.data[28] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+  rtcData.data[8] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
   
   Serial.print("Device Mode set to: ");
   Serial.println(deviceMode); 
@@ -724,7 +736,7 @@ void otaControl()
     switch(ret) {
          case HTTP_UPDATE_FAILED:
             Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-           // rtcData.data[28] = 2;            // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+           // rtcData.data[8] = 2;            // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
             deviceMode = 2;   // Set device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
             Serial.print("Device Mode set to: ");
             Serial.println(deviceMode);  
@@ -732,7 +744,7 @@ void otaControl()
 
          case HTTP_UPDATE_NO_UPDATES:
             Serial.println("HTTP_UPDATE_NO_UPDATES");
-            //rtcData.data[28] = 2;              // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+            //rtcData.data[8] = 2;              // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
             deviceMode = 2;     // Set device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
             Serial.print("Device Mode set to: ");
             Serial.println(deviceMode);  
@@ -741,12 +753,12 @@ void otaControl()
          case HTTP_UPDATE_OK:
             Serial.println("HTTP_UPDATE_OK");
             delay(5000);                    // wait for few seconds issue command with payload 36/09/00/.
-            //rtcData.data[28] = 0;            // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+            //rtcData.data[8] = 0;            // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
             
             Serial.print("Device Mode set to: ");
             Serial.println(deviceMode); 
             deviceMode = 0;   // Set device mode (0 for regular, 1 for autupdate and 2 for AutoConnect). 
-            rtcData.data[28] = 0;
+            rtcData.data[8] = 0;
             ESP.restart();
             break;
 
@@ -764,7 +776,7 @@ void otaControl()
       
     } else {
      
-      sleepTime = rtcData.data[22];   // Set sleeptme.
+      sleepTime = rtcData.data[7];   // Set sleeptme.
       Serial.print("Sleep Time in minutes: ");
       Serial.println(sleepTime);
      }
@@ -772,8 +784,8 @@ void otaControl()
 
 void sendStatus() {
   
-               rtcData.data[44] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
-               requestStatus = rtcData.data[44];     // Set device mode.
+               rtcData.data[10] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+               requestStatus = rtcData.data[26];     // Set device mode.
                Serial.print("Request status: ");
                Serial.println(requestStatus);  
                deviceStatus[0] = device;  
@@ -781,15 +793,27 @@ void sendStatus() {
                deviceStatus[2] = devceIP;            // last part of this device's fixed IP
                deviceStatus[3] = wifiChannel;        // WiFi Channel for this device. 
                deviceStatus[4] = sleepTime;          // Sleep tme nminutes for this device.
-               deviceStatus[5] = random(100);        // To do.
+               deviceStatus[5] = upTime;            // Device upTime.
                wifi_set_macaddr(STATION_IF, deviceStatus);
                probeRequest();
                Serial.print("Device status values sent to controller: ");
                Serial.println(WiFi.macAddress());
-               requestStatus = 0;
-               rtcData.data[44] = 0; 
+               
          }
 
+void printMemory() {
+  char buf[3];
+  uint8_t *ptr = (uint8_t *)&rtcData;
+  for (size_t i = 0; i < sizeof(rtcData); i++) {
+    sprintf(buf, "%02X", ptr[i]);
+    Serial.print(buf);
+    if ((i + 1) % 32 == 0) {
+      Serial.println();
+    } else {
+      Serial.print(" ");
+    }
+  }
+} 
 
  uint32_t calculateCRC32(const uint8_t *data, size_t length) {
   uint32_t crc = 0xffffffff;
