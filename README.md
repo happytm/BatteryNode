@@ -19,61 +19,61 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
 
 ### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX true in ProbeSender.ino code)
 
-Command structure:  (commands are issued via MQTT payload with topic name "command/"
+### Command structure:  (commands are issued via MQTT payload with topic name "command/"
       
-Command1 = Device ID Number -               
+#### Command1 = Device ID Number -               
 
-device ID must be 2 digits end with 2,6,A or E to avoid conflict with other devices.
-See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-                                               for-my-virtual-machines.
-use any of following for devie ID ending with 6.
-06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246.
-Device ID and last part of fixed IP are same.
+- Device ID must be 2 digits end with 2,6,A or E to avoid conflict with other devices.
+- See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-                                               for-my-virtual-machines.
+- use any of following for devie ID ending with 6.
+- 06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246.
+- Device ID and last part of fixed IP are same.
                                             
-Command2 = Command type     -         
+#### Command2 = Command type     -         
 
-value 01 to 09 is reserved for following commands(must have 0 as first digit):
+- value 01 to 09 is reserved for following commands(must have 0 as first digit):
 
- 01 = digitalWright or analogWrite.
-           Example command payload 36/01/00 0r 01/ for digitalWrite.
-           Example command payload 36/01/02 to 256/ for analogWrite.
- 02 = digitalRead.
-           Example command payload 36/02/01 to 05 or 12 to 16/
- 03 = analogRead,
- 04 = Reserved,
- 05 = Neopixel etc.
-           Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
- 06 =      change sensor types.First byte must be target device id and
-           second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be                                                changed according to hardware setup.
-           Example command payload 36/06/16/26/36/46/.
+ - 01 = digitalWright or analogWrite.
+           - Example command payload 36/01/00 0r 01/ for digitalWrite.
+           - Example command payload 36/01/02 to 256/ for analogWrite.
+ - 02 = digitalRead.
+           - Example command payload 36/02/01 to 05 or 12 to 16/
+ - 03 = analogRead,
+ - 04 = Reserved,
+ - 05 = Neopixel etc.
+           - Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
+ - 06 =      change sensor types.First byte must be target device id and
+           - second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be                                              - changed according to hardware setup.
+           - Example command payload 36/06/16/26/36/46/.
 
-  07 =     change wifiChannel.
-  08 =     change sleepTime.
-           Example command payload 36/08/00 to 255/ (Sleep Time in minutes).
-  09 =     Activate alternative code for OTA,Wifimanager ETC.
-           Example command payload 36/09/00 or 01  (01 to activate Auto firmware update).
+  - 07 =     change wifiChannel.
+  - 08 =     change sleepTime.
+           - Example command payload 36/08/00 to 255/ (Sleep Time in minutes).
+  - 09 =     Activate alternative code for OTA,Wifimanager ETC.
+           - Example command payload 36/09/00 or 01  (01 to activate Auto firmware update).
 
-Command3 = Command  pinNumber  -            
+#### Command3 = Command  pinNumber  -            
 
-pinNumber in case of command type 01 to 04 above. 
-Neopixel LED number in case of command type 05.
-Value in case of command type 06,07,08 & 09 commandtype.
-sensorType4 value in case of command 06.
+- pinNumber in case of command type 01 to 04 above. 
+- Neopixel LED number in case of command type 05.
+- Value in case of command type 06,07,08 & 09 commandtype.
+- sensorType4 value in case of command 06.
                                             
-Command4 = Command value1      -            
+#### Command4 = Command value1      -            
 
-00 or 255 in case of command type 01 (digitalWrite & analogWrite)  
-or RED neopixel value in case of command type 05 
-or sensorType4 value in case of command 06.
+- 00 or 255 in case of command type 01 (digitalWrite & analogWrite)  
+- or RED neopixel value in case of command type 05 
+- or sensorType4 value in case of command 06.
 
-Command5 = Command value2      -            
+#### Command5 = Command value2      -            
 
-00 to 255 for GREEN neopixel in case of command type 05 
-or sensorType5 value in case of command 06.
+- 00 to 255 for GREEN neopixel in case of command type 05 
+- or sensorType5 value in case of command 06.
         
-Command6 = Command value2      -            
+#### Command6 = Command value2      -            
 
-00 to 255 for BLUE neopixel in case of command type 05 
-or sensorType6 value in case of command 06.
+- 00 to 255 for BLUE neopixel in case of command type 05 
+- or sensorType6 value in case of command 06.
 
 
 Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
