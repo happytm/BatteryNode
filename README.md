@@ -119,6 +119,10 @@ https://www.ebay.com/itm/10pcs-5V-30mA-Micro-Mini-Power-Solar-Cells-Panel-Board-
 
 https://www.ebay.com/itm/2X-1A-5V-TP4056-Lithium-Battery-Charging-Module-USB-Board-Electronic-Componen-LL/372528382545?hash=item56bc6c0251:g:UHIAAOSwmRNauwg0
 
+### Batterymonitor:
+
+https://www.ebay.com/itm/10pcs-DS2438-DS2438Z-TR-DS2438Z-SOP-8/292502146541
+
 ### Environment sensor:
 
 https://www.ebay.com/itm/Temperature-and-Pressure-BME280-Sensor-Module-Voltage1-71V-3-6V/323861991809?hash=item4b67add181:g:H7UAAOSwDYxbvcJ6
@@ -168,8 +172,17 @@ https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-f
 - APDS9960
 - HC-SR04
 - Soil Moisture I2C
-- WS2812 & 18B20 - Both are addressable. 
- 
+- WS2812 & 18B20 - Both are addressable.
+- DS2438 1-wire battery monitor/temperature sensor/A/D converter addressable.
+  - http://www.howmuchsnow.com/snow/proto1.html
+  - https://www.ebay.com/itm/10pcs-DS2438-DS2438Z-TR-DS2438Z-SOP-8/292502146541
+  - Blue Enhanced Silicon Photodiode is available from Digi-Key #PDB-V113 
+  - https://github.com/jbechter/arduino-onewire-DS2438/tree/master/examples
+  - https://github.com/jbechter?tab=repositories
+  - http://projects.bechter.com/arduino-onewire/intro.html
+  - https://wp.josh.com/2014/06/23/no-external-pull-up-needed-for-ds18b20-temp-sensor/
+  - http://tj3sat.wikidot.com/forum/t-255274/arduino-code-for-ds2438
+  
 
 # uMQTTBroker
 MQTT Broker library for ESP8266 Arduino
