@@ -159,14 +159,17 @@ https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-f
 
 ### To do:
 
--Implement this code for ESP32 for lora like long distance communication like following:
+-Implement code for ESP32 for lora like long distance communication like following:
  - https://www.youtube.com/watch?v=yCLb2eItDyE
  - https://www.youtube.com/watch?v=2rujjTOPIRU
  - https://www.youtube.com/watch?v=PUppoaePi3A
  - https://github.com/jnogues/ESP32-Long-Range-WiFi
+- BME280
+- APDS9960
+- HC-SR04
+- Soil Moisture I2C
+- WS2812 & 18B20 - Both are addressable. 
  
- 
-
 
 # uMQTTBroker
 MQTT Broker library for ESP8266 Arduino
