@@ -172,7 +172,8 @@ https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-f
 - APDS9960
 - HC-SR04
 - Soil Moisture I2C
-- WS2812 & 18B20 - Both are addressable.
+- WS2812 or Neopixel addressable.
+- DS18B20 - addressable.
 - DS2438 1-wire battery monitor/temperature sensor/A/D converter addressable.
   - http://www.howmuchsnow.com/snow/proto1.html
   - https://www.ebay.com/itm/10pcs-DS2438-DS2438Z-TR-DS2438Z-SOP-8/292502146541
@@ -182,7 +183,7 @@ https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-f
   - http://projects.bechter.com/arduino-onewire/intro.html
   - https://wp.josh.com/2014/06/23/no-external-pull-up-needed-for-ds18b20-temp-sensor/
   - http://tj3sat.wikidot.com/forum/t-255274/arduino-code-for-ds2438
-  
+
 
 # uMQTTBroker
 MQTT Broker library for ESP8266 Arduino
