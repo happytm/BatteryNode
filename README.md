@@ -70,7 +70,7 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
 - 00 to 255 for GREEN neopixel in case of command type 05 
 - or sensorType5 value in case of command 06.
 ```        
-#### Command6 = Command value2      -            
+#### Command6 = Command value3      -            
 ```c
 - 00 to 255 for BLUE neopixel in case of command type 05 
 - or sensorType6 value in case of command 06.
