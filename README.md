@@ -20,7 +20,7 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
 ### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX true in ProbeSender.ino code)
 
 ### Command structure:  (commands are issued via MQTT payload with topic name "command/"
-      
+```c      
 #### Command1 = Device ID Number -               
 
 - Device ID must be 2 digits end with 2,6,A or E to avoid conflict with other devices.
@@ -74,7 +74,7 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
 
 - 00 to 255 for BLUE neopixel in case of command type 05 
 - or sensorType6 value in case of command 06.
-
+```
 
 Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
 
