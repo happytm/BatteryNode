@@ -43,7 +43,8 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
  - 05 = Neopixel etc.
            - Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
  - 06 =      change sensor types.First byte must be target device id and
-           - second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be changed according to hardware.              - Example command payload 36/06/16/26/36/46/.
+           - second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be changed according to hardware.
+           - Example command payload 36/06/16/26/36/46/.
 
   - 07 =     change wifiChannel.
   - 08 =     change sleepTime.
