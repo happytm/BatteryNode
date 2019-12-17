@@ -34,8 +34,8 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
 - value 01 to 09 is reserved for following commands(must have 0 as first digit):
 
  - 01 = digitalWright or analogWrite.
-           - Example command payload 36/01/00 0r 01/ for digitalWrite.
-           - Example command payload 36/01/02 to 256/ for analogWrite.
+           - Example command payload 36/01/01 to 05 or 12 to 16/00 0r 01/ for digitalWrite.
+           - Example command payload 36/01/01 to 05 or 12 to 160/2 to 256/ for analogWrite.
  - 02 = digitalRead.
            - Example command payload 36/02/01 to 05 or 12 to 16/
  - 03 = analogRead,
