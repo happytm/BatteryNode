@@ -24,7 +24,7 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
 #### Command1 = Device ID Number -               
 
 - Device ID must be 2 digits end with 2,6,A or E to avoid conflict with other devices.
-- See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-                                               for-my-virtual-machines.
+- See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
 - use any of following for devie ID ending with 6.
 - 06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246.
 - Device ID and last part of fixed IP are same.
