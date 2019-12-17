@@ -50,7 +50,7 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
   - 08 =     change sleepTime.
            - Example command payload 36/08/00 to 255/ (Sleep Time in minutes).
   - 09 =     Activate alternative code for OTA,Wifimanager ETC.
-           - Example command payload 36/09/00 or 01  (01 to activate Auto firmware update).
+           - Example command payload 36/09/00 or 255/  (01 to activate Auto firmware update).
 ```
 #### Command3 = Command  pinNumber  -            
 ```c
