@@ -19,7 +19,7 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
 
 ### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX true in ProbeSender.ino code)
 
-### Command structure:  (commands are issued via MQTT payload with topic name "command/"
+### Command structure:  (commands are issued via MQTT payload with topic name "command/" and atleast first three commands are necessary)
       
 #### Command1 = Device ID Number -               
 ```c
