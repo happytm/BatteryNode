@@ -1,6 +1,6 @@
 /*
   Data exchange time in simulated sensors mode (no sensors physically connected).
-  Duplex mode =  134 milliseconds, One way = 52 milliseonds.
+  Duplex mode =  125 milliseconds, One way = 52 milliseonds.
 ************************************************************
 Command structure:  (commands are issued via MQTT payload with topic name "command/"
 
@@ -96,8 +96,8 @@ struct {
 #define BOOT_AFTER_UPDATE    false
 HTTPClient http;
 
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "ssid";
+const char* password = "password";
 
 // use any of following for devie ID ending with 6.
 // 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
@@ -107,8 +107,8 @@ int wifiChannel = 7;     // WiFi Channel for this device.
 char* gateway = "ESP";   // This name has to be same as main controller's ssid.
 int sleepTime = 1;       // Sleep time in minutes.
 int upTime;              // Device uptime in milliseconds.
-//int deviceMode;         // 0 for regular, 1 for autupdate and 2 for AutoConnect.
-//int devceIP = device;   // last part of this device's fixed IP
+int deviceMode = 0;      // 0 for regular, 1 for autupdate and 2 for AutoConnect.
+int deviceIP = device;   // last part of this device's fixed IP
 //int requestStatus;
 //int duplexStatus;
 
@@ -116,18 +116,18 @@ int upTime;              // Device uptime in milliseconds.
 // Status values to be sent to Gateway
 
 uint8_t deviceStatus[6];  // {device, deviceMode, deviceIP, wifiChannel, sleepTime, random(255)}
-
+/*
 int sensorType1 = 36;// Predefined sensor type table is below:
 int sensorType2 = 06;// Predefined sensor type table is below:
 int sensorType3 = 16;// volatage = 6, temperature = 16, humidity= 26,
 int sensorType4 = 26;// pressure= 36, light= 46, OpenClose = 56, level = 66,
 int sensorType5 = 36;// presence = 76, motion = 86, rain = 96 etc.
 int sensorType6 = 46;// volatage = 6, temperature = 16, humidity= 26,
-
+*/
 
 // Sensor types to be sent to Gateway
 
-uint8_t sensorType[6] = {sensorType1, sensorType2, sensorType3, sensorType4, sensorType5, sensorType6}; // Change last 4 bytes according to sensot type used.
+uint8_t sensorType[6];  // = {sensorType1, sensorType2, sensorType3, sensorType4, sensorType5, sensorType6}; // Change last 4 bytes according to sensot type used.
 
 // Sensor values to be sent to Gateway
 
@@ -150,7 +150,7 @@ void setup() {
   WiFi.scanDelete();  //remove previous scan data from memory
   Serial.begin(115200);
              
-#if DUPLEX
+
 // Read struct from RTC memory
 if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) 
   {
@@ -169,15 +169,14 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
       Serial.println("CRC32 check ok, data is valid.");
      }
   } 
-
-    sensorType[0] = rtcData.data[0] ;
-    sensorType[1] = rtcData.data[1] ;
-    sensorType[2] = rtcData.data[2] ;
-    sensorType[3] = rtcData.data[3] ;
-    sensorType[4] = rtcData.data[4] ;
-    sensorType[5] = rtcData.data[5] ;       
- #endif   
- 
+   
+    sensorType[0] = rtcData.data[0];   // Device ID
+    sensorType[1] = rtcData.data[1];   // Voltage
+    sensorType[2] = rtcData.data[2];   // Sensor Tytp 1
+    sensorType[3] = rtcData.data[3];   // Sensor Tytp 2
+    sensorType[4] = rtcData.data[4];   // Sensor Tytp 3
+    sensorType[5] = rtcData.data[5];   // Sensor Tytp 4
+     
   wifi_set_macaddr(STATION_IF, sensorType);
   probeRequest();
   Serial.print("Sensor Type values sent to controller: ");
@@ -216,24 +215,10 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
     value1 = WiFi.BSSID(0)[3];
     value2 = WiFi.BSSID(0)[4];
     value3 = WiFi.BSSID(0)[5];
-    /*
-    Serial.println("Message (DEC format): ");
-    Serial.print("Received Device: ");
-    Serial.print(receivedDevice);
-    Serial.print(" receivedCommand: ");
-    Serial.print(receivedCommand);
-    Serial.print(" pinNumber: ");
-    Serial.print(pinNumber);
-    Serial.print(" value1: ");
-    Serial.print(value1);
-    Serial.print(" value2: ");
-    Serial.print(value2);
-    Serial.print(" value3: ");
-    Serial.println(value3);
-    */
+   
      
    if (receivedCommand == 6)      
-   {
+             {
               rtcData.data[0] = receivedDevice;
               rtcData.data[1] = receivedCommand;
               rtcData.data[2] = pinNumber;
@@ -242,18 +227,19 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
               rtcData.data[5] = value3;
     
     } else if (receivedCommand == 7) 
-           {
+             {
               rtcData.data[6] = pinNumber;
               wifiChannel = rtcData.data[6];
               
      } else if (receivedCommand == 8 && pinNumber != 0) 
-            {
-               rtcData.data[7] = pinNumber;    // Save sleep time in minutes.
+             {
+              rtcData.data[7] = pinNumber;    // Save sleep time in minutes.
+              sleepTime = rtcData.data[7];
                
      } else if (receivedCommand == 9) 
              {
-               rtcData.data[8] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
-              
+              rtcData.data[8] = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
+              deviceMode = rtcData.data[8];
               }
       
       
@@ -272,53 +258,48 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
       Serial.println();
      }
 
-    if (sensorType1 == 16 || sensorType1 == 26 || sensorType1 == 36 || 
-        sensorType2 == 16 || sensorType2 == 26 || sensorType2 == 36 || 
-        sensorType3 == 16 || sensorType3 == 26 || sensorType3 == 36 || 
-        sensorType4 == 16 || sensorType4 == 26 || sensorType4 == 36) 
+    if (sensorType[2] == 16 || sensorType[2] == 26 || sensorType[2] == 36 || 
+        sensorType[3] == 16 || sensorType[3] == 26 || sensorType[3] == 36 || 
+        sensorType[4] == 16 || sensorType[4] == 26 || sensorType[4] == 36 || 
+        sensorType[5] == 16 || sensorType[5] == 26 || sensorType[5] == 36) 
     {           
      #define BME280SENSOR   true
      Serial.println();
      Serial.println("Activate code for BME280");
     }  
     
-    if (sensorType1 == 46 || sensorType2 == 46 || sensorType3 == 46 || sensorType4 == 46)  
+    if (sensorType[2] == 46 || sensorType[3] == 46 || sensorType[4] == 46 || sensorType[5] == 46)  
     {
     #define APDS9960SENSOR   true
     Serial.println("Activate code for APDS9960");
     } 
     
-    if (sensorType1 == 56 || sensorType2 == 56 || sensorType3 == 56 || sensorType4 == 56)  
-    {
+    if (sensorType[2] == 56 || sensorType[3] == 56 || sensorType[4] == 56 || sensorType[5] == 56)    {
     #define OPENCLOSESENSOR   true  
     Serial.println("Activate code for OpenClose sensor");
     } 
     
-    if (sensorType1 == 66 || sensorType2 == 66 || sensorType3 == 66 || sensorType4 == 66)  
-    {
+    if (sensorType[2] == 66 || sensorType[3] == 66 || sensorType[4] == 66 || sensorType[5] == 66)    {
     #define HCSR04SENSOR   true
     Serial.println("Activate code for distance sensor");
     } 
      
-    if (sensorType1 == 76 || sensorType2 == 76 || sensorType3 == 76 || sensorType4 == 76)  
-    {
+    if (sensorType[2] == 76 || sensorType[3] == 76 || sensorType[4] == 76 || sensorType[5] == 76)    {
     #define PIRSENSOR   true  
     Serial.println("Activate code for presene detection sensor");
     } 
 
-    if (sensorType1 == 86 || sensorType2 == 86 || sensorType3 == 86 || sensorType4 == 86)  
-    {
+    if (sensorType[2] == 86 || sensorType[3] == 86 || sensorType[4] == 86 || sensorType[5] == 86)    {
     #define RCWL0516SENSOR   true
     Serial.println("Activate code for presence detection sensor");
     }    
 
-    if (sensorType1 == 96 || sensorType2 == 96 || sensorType3 == 96 || sensorType4 == 96)  
-    {
+    if (sensorType[2] == 96 || sensorType[3] == 96 || sensorType[4] == 96 || sensorType[5] == 96)    {
     #define PHOTOSENSOR   true
     Serial.println("Activate code for light sensor");
     Serial.println();
     }  
-   
+  
 #endif
     
     delay(1);
@@ -340,15 +321,16 @@ if (receivedDevice == device && receivedCommand == 9)  {
     }  
 #endif
 
-   upTime = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
+   rtcData.data[9] = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
+   upTime = rtcData.data[9];
    sendStatus();
    Serial.print("Total time I spent before going to sleep: ");
-   Serial.println(millis());
+   Serial.println(upTime);
    Serial.print("I will wakeup in: ");
-   Serial.print(rtcData.data[7]);
+   Serial.print(sleepTime);
    Serial.println(" Minutes");
    delay(5000); ESP.restart();   // For testing only.
-   //ESP.deepSleep(sleepTime * 60000000, RF_NO_CAL); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
+   //ESP.deepSleepInstant(sleepTime * 60000000, WAKE_NO_RFCAL); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
     
 }     // end of main loop.
 //=========================Main Loop ends==========================
@@ -360,7 +342,8 @@ if (receivedDevice == device && receivedCommand == 9)  {
 void probeRequest()  {
  
   //int8_t scanNetworks(bool async = true, bool show_hidden = false, uint8 channel = 0, uint8* ssid = NULL);
- int n = WiFi.scanNetworks(true, false, wifiChannel, (uint8*) gateway);
+    int n = WiFi.scanNetworks(true, false, wifiChannel, (uint8*) gateway);
+  //int n = WiFi.scanNetworks(true, false);
 
   yield();
 
@@ -536,11 +519,11 @@ void otaControl()
 void sendStatus() {
   
    deviceStatus[0] = device;  
-   deviceStatus[1] = rtcData.data[8];     // 0 for regular, 1 for autupdate and 2 for AutoConnect.
-   deviceStatus[2] = device;              // last part of this device's fixed IP (same as device ID).
+   deviceStatus[1] = deviceMode;     // 0 for regular, 1 for autupdate and 2 for AutoConnect.
+   deviceStatus[2] = deviceIP;              // Last part of this device's fixed IP (same as device ID).
    deviceStatus[3] = wifiChannel;         // WiFi Channel for this device. 
-   deviceStatus[4] = rtcData.data[7];     // Sleep tme nminutes for this device.
-   deviceStatus[5] = upTime;              // Device upTime.
+   deviceStatus[4] = sleepTime;           // Sleep time in minutes for this device.
+   deviceStatus[5] = upTime;              // Device upTime in milliseconds.
    wifi_set_macaddr(STATION_IF, deviceStatus);
    probeRequest();
    Serial.print("Device status values sent to controller: ");
