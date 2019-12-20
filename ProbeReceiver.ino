@@ -14,25 +14,18 @@
 //   Your WiFi config here
 
 int wifiChannel = 7;
-char* room = "Livingroom";
-int rssiThreshold = -50; // Adjust according to signal strength by trial & error.
-char gateway[] = "ESP";
-char ssid[] = "myAP";     // your network SSID (name)
-char pass[] = ""; // your network password
+char* room = "Livingroom";// Needed for person locator.Each room must run probeReceiver sketch to implement person locator. 
+int rssiThreshold = -50;  // Adjust according to signal strength by trial & error.
+char gateway[] = "ESP";   // Gateway mustbe same across all devices on network.
+char ssid[] = "ssid";     // your network SSID (name)
+char pass[] = "password"; // your network password
 
 int device;
 float voltage;
 
-int sensorValue1;
-int sensorValue2;
-int sensorValue3;
-int sensorValue4;
+int sensorValue1; int sensorValue2; int sensorValue3; int sensorValue4;
 
-int statusValue1;
-int statusValue2;
-int statusValue3;
-int statusValue4;
-int statusValue5;
+int statusValue1; int statusValue2; int statusValue3; int statusValue4; int statusValue5;
 
 uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
 uint8_t PresencePerson2[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #2.
@@ -45,33 +38,11 @@ uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of 
   OpenClose = 56, level = 66, presence = 76, motion = 86, rain = 96 etc.
 */
 
-int sensorType1;
-int sensorType2;
-int sensorType3;
-int sensorType4;
-int sensorType5;
+int sensorType1; int sensorType2; int sensorType3; int sensorType4; int sensorType5;
 
-char topic1[50];
-char topic2[50];
-char topic3[50];
-char topic4[50];
-char topic5[50];
-char topic6[50];
-char topic7[50];
-char topic8[50];
-char topic9[50];
-char topic10[50];
-char topic11[50];
-char topic12[50];
+char topic1[50]; char topic2[50]; char topic3[50]; char topic4[50]; char topic5[50]; char topic6[50]; char topic7[50]; char topic8[50]; char topic9[50]; char topic10[50]; char topic11[50]; char topic12[50];
 
-
-int command1 = 36;  // = 0;
-int command2;  // = 0;
-int command3;  // = 0;
-int command4;  // = 0;
-int command5;  // = 0;
-int command6;  // = 0;
-
+int command1 = 36; int command2;  int command3;  int command4;  int command5; int command6;  
 uint8_t mac[6] = {command1, command2, command3, command4, command5, command6};
 
 // ==================== end of TUNEABLE PARAMETERS ====================
@@ -101,7 +72,7 @@ class myMQTTBroker: public uMQTTBroker
       char data_str[length + 1];
       os_memcpy(data_str, data, length);
       data_str[length] = '\0';
-      Serial.println("received topic '" + topic + (String)data_str);
+      Serial.println("Received Topic '" + topic + (String)data_str);
 
       if (topic == "command/")   {
 
@@ -236,18 +207,18 @@ void mqttPublish()    {
     level = 76, presence = 86, motion = 96 etc.
   */
 
-  sprintf(topic1, "%s%i%s%i%s", "Sensordata/", device, "/", device, "/");
-  sprintf(topic2, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType1, "/");
-  sprintf(topic3, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType2, "/");
-  sprintf(topic4, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType3, "/");
-  sprintf(topic5, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType4, "/");
-  sprintf(topic6, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType5, "/");
-  sprintf(topic7, "%s%i%s%i%s", "Sensorstatus/", device, "/", device, "/");
-  sprintf(topic8, "%s%i%s%s", "Sensorstatus/", device, "/", "DeviceMode/");
-  sprintf(topic9, "%s%i%s%s", "Sensorstatus/", device, "/", "DeviceIP/");
-  sprintf(topic10, "%s%i%s%s", "Sensorstatus/", device, "/", "WiFiChannel/");
-  sprintf(topic11, "%s%i%s%s", "Sensorstatus/", device, "/", "SleepTime/");
-  sprintf(topic12, "%s%i%s%s", "Sensorstatus/", device, "/", "Uptime/");
+  sprintf(topic1, "%s%i%s%i%s", "SensorData/", device, "/", device, "/");
+  sprintf(topic2, "%s%i%s%i%s", "SensorData/", device, "/", sensorType1, "/");
+  sprintf(topic3, "%s%i%s%i%s", "SensorData/", device, "/", sensorType2, "/");
+  sprintf(topic4, "%s%i%s%i%s", "SensorData/", device, "/", sensorType3, "/");
+  sprintf(topic5, "%s%i%s%i%s", "SensorData/", device, "/", sensorType4, "/");
+  sprintf(topic6, "%s%i%s%i%s", "SensorData/", device, "/", sensorType5, "/");
+  sprintf(topic7, "%s%i%s%i%s", "DeviceStatus/", device, "/", device, "/");
+  sprintf(topic8, "%s%i%s%s", "DeviceStatus/", device, "/", "DeviceMode/");
+  sprintf(topic9, "%s%i%s%s", "DeviceStatus/", device, "/", "DeviceIP/");
+  sprintf(topic10, "%s%i%s%s", "DeviceStatus/", device, "/", "WiFiChannel/");
+  sprintf(topic11, "%s%i%s%s", "DeviceStatus/", device, "/", "SleepTime/");
+  sprintf(topic12, "%s%i%s%s", "DeviceStatus/", device, "/", "UpTime/");
 
 
   // myBroker.publish(topic1, (String)device);
