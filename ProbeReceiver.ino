@@ -14,7 +14,7 @@
 //   Your WiFi config here
 
 int wifiChannel = 7;
-char* room = "Livingroom";// Needed for person locator.Each room must run probeReceiver sketch to implement person locator. 
+char* room = "Livingroom";// Needed for person locator.Each room must run probeReceiver sketch to implement person locator.
 int rssiThreshold = -50;  // Adjust according to signal strength by trial & error.
 char gateway[] = "ESP";   // Gateway mustbe same across all devices on network.
 char ssid[] = "ssid";     // your network SSID (name)
@@ -42,7 +42,7 @@ int sensorType1; int sensorType2; int sensorType3; int sensorType4; int sensorTy
 
 char topic1[50]; char topic2[50]; char topic3[50]; char topic4[50]; char topic5[50]; char topic6[50]; char topic7[50]; char topic8[50]; char topic9[50]; char topic10[50]; char topic11[50]; char topic12[50];
 
-int command1 = 36; int command2;  int command3;  int command4;  int command5; int command6;  
+int command1 = 36; int command2;  int command3;  int command4;  int command5; int command6;
 uint8_t mac[6] = {command1, command2, command3, command4, command5, command6};
 
 // ==================== end of TUNEABLE PARAMETERS ====================
@@ -76,56 +76,56 @@ class myMQTTBroker: public uMQTTBroker
 
       if (topic == "command/")   {
 
-/***********************************************************************************************************************************************************************
-Command structure:  (commands are issued via MQTT payload with topic name "command/"
+        /***********************************************************************************************************************************************************************
+          Command structure:  (commands are issued via MQTT payload with topic name "command/"
 
-Command1 = Device ID Number -       device ID must be 2 digits end with 2,6,A or E to avoid conflict with other devices.
-                                            See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
-                                            use any of following for devie ID ending with 6.
-                                            06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
-                                            Device ID and last part of fixed IP are same.
-                                            
-Command2 = Command type     -        value 01 to 09 is reserved for following commands(must have 0 as first digit):
+          Command1 = Device ID Number -       device ID must be 2 digits end with 2,6,A or E to avoid conflict with other devices.
+                                                    See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+                                                    use any of following for devie ID ending with 6.
+                                                    06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
+                                                    Device ID and last part of fixed IP are same.
 
-                                       01 = digitalWright or analogWrite.
-                                            Example command payload 36/01/00 0r 01/ for digitalWrite.
-                                            Example command payload 36/01/02 to 256/ for analogWrite.
-                                       02 = digitalRead.
-                                            Example command payload 36/02/01 to 05 or 12 to 16/
-                                       03 = analogRead,
-                                       04=  Reserved,
-                                       05 = Neopixel etc.
-                                            Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
-                                       06 = change sensoor types.First byte must be target device id and
-                                            second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be changed according to hardware setup.
-                                            Example command payload 36/06/16/26/36/46/.
+          Command2 = Command type     -        value 01 to 09 is reserved for following commands(must have 0 as first digit):
 
-                                       07 = change wifiChannel.
-                                       08 = change sleepTime.
-                                            Example command payload 36/08/00 to 255/ (Sleep Time in minutes).
-                                       09 = Activate alternative code for OTA,Wifimanager ETC.
-                                            Example command payload 36/09/00 or 01 or 02/ (01 to activate Auto firmware update & 02 to activate AutoConnect.).
+                                               01 = digitalWright or analogWrite.
+                                                    Example command payload 36/01/00 0r 01/ for digitalWrite.
+                                                    Example command payload 36/01/02 to 256/ for analogWrite.
+                                               02 = digitalRead.
+                                                    Example command payload 36/02/01 to 05 or 12 to 16/
+                                               03 = analogRead,
+                                               04=  Reserved,
+                                               05 = Neopixel etc.
+                                                    Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
+                                               06 = change sensoor types.First byte must be target device id and
+                                                    second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be changed according to hardware setup.
+                                                    Example command payload 36/06/16/26/36/46/.
 
-                                            value 10 to 20 is reserved for following commands:
-                                        
+                                               07 = change wifiChannel.
+                                               08 = change sleepTime.
+                                                    Example command payload 36/08/00 to 255/ (Sleep Time in minutes).
+                                               09 = Activate alternative code for OTA,Wifimanager ETC.
+                                                    Example command payload 36/09/00 or 01 or 02/ (01 to activate Auto firmware update & 02 to activate AutoConnect.).
 
-Command3 = Command  pinNumber  -            pinNumber in case of command type 01 to 04 above. 
-                                            Neopixel LED number in case of command type 05.
-                                            Value in case of command type 06,07,08 & 09 commandtype.
-                                            sensorType4 value in case of command 06.
-                                            
+                                                    value 10 to 20 is reserved for following commands:
 
-Command4 = Command value1      -            00 or 255 in case of command type 01 (digitalWrite & analogWrite)  
-                                            or RED neopixel value in case of command type 05 
-                                            or sensorType4 value in case of command 06.
 
-Command5 = Command value2      -            00 to 255 for GREEN neopixel in case of command type 05 
-                                            or sensorType5 value in case of command 06.
-        
-Command6 = Command value2      -            00 to 255 for BLUE neopixel in case of command type 05 
-                                            or sensorType6 value in case of command 06.
-*********************************************************************************************************************************/        
-        
+          Command3 = Command  pinNumber  -            pinNumber in case of command type 01 to 04 above.
+                                                    Neopixel LED number in case of command type 05.
+                                                    Value in case of command type 06,07,08 & 09 commandtype.
+                                                    sensorType4 value in case of command 06.
+
+
+          Command4 = Command value1      -            00 or 255 in case of command type 01 (digitalWrite & analogWrite)
+                                                    or RED neopixel value in case of command type 05
+                                                    or sensorType4 value in case of command 06.
+
+          Command5 = Command value2      -            00 to 255 for GREEN neopixel in case of command type 05
+                                                    or sensorType5 value in case of command 06.
+
+          Command6 = Command value2      -            00 to 255 for BLUE neopixel in case of command type 05
+                                                    or sensorType6 value in case of command 06.
+        *********************************************************************************************************************************/
+
         command1 = atoi(&data[0]);
         Serial.println(command1);
         command2 = atoi(&data[3]);
@@ -183,20 +183,20 @@ void setup()
 
   probeRequestPrintHandler = WiFi.onSoftAPModeProbeRequestReceived(&onProbeRequest);
   delay(1);
- 
+
   // Start the broker
-     Serial.println("Starting MQTT broker");
-     myBroker.init();
- 
+  Serial.println("Starting MQTT broker");
+  myBroker.init();
+
   // Subscribe to anything
-  
-     myBroker.subscribe("#");
+
+  myBroker.subscribe("#");
 }
 
 
 void loop()
 {
-   // Your loop code goes here. 
+  // Your loop code goes here.
 }
 
 
@@ -228,7 +228,7 @@ void mqttPublish()    {
   myBroker.publish(topic4, (String)sensorValue2);
   myBroker.publish(topic5, (String)sensorValue3);
   myBroker.publish(topic6, (String)sensorValue4);
-  
+
   myBroker.publish(topic8, (String)statusValue1);
   myBroker.publish(topic9, (String)statusValue2);
   myBroker.publish(topic10, (String)statusValue3);
@@ -270,28 +270,28 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
       sensorType3 = (dataReceived.mac[3]);
       sensorType4 = (dataReceived.mac[4]);
       sensorType5 = (dataReceived.mac[5]);
-      #if MQTTBROKER
+#if MQTTBROKER
       mqttPublish();
-      #endif
-      
+#endif
+
     } else if (dataReceived.mac[3] == wifiChannel)
 
     {
-       statusValue1 = (dataReceived.mac[1]);
-       statusValue2 = (dataReceived.mac[2]);
-       statusValue3 = (dataReceived.mac[3]);
-       statusValue4 = (dataReceived.mac[4]);
-       statusValue5 = (dataReceived.mac[5]);
-       #if MQTTBROKER
-       mqttPublish();
-       #endif
-     }
+      statusValue1 = (dataReceived.mac[1]);
+      statusValue2 = (dataReceived.mac[2]);
+      statusValue3 = (dataReceived.mac[3]);
+      statusValue4 = (dataReceived.mac[4]);
+      statusValue5 = (dataReceived.mac[5]);
+#if MQTTBROKER
+      mqttPublish();
+#endif
+    }
 
     Serial.print("Signal Strength of remote sensor: ");
     Serial.println(dataReceived.rssi);
-    #if MQTTBROKER
+#if MQTTBROKER
     myBroker.publish("Sensordata/Signal/", (String)dataReceived.rssi);
-    #endif
+#endif
 
 
     Serial.print("Probe Request:- ");
@@ -313,11 +313,21 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
     Serial.print(dataReceived.mac[3], DEC);
     sensorValue2 = dataReceived.mac[3];
 
+   if (sensorType4 == 36)
+   {  
     Serial.print(" Sensor 3:  ");
     Serial.print(dataReceived.mac[4], DEC);
     sensorValue3 = dataReceived.mac[4];
     sensorValue3 = sensorValue3 * 4;
+   } else {
 
+    Serial.print(" Sensor 3:  ");
+    Serial.print(dataReceived.mac[4], DEC);
+    sensorValue3 = dataReceived.mac[4];
+    
+    }
+
+   
     Serial.print(" Sensor 4:  ");
     Serial.println(dataReceived.mac[5], DEC);
     sensorValue4 = dataReceived.mac[5];
@@ -327,9 +337,9 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
     {
 #if MQTTBROKER
       delay(1);
-    
+
       myBroker.publish("SensorData/warning/LowBattery/", (String)device);
-      
+
 #endif
 
       Serial.println("**************Warning :- Battery Voltage low please change batteries********************" );
@@ -339,7 +349,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
 
     if (dataReceived.mac[1] > 115 && dataReceived.mac[1] < 180)  {
 
-      
+
 
 
     }
@@ -352,7 +362,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
 }
 
 void sendCommand()  {
- 
+
   mac[0] = command1;
   mac[1] = command2;
   mac[2] = command3;
