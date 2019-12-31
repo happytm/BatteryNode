@@ -176,7 +176,7 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
     sensorType[3] = rtcData.data[3];   // Sensor Tytp 2
     sensorType[4] = rtcData.data[4];   // Sensor Tytp 3
     sensorType[5] = rtcData.data[5];   // Sensor Tytp 4
-     
+
   wifi_set_macaddr(STATION_IF, sensorType);
   probeRequest();
   Serial.print("Sensor Type values sent to controller: ");
@@ -222,8 +222,14 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
               rtcData.data[0] = receivedDevice;
               rtcData.data[1] = receivedCommand;
               rtcData.data[2] = pinNumber;
+              if (pinNumber == 16)
+              {  
+              rtcData.data[3] = 26;
+              rtcData.data[4] = 36; 
+              } else {
               rtcData.data[3] = value1;
               rtcData.data[4] = value2;
+              }
               rtcData.data[5] = value3;
     
     } else if (receivedCommand == 7) 
@@ -257,49 +263,7 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
    // Serial.println("Write: ");
       Serial.println();
      }
-/*
-    if (sensorType[2] == 16 || sensorType[2] == 26 || sensorType[2] == 36 || 
-        sensorType[3] == 16 || sensorType[3] == 26 || sensorType[3] == 36 || 
-        sensorType[4] == 16 || sensorType[4] == 26 || sensorType[4] == 36 || 
-        sensorType[5] == 16 || sensorType[5] == 26 || sensorType[5] == 36) 
-    {           
-     #define BME280SENSOR   true
-     Serial.println();
-     Serial.println("Activate function for BME280");
-    }  
-    
-    if (sensorType[2] == 46 || sensorType[3] == 46 || sensorType[4] == 46 || sensorType[5] == 46)  
-    {
-    #define APDS9960SENSOR   true
-    Serial.println("Activate function for APDS9960");
-    } 
-    
-    if (sensorType[2] == 56 || sensorType[3] == 56 || sensorType[4] == 56 || sensorType[5] == 56)    {
-    #define OPENCLOSESENSOR   true  
-    Serial.println("Activate function for OpenClose sensor");
-    } 
-    
-    if (sensorType[2] == 66 || sensorType[3] == 66 || sensorType[4] == 66 || sensorType[5] == 66)    {
-    #define HCSR04SENSOR   true
-    Serial.println("Activate function for distance sensor");
-    } 
-     
-    if (sensorType[2] == 76 || sensorType[3] == 76 || sensorType[4] == 76 || sensorType[5] == 76)    {
-    #define PIRSENSOR   true  
-    Serial.println("Activate function for presene detection sensor");
-    } 
 
-    if (sensorType[2] == 86 || sensorType[3] == 86 || sensorType[4] == 86 || sensorType[5] == 86)    {
-    #define RCWL0516SENSOR   true
-    Serial.println("Activate function for presence detection sensor");
-    }    
-
-    if (sensorType[2] == 96 || sensorType[3] == 96 || sensorType[4] == 96 || sensorType[5] == 96)    {
-    #define PHOTOSENSOR   true
-    Serial.println("Activate function for light sensor");
-    Serial.println();
-    }  
-  */
 #endif
     
     delay(1);
@@ -366,6 +330,14 @@ void sensorValues() {
     Serial.println();
   }
   */
+
+ sensorData[0] = device;
+ sensorData[1] = voltage;
+/*  sensorData[2] = random(90);         //temperature;
+  sensorData[3] = random(100);        //humidity;
+  sensorData[4] = random(1024) / 4;   //pressure;
+  sensorData[5] = random(100);        //light;
+  */
   
  //Functions for all sensors used on this device goes here and activated by command received from controller.
  //Values received from sensors replaces 4 random values of sensorData array.
@@ -377,30 +349,30 @@ void sensorValues() {
       sensorType[4] = 36;
       Serial.println();
       Serial.println("Activate function for BME280");
-      sensorData[2] = random(90);         //temperature;
-      sensorData[3] = random(100);        //humidity;
+      sensorData[2] = 1;         //temperature;
+      sensorData[3] = 2;        //humidity;
       sensorData[4] = random(1024) / 4;   //pressure;
     
     } else if (sensorType[2] == 46) {
 
-      sensorData[2] = random(100);  
+      sensorData[2] = 60;  
       Serial.println("Activate function for APDS9960 Light Sensor");
       Serial.println();
     
     } else if (sensorType[2] == 56) {
 
-      sensorData[2] = random(1);  // 0 or 1
+      sensorData[2] = 1; 
       Serial.println("Activate function for OpenClose sensor");
       Serial.println();
     } else if (sensorType[2] == 66) {
 
-      sensorData[2] = random(256);  // 0 to 256 cm.
+      sensorData[2] = 8;  // 0 to 256 cm.
       Serial.println("Activate function for HCSR04 distance sensor");
       Serial.println();
     
     } else if (sensorType[2] == 76) {
 
-      sensorData[2] = random(1);  // 0 or 1
+      sensorData[2] = 0;  
       Serial.println("Activate function for motion (rcwl-0516 or hc-sr505) sensor");
       Serial.println();
       
@@ -419,18 +391,18 @@ void sensorValues() {
 
     if (sensorType[3] == 46) {
 
-      sensorData[3] = random(100);  
+      sensorData[3] = 60;  
       Serial.println("Activate function for APDS9960 Light Sensor");
       Serial.println();
     
     } else if (sensorType[3] == 56) {
 
-      sensorData[3] = random(1);  // 0 or 1
+      sensorData[3] = 1;  // 0 or 1
       Serial.println("Activate function for OpenClose sensor");
       Serial.println();
     } else if (sensorType[3] == 66) {
 
-      sensorData[3] = random(256);  // 0 to 256 cm.
+      sensorData[3] = 8;  // 0 to 256 cm.
       Serial.println("Activate function for HCSR04 distance sensor");
       Serial.println();
     
@@ -466,7 +438,7 @@ void sensorValues() {
       Serial.println();
     } else if (sensorType[4] == 66) {
 
-      sensorData[4] = random(256);  // 0 to 256 cm.
+      sensorData[4] = 8;  // 0 to 256 cm.
       Serial.println("Activate function for HCSR04 distance sensor");
       Serial.println();
     
@@ -497,12 +469,12 @@ void sensorValues() {
     
     } else if (sensorType[5] == 56) {
 
-      sensorData[5] = random(1);  // 0 or 1
+      sensorData[5] = random(2);  // 0 or 1
       Serial.println("Activate function for OpenClose sensor");
       Serial.println();
     } else if (sensorType[5] == 66) {
 
-      sensorData[5] = random(256);  // 0 to 256 cm.
+      sensorData[5] = 8;  // 0 to 256 cm.
       Serial.println("Activate function for HCSR04 distance sensor");
       Serial.println();
     
@@ -524,13 +496,8 @@ void sensorValues() {
       Serial.println("Activate function for some sensor");
       Serial.println();
     }
-  
-  sensorData[0] = device;
-  sensorData[1] = voltage;
-  sensorData[2] = random(90);         //temperature;
-  sensorData[3] = random(100);        //humidity;
-  sensorData[4] = random(1024) / 4;   //pressure;
-  sensorData[5] = random(100);        //light;
+
+ 
   wifi_set_macaddr(STATION_IF, sensorData);
 
 }
