@@ -18,34 +18,34 @@ https://github.com/HarringayMakerSpace/sonoff-adhoc/issues/1
 commands
 Before you do anything, the system should be up to date:
 
-sudo apt-get update
-sudo apt-get upgrade
-sudo rpi-update
+- sudo apt-get update
+- sudo apt-get upgrade
+- sudo rpi-update
 
 Since there are several packages on GitHub, we need git on the system to load them.
 
-sudo apt-get install git
+- sudo apt-get install git
+
 Then we start with a few dependencies, which we will need later.
 
-git clone https://github.com/drkjam/netaddr
-cd netaddr
-sudo python setup.py install
-cd ..
+- git clone https://github.com/drkjam/netaddr
+- cd netaddr
+- sudo python setup.py install
+- cd ..
 
-git clone https://github.com/secdev/scapy.git
-cd scapy
-sudo python setup.py install
-cd ..
+- git clone https://github.com/secdev/scapy.git
+- cd scapy
+- sudo python setup.py install
+- cd ..
+
 Now it goes on with Probemon and Aircrack-NG (the second one is not necessary, but is a cool tool).
 
-git clone https://github.com/nikharris0/probemon.git
+- git clone https://github.com/nikharris0/probemon.git
+- sudo apt-get install aircrack-ng
+- ifconfig
+- sudo ifconfig wlan0 down
+- sudo airmon-ng start wlan0
 
-sudo apt-get install aircrack-ng
-ifconfig
-
-sudo ifconfig wlan0 down
-
-sudo airmon-ng start wlan0
 Build new drivers for the interface
 Since I wanted to use the internal WiFi module of the Raspberry Pi, I had to build a new driver with nexmon , since the standard driver does not support monitoring mode. Sounds easy at first, but requires a whole bunch of individual steps.
 
@@ -53,55 +53,49 @@ Here I have documented the commands from the video. The best thing to do is to f
 
 ###These commands are for kernel 4.14 and a Raspberry Pi Zero W
 
-sudo su
-cd /usr/local/src
+- sudo su
+- cd /usr/local/src
 
-wget  -O re4son-kernel_current.tar.xz https://re4son-kernel.com/download/re4son-kernel-current/
+- wget  -O re4son-kernel_current.tar.xz https://re4son-kernel.com/download/re4son-kernel-current/
 
-tar -xJf re4son-kernel_current.tar.xz
+- tar -xJf re4son-kernel_current.tar.xz
 
-cd re4son-kernel_4*
+- cd re4son-kernel_4*
 
-./install.sh
+- ./install.sh
 
 (answer Y to a few prompts)
 
 (reboots)
 
-sudo iw phy phy0 interface add mon0 type monitor
+- sudo iw phy phy0 interface add mon0 type monitor
 
-sudo ifconfig mon0 up
+- sudo ifconfig mon0 up
 
-sudo apt-get install tcpdump
+- sudo apt-get install tcpdump
 
 (now tracking my device 6c:96:cf:db:2f:77)
-sudo tcpdump -i mon0 -e -s 0 type mgt subtype probe-req and ether host 6c:96:cf:db:2f:77
+
+- sudo tcpdump -i mon0 -e -s 0 type mgt subtype probe-req and ether host 6c:96:cf:db:2f:77
 
 These commands are for kernel 4.14 and a Raspberry Pi 3 (NOT 3B +)
 
-sudo su
-
-apt install raspberrypi-kernel-headers git libgmp3-dev gawk qpdf bison flex make
-git clone https://github.com/seemoo-lab/nexmon.git
-cd nexmon
-
-file /usr/lib/arm-linux-gnueabihf/libisl.so.10
-
-cd buildtools/isl-0.10
-./configure
-make
-make install
-ln -s /usr/local/lib/libisl.so /usr/lib/arm-linux-gnueabihf/libisl.so.10
-
-cd ../..
-source setup_env.sh
-make
-cd patches/bcm43430a1/7_45_41_46/nexmon/
-
-
-wget https://raw.githubusercontent.com/notro/rpi-source/master/rpi-source -O /usr/bin/rpi-source && chmod +x /usr/bin/rpi-source && /usr/bin/rpi-source -q --tag-update
-
-apt-get install bc libncurses5-dev
+- sudo su
+- apt install raspberrypi-kernel-headers git libgmp3-dev gawk qpdf bison flex make
+- git clone https://github.com/seemoo-lab/nexmon.git
+- cd nexmon
+- file /usr/lib/arm-linux-gnueabihf/libisl.so.10
+- cd buildtools/isl-0.10
+- ./configure
+- make
+- make install
+- ln -s /usr/local/lib/libisl.so /usr/lib/arm-linux-gnueabihf/libisl.so.10
+- cd ../..
+- source setup_env.sh
+- make
+- cd patches/bcm43430a1/7_45_41_46/nexmon/
+- wget https://raw.githubusercontent.com/notro/rpi-source/master/rpi-source -O /usr/bin/rpi-source && chmod +x /usr/bin/rpi-source && /usr/bin/rpi-source -q --tag-update
+- apt-get install bc libncurses5-dev
 rpi-source
 
 
@@ -120,7 +114,7 @@ depmod -a
 
 reboot
 sudo su
-Further in the text
+
 Next, a monitoring device is created, which can then be used to receive sample requests. Supposedly you can even use the Monitoring Mode and the normal WiFi interface in parallel. But I didn't test it because my Raspberry Pi is hanging from the cable in the basement.
 
 iw phy `iw dev wlan0 info | gawk '/wiphy/ {printf "phy" $2}'` interface add mon0 type monitor
@@ -128,6 +122,7 @@ ifconfig mon0 up
 
 exit
 cd ~/python
+
 Now install tcpdump and test whether everything works.
 
 sudo apt-get install tcpdump
@@ -147,10 +142,12 @@ git clone https://github.com/klein0r/probemon.git
 Then the whole thing can be tested. Please adjust MQTT broker, user and password.
 
 sudo python probemon.py -i mon0 --mac-info --ssid --log --mqtt-broker 192.168.44.11 --mqtt-user raspberry --mqtt-password xxx --mqtt-topic /SmartHome/Interface/WiFi/ProbeRequest
+
 If everything goes well, I'll take care of the auto start. A new file is created for this.
 
 chmod +x probemon.py
 sudo vi /lib/systemd/system/probemon.service
+
 This gets this content (theoretically it would be nicer to move the whole thing from the home directory of the pi user to another place beforehand. But that's how it works.)
 
 Please remove –log as a parameter. We do not need to spend on stdout
