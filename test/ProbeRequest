@@ -1,6 +1,5 @@
 Project: Recognize the postman with ProbeRequests
-  project
-Project: Recognize the postman with ProbeRequests
+ 
 If you have configured several WiFi networks on your smartphone (home, work, friends, cafes, ...) and leave the house, the device constantly asks whether these networks can be reached in the area. If so, it connects. Most of the time, however, you are on the road and far away from home - then you continue to ask cheerfully. And for all entries. So if you were in the hotel WiFi during your last vacation, then it also asks for this network in the pedestrian zone in Germany. These requests are called sample requests. The same thing happens when the DHL delivery man is at your front door with his handheld. These devices also have WiFi and are constantly asking for this. This is how we can recognize them. Cool, isn't it?
 
 So what if the DHL employee was on the way to the front door and we already knew. Before he rings! For this we listen with a Raspberry Pi for sample requests from nearby devices. So if someone calls for their DHL network, it is most likely not their neighbor. So we know that the postman is approaching and can act.
