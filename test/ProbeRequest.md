@@ -9,7 +9,7 @@ With this data you can do a lot of nonsense. Track people, create motion profile
 What you need?
 
 Reference Links : 
-
+https://haus-automatisierung.com/projekt/2019/01/13/projekt-paketdienst-erkennen-probe-wifi.html
 https://www.youtube.com/watch?v=eLZb8VvX9aE&list=FLgxA0uNGRdFmcM-iASEkiHg&index=2&t=0s
 https://github.com/HarringayMakerSpace/sonoff-adhoc/issues/1
 
