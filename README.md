@@ -89,6 +89,10 @@ https://play.google.com/store/apps/details?id=com.thn.iotmqttdashboard&hl=en_US
 IOT MQTT Panel : 
 https://play.google.com/store/apps/details?id=snr.lab.iotmqttpanel.prod&hl=en_US
 
+Node-Red :
+It is also possible to run Node-Red on android smartphones or tablets. 
+https://nodered.org/docs/getting-started/android
+
 ## Required Hardware Links:
 
 ### ESP8266:
