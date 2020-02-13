@@ -95,6 +95,7 @@ https://nodered.org/docs/getting-started/android
 
 ## Useful tool to estimate power consumption and solar battery charging:
 https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
+
 http://www.of-things.de/battery-life-calculator.php
 
 ## Required Hardware Links:
