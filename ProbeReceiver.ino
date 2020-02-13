@@ -17,17 +17,18 @@ int wifiChannel = 7;
 char* room = "Livingroom";// Needed for person locator.Each room must run probeReceiver sketch to implement person locator.
 int rssiThreshold = -50;  // Adjust according to signal strength by trial & error.
 char gateway[] = "ESP";   // Gateway mustbe same across all devices on network.
-char ssid[] = "ssid";     // your network SSID (name)
-char pass[] = "password"; // your network password
+char ssid[] = "HAPPYHOME";     // your network SSID (name)
+char pass[] = "kb1henna"; // your network password
 
 int device;
 float voltage;
-
+uint8_t data[12];
 int sensorValue1; int sensorValue2; int sensorValue3; int sensorValue4;
 
 int statusValue1; int statusValue2; int statusValue3; int statusValue4; int statusValue5;
 
-uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
+//uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
+uint8_t PresencePerson1[6] = {0xD0, 0xFC, 0xCC, 0x24, 0xC0, 0x8A}; // Mac ID of Cell phone #1.
 uint8_t PresencePerson2[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #2.
 uint8_t PresencePerson3[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #3.
 uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #4.
@@ -44,6 +45,8 @@ char topic1[50]; char topic2[50]; char topic3[50]; char topic4[50]; char topic5[
 
 int command1 = 36; int command2;  int command3;  int command4;  int command5; int command6;
 uint8_t mac[6] = {command1, command2, command3, command4, command5, command6};
+
+
 
 // ==================== end of TUNEABLE PARAMETERS ====================
 
@@ -191,12 +194,15 @@ void setup()
   // Subscribe to anything
 
   myBroker.subscribe("#");
+  
 }
 
 
 void loop()
 {
   // Your loop code goes here.
+
+ 
 }
 
 
@@ -206,19 +212,37 @@ void mqttPublish()    {
     volatage = 16, temperature = 26, humidity= 36, pressure= 46, light= 56, OpenClose = 66,
     level = 76, presence = 86, motion = 96 etc.
   */
+  const char* room;
+  if (device == 06) room = "Livingroom";
+  if (device == 16) room = "Kitchen";
+  if (device == 26) room = "Bedroom1";
+  if (device == 36) room = "Bedroom2";
+  if (device == 46) room = "Bedroom3";
+  if (device == 56) room = "Bedroom4";
+  if (device == 66) room = "Bathroom1";
+  if (device == 76) room = "Bathroom2";
+  if (device == 86) room = "Bathroom3";
+  if (device == 96) room = "Bathroom4";
+  if (device == 106) room = "Laudry";
+  if (device == 116) room = "Boiler Room";
+  if (device == 126) room = "Workshop";
+  if (device == 136) room = "Garage";
+  if (device == 146) room = "Water Tank";
+  if (device == 156) room = "Solar Tracker";
 
-  sprintf(topic1, "%s%i%s%i%s", "SensorData/", device, "/", device, "/");
-  sprintf(topic2, "%s%i%s%i%s", "SensorData/", device, "/", sensorType1, "/");
-  sprintf(topic3, "%s%i%s%i%s", "SensorData/", device, "/", sensorType2, "/");
-  sprintf(topic4, "%s%i%s%i%s", "SensorData/", device, "/", sensorType3, "/");
-  sprintf(topic5, "%s%i%s%i%s", "SensorData/", device, "/", sensorType4, "/");
-  sprintf(topic6, "%s%i%s%i%s", "SensorData/", device, "/", sensorType5, "/");
-  sprintf(topic7, "%s%i%s%i%s", "DeviceStatus/", device, "/", device, "/");
-  sprintf(topic8, "%s%i%s%s", "DeviceStatus/", device, "/", "DeviceMode/");
-  sprintf(topic9, "%s%i%s%s", "DeviceStatus/", device, "/", "DeviceIP/");
-  sprintf(topic10, "%s%i%s%s", "DeviceStatus/", device, "/", "WiFiChannel/");
-  sprintf(topic11, "%s%i%s%s", "DeviceStatus/", device, "/", "SleepTime/");
-  sprintf(topic12, "%s%i%s%s", "DeviceStatus/", device, "/", "UpTime/");
+  
+  sprintf(topic1, "%s%s%s%i%s", "SensorData/", room, "/", device, "/");
+  sprintf(topic2, "%s%s%s%i%s", "SensorData/", room, "/", sensorType1, "/");
+  sprintf(topic3, "%s%s%s%i%s", "SensorData/", room, "/", sensorType2, "/");
+  sprintf(topic4, "%s%s%s%i%s", "SensorData/", room, "/", sensorType3, "/");
+  sprintf(topic5, "%s%s%s%i%s", "SensorData/", room, "/", sensorType4, "/");
+  sprintf(topic6, "%s%s%s%i%s", "SensorData/", room, "/", sensorType5, "/");
+  sprintf(topic7, "%s%s%s%i%s", "DeviceStatus/", room, "/", device, "/");
+  sprintf(topic8, "%s%s%s%s", "DeviceStatus/", room, "/", "DeviceMode/");
+  sprintf(topic9, "%s%s%s%s", "DeviceStatus/", room, "/", "DeviceIP/");
+  sprintf(topic10, "%s%s%s%s", "DeviceStatus/", room, "/", "WiFiChannel/");
+  sprintf(topic11, "%s%s%s%s", "DeviceStatus/", room, "/", "SleepTime/");
+  sprintf(topic12, "%s%s%s%s", "DeviceStatus/", room, "/", "UpTime/");
 
 
   // myBroker.publish(topic1, (String)device);
@@ -234,14 +258,14 @@ void mqttPublish()    {
   myBroker.publish(topic10, (String)statusValue3);
   myBroker.publish(topic11, (String)statusValue4);
   myBroker.publish(topic12, (String)statusValue5);
-
+  
   Serial.println();
   delay(5000);
 }
 
 void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived) {
 
-
+      
   if (dataReceived.mac[0] == PresencePerson1[0] && dataReceived.mac[1] == PresencePerson1[1] && dataReceived.mac[2] == PresencePerson1[2])
   { // write code to match MAC ID of cell phone to predefined variable and store presence/absense in new variable.
     Serial.println("################ Person 1 arrived ###################### ");
@@ -265,11 +289,14 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
 
     if (dataReceived.mac[1] == 6) // only accept data from device with voltage as a sensor type at byte 1.
     {
+      
       sensorType1 = (dataReceived.mac[1]);
       sensorType2 = (dataReceived.mac[2]);
       sensorType3 = (dataReceived.mac[3]);
       sensorType4 = (dataReceived.mac[4]);
       sensorType5 = (dataReceived.mac[5]);
+
+      
 #if MQTTBROKER
       mqttPublish();
 #endif
@@ -282,6 +309,10 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
       statusValue3 = (dataReceived.mac[3]);
       statusValue4 = (dataReceived.mac[4]);
       statusValue5 = (dataReceived.mac[5]);
+
+      
+       
+
 #if MQTTBROKER
       mqttPublish();
 #endif
@@ -333,6 +364,8 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
     sensorValue4 = dataReceived.mac[5];
 
 
+  
+
     if (voltage < 295)      // if voltage of battery gets to low, print the warning below.
     {
 #if MQTTBROKER
@@ -349,16 +382,14 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
 
     if (dataReceived.mac[1] > 115 && dataReceived.mac[1] < 180)  {
 
-
-
-
-    }
+     }
     //}
   } else {
 
     //Serial.println("Waiting for Data............");
 
   }
+
 }
 
 void sendCommand()  {
