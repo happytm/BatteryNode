@@ -17,8 +17,8 @@ int wifiChannel = 7;
 char* room = "Livingroom";// Needed for person locator.Each room must run probeReceiver sketch to implement person locator.
 int rssiThreshold = -50;  // Adjust according to signal strength by trial & error.
 char gateway[] = "ESP";   // Gateway mustbe same across all devices on network.
-char ssid[] = "HAPPYHOME";     // your network SSID (name)
-char pass[] = "kb1henna"; // your network password
+char ssid[] = "SSID";     // your network SSID (name)
+char pass[] = "PASSWORD"; // your network password
 
 int device;
 float voltage;
@@ -27,8 +27,7 @@ int sensorValue1; int sensorValue2; int sensorValue3; int sensorValue4;
 
 int statusValue1; int statusValue2; int statusValue3; int statusValue4; int statusValue5;
 
-//uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
-uint8_t PresencePerson1[6] = {0xD0, 0xFC, 0xCC, 0x24, 0xC0, 0x8A}; // Mac ID of Cell phone #1.
+uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
 uint8_t PresencePerson2[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #2.
 uint8_t PresencePerson3[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #3.
 uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #4.
