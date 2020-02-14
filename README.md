@@ -25,7 +25,7 @@ User's proximity tothe particular sensor device can be located using probereques
 
 ## OTA update using github 
 
-Simply placing .bin file to github and publishing MQTT command from MQTT client app all sensor devices on the network can be updated with latest firmware. 
+Simply placing .bin file to github and publishing MQTT command from MQTT client app all sensor devices on the network can be updated with latest firmware. Simply publish "command/<devicenumber>/09/01" from any MQTT client. 
 
 # Concept in detail:
 
