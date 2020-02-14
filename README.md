@@ -1,13 +1,27 @@
 # Very simple DIY Low Power low cost sensors, Standalone IOT Network.
 
-# No local linux server or cloud service required:
+# Features
+
+## Very low power consumption.
+
+Proberequest protocol is used for data transfer to conserve power.
+
+## No local linux server or cloud service required:
 
 Whole network can be aceesed using any android or ios MQTT front end dashboard client app like MQTT Dash.
 
 
-# Build it and forget about it: 
+## Build it and forget about it: 
 
 No need to charge battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section.
+
+## Very low cost DIY sensors.
+
+All the low cost sensors are listed in hardware section below.
+
+## Person Locator/presence detector:
+
+User's proximity tothe particular sensor device can be located using proberequest protocol thereby allowing further automation.
 
 Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc. 
 
