@@ -21,7 +21,7 @@ All the low cost sensors are listed in hardware section below.
 
 ## Person Locator/presence detector:
 
-User's proximity tothe particular sensor device can be located using proberequest protocol thereby allowing further automation.
+User's presence in the particular room can be located using proberequest protocol thereby allowing further automation based on presence.
 
 ## OTA update using github 
 
