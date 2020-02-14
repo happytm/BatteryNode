@@ -1,4 +1,13 @@
-# Very simple DIY Low Power low cost sensors, Standalone IOT Network (could be used with any android or ios MQTT front end dashboard client software).No need to charge battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section.
+# Very simple DIY Low Power low cost sensors, Standalone IOT Network.
+
+# No local linux server or cloud service required:
+
+Whole network can be aceesed using any android or ios MQTT front end dashboard client app like MQTT Dash.
+
+
+# Build it and forget about it: 
+
+No need to charge battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section.
 
 Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc. 
 
