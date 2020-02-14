@@ -9,7 +9,7 @@ The device can auto update firmware via Github if specific .bin file is availabl
 
 This code create small standalone network (maximum of 100) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network topology.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
 
-My testing shows 12 bytes (4 different sensor's data + battery voltage using 1 byte + device indentifier using 1 byte)  of sensor data is moved within 55 milliseconds on average.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow ?). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
+My testing shows 18 bytes of data (4 different sensor's values with their respective sensor types + 5 different device status data + battery voltage using 1 byte + device indentifier using 1 byte)  is moved within 55 milliseconds on average thereby saving significant battery power.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow ?). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
 
 Presene detection & user locater within home is implemented in ProbeReceiver sketch.
 
