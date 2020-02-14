@@ -1,6 +1,6 @@
 # Very simple DIY Low Power low cost sensors, Standalone IOT Network.
 
-# Features
+# Features:
 
 ## Very low power consumption.
 
@@ -42,15 +42,15 @@ My testing shows 18 bytes of data (4 different sensor's values with their respec
 
 Presene detection & user locater within home is implemented in ProbeReceiver sketch.
 
-### Installation
+### Installation:
 
 To use the code 2 ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver.ino sketch and another device (sleeping most of the time and battery powered) use ProbeSender.ino code.There can be as many as 100 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your home access point (fixed) , needs to be same on all ProbeReceiver and ProbeSender devices in order to have least amount of time consumed to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.If presence detection (or user's location finder within the home) is required then user's mobile phone's MAC id is also required.
 
-### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX true in ProbeSender.ino code)
+### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in ProbeSender.ino code)
 
-### Command structure:  (commands are issued via MQTT payload with topic name "command/" and atleast first three commands are necessary)
+### Command structure:  (commands are issued via MQTT payload with topic name "command/". At least first three commands are necessary)
       
-#### Command1 = Device ID Number -               
+#### Command1 = Device ID Number (required for all commands) -               
 ```c
 - Device ID must be 2 digits end with 2,6,A or E to avoid conflict with other devices.
 - See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
@@ -58,7 +58,7 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
 - 06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246.
 - Device ID and last part of fixed IP are same.
 ```                                            
-#### Command2 = Command type     -         
+#### Command2 = Command type  (required for all commands)   -         
 ```c
 - value 01 to 09 is reserved for following commands(must have 0 as first digit):
 
@@ -81,7 +81,7 @@ To use the code 2 ESP8266 devices are required.One device (always on and mains p
   - 09 =     Activate alternative code for OTA,Wifimanager ETC.
            - Example command payload 36/09/00 or 255/  (01 to activate Auto firmware update).
 ```
-#### Command3 = Command  pinNumber  -            
+#### Command3 = Command  pinNumber  -    (required for all commands)        
 ```c
 - pinNumber in case of command type 01 to 04 above. 
 - Neopixel LED number in case of command type 05.
