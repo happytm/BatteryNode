@@ -23,6 +23,12 @@ All the low cost sensors are listed in hardware section below.
 
 User's proximity tothe particular sensor device can be located using proberequest protocol thereby allowing further automation.
 
+## OTA update using github 
+
+Simply placing .bin file to github and publishing MQTT command from MQTT client app all sensor devices on the network can be updated with latest firmware. 
+
+# Concept in detail:
+
 Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc. 
 
 
