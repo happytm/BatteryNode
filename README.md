@@ -1,4 +1,4 @@
-# Very simple DIY Low Power low cost sensors, Standalone IOT Network.
+# Very simple DIY Low Power low cost sensors, Local standalone (no cloud service required) IOT Network.
 
 # Features:
 
