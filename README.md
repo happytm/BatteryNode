@@ -8,7 +8,7 @@ Proberequest protocol is used for data transfer to conserve power.
 
 ## No local linux server or cloud service required:
 
-Whole network can be aceesed using any android or ios MQTT front end dashboard client app like MQTT Dash.
+Whole network can be aceesed using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple toimplement. 
 
 
 ## Build it and forget about it: 
