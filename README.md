@@ -8,16 +8,16 @@ Proberequest protocol is used for data transfer to conserve power.
 
 ## No local linux server or cloud service required:
 
-Whole network can be aceesed using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement. 
+Whole network can be accesed using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement. 
 
 
 ## Build it and forget about it: 
 
-No need to charge battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section.
+No need to charge small 100 mAh button cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section.
 
 ## Very low cost DIY sensors.
 
-All the low cost sensors are listed in hardware section below.
+Average sensor node could be below $5. All the low cost sensors are listed in hardware section below.
 
 ## Person Locator/presence detector:
 
