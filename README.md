@@ -25,7 +25,7 @@ User's presence in the particular room can be located using proberequest protoco
 
 ## OTA update using github. 
 
-Simply placing .bin file to github and publishing MQTT command from MQTT client app all sensor devices on the network can be updated with latest firmware. Simply publish "command/<devicenumber>/09/01" from any MQTT client. 
+Simply placing .bin file to github and publishing MQTT command from MQTT client app all sensor devices on the network can be updated with latest firmware. Simply publish "command/devicenumber/09/01" from any MQTT client. 
 
 # Concept in detail:
 
