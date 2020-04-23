@@ -11,9 +11,9 @@ Proberequest protocol is used for data transfer to conserve power.
 Whole network can be accesed using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement. 
 
 
-## Build it and forget about it. 
+## Build it, position towards maximum sun exposure and forget about it. 
 
-No need to charge small 100 mAh button cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section.
+No need to charge small 100 mAh LIR2450 coin cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section.
 
 ## Very low cost DIY sensors.
 
