@@ -9,8 +9,8 @@
 
 
 #include <ESP8266WiFi.h>
-#include "uMQTTBroker.h"
-#include "JsonLogger.h"
+#include "uMQTTBroker.h"  // https://github.com/martin-ger/uMQTTBroker
+#include "JsonLogger.h"   // https://github.com/ravelab/JsonLogger
 
 char sensorTypes[256], sensorValues[256], deviceStatus[256];
 
@@ -41,15 +41,10 @@ const char* location;
 
 
 //uint8_t securityCode[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at remote sensors to compare.
-uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
+uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0xC0, 0x8A}; // Mac ID of Cell phone #1.
 uint8_t PresencePerson2[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #2.
 uint8_t PresencePerson3[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #3.
 uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #4.
-
-/*  Predefined sensor type table is below:
-  volatage = 6, temperature = 16, humidity= 26, pressure= 36, light= 46, 
-  OpenClose = 56, level = 66, presence = 76, motion = 86, rain = 96 etc.
-*/
 
 
 // ==================== end of TUNEABLE PARAMETERS ====================
@@ -236,8 +231,8 @@ void mqttPublish()    {
   if (device == 156) location = "Solar Tracker";
 
    if (voltage > 2) {
-      int len = json(sensorValues, "s|location", location, "f3|Volts", voltage, "s|Sensor1", sensorType1, "i|SensorValue1", sensorValue1, "s|Sensor2", sensorType2, "i|SensorValue2", sensorValue2, "s|Sensor3", sensorType3, "i|SensorValue3", sensorValue3, "s|Sensor4", sensorType4, "i|SensorValue4", sensorValue4);
-     // int len = json(sensorValues, "s|location", location, "f3|Volts", voltage, "i|SensorValue1", sensorValue1, "i|SensorValue2", sensorValue2, "i|SensorValue3", sensorValue3, "i|SensorValue4", sensorValue4);
+      int len = json(sensorValues, "s|Location", location, "f3|Volts", voltage, "s|Sensor1", sensorType1, "i|SensorValue1", sensorValue1, "s|Sensor2", sensorType2, "i|SensorValue2", sensorValue2, "s|Sensor3", sensorType3, "i|SensorValue3", sensorValue3, "s|Sensor4", sensorType4, "i|SensorValue4", sensorValue4);
+     // int len = json(sensorValues, "s|location", location, "f3|Volts", voltage, sensorType1, sensorValue1, "i|SensorValue2", sensorValue2, "i|SensorValue3", sensorValue3, "i|SensorValue4", sensorValue4);
      // Serial.println(String(sensorValues));
       myBroker.publish("SensorValues/", String(sensorValues));
       } 
@@ -299,13 +294,6 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
      //  volatage = 06, temperature = 16, humidity= 26, pressure= 36, light= 46, OpenClose = 66,
      //  level = 66, presence = 76, motion = 86 custom = 96 etc.
  
-      
-      
-     
-     
-     
-      
-
       if (dataReceived.mac[2] == 16) sensorType1 = "Temperature";
       if (dataReceived.mac[2] == 26) sensorType1 = "Humidity";
       if (dataReceived.mac[2] == 36) sensorType1 = "Pressure";
@@ -347,30 +335,11 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
       if (dataReceived.mac[5] == 86) sensorType4 = "Motion";
       if (dataReceived.mac[5] == 96) sensorType4 = "Custom";
 
-    
-     /* sensorType1 = (dataReceived.mac[1]);
-      sensorType2 = (dataReceived.mac[2]);
-      sensorType3 = (dataReceived.mac[3]);
-      sensorType4 = (dataReceived.mac[4]);
-      sensorType5 = (dataReceived.mac[5]); 
-      */
-      
-     /* int len = json(sensorTypes, "i|location", dataReceived.mac[0], "i|Voltage", dataReceived.mac[1], "s|Sensor1", sensorValue1, "s|Sensor2", sensorType2, "s|Sensor3", sensorType3, "s|Sensor4", sensorType4);
-      Serial.println(String(sensorTypes));
-      myBroker.publish("SensorTypes/", String(sensorTypes));
-      delay(100);
-      
-#if MQTTBROKER
-      mqttPublish();
-#endif
-      */
-
-
     } else if (dataReceived.mac[3] == apChannel)
 
-    {
-
-      int len = json(deviceStatus, "s|location", location, "i|DeviceMode", dataReceived.mac[1], "i|DeviceIP", dataReceived.mac[2], "i|WiFiChannel", dataReceived.mac[3], "i|SleepTime", dataReceived.mac[4], "i|UpTime", dataReceived.mac[5]);
+    {  
+       
+      int len = json(deviceStatus, "s|Location", location, "i|SingnalStrength", dataReceived.rssi, "i|DeviceMode", dataReceived.mac[1], "i|DeviceIP", dataReceived.mac[2], "i|WiFiChannel", dataReceived.mac[3], "i|SleepTime", dataReceived.mac[4], "i|UpTime", dataReceived.mac[5]);
    //   Serial.println(String(deviceStatus));
       myBroker.publish("DeviceStatus/", String(deviceStatus));
       delay(100);
@@ -381,94 +350,42 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
       deviceStatus4 = (dataReceived.mac[4]);
       deviceStatus5 = (dataReceived.mac[5]);
 
-      
-       
-
-#if MQTTBROKER
       mqttPublish();
-#endif
-
     }
     
-
-     // Serial.print("Signal Strength of remote sensor: ");
-     // Serial.println(dataReceived.rssi); 
-      myBroker.publish("Sensordata/Signal/", (String)dataReceived.rssi);
-
-
-    
-    //Serial.print("Probe Request:- ");
-    
-    //Serial.print(" Device ID:  ");
-    //Serial.print(dataReceived.mac[0], DEC);
     device = dataReceived.mac[0];
     
-    //Serial.print(" Voltage:  ");
-    //Serial.print(dataReceived.mac[1], DEC);
     voltage = dataReceived.mac[1];
     voltage = voltage * 2 / 100;
 
-    //Serial.print(" Sensor 1:  ");
-    //Serial.print(dataReceived.mac[2], DEC);
     sensorValue1 = dataReceived.mac[2];
-    
-    //Serial.print(" Sensor 2:  ");
-    //Serial.print(dataReceived.mac[3], DEC);
     sensorValue2 = dataReceived.mac[3];
    
     if (sensorType4 == "Pressure")
    {  
-    //Serial.print(" Sensor 3:  ");
-    //Serial.print(dataReceived.mac[4], DEC);
     sensorValue3 = dataReceived.mac[4];
     sensorValue3 = sensorValue3 * 4;
-   } else {
-
-    //Serial.print(" Sensor 3:  ");
-    //Serial.print(dataReceived.mac[4], DEC);
+   } else {    
     sensorValue3 = dataReceived.mac[4];
+   }
     
-    }
-
-   
-    //Serial.print(" Sensor 4:  ");
-    //Serial.println(dataReceived.mac[5], DEC);
     sensorValue4 = dataReceived.mac[5];
-    
+   
     if (voltage < 295)      // if voltage of battery gets to low, print the warning below.
     {
-        #if MQTTBROKER
            delay(1);
-           myBroker.publish("SensorData/warning/", "Battery Low");
-        #endif
-
-     // Serial.println("**************Warning :- Battery Voltage low please change batteries********************" );
-     // Serial.println();
-
-    }
+           myBroker.publish("Warning/Battery Low/", location);
+     }
+     
     
-    if (dataReceived.mac[1] > 115 && dataReceived.mac[1] < 180)  {
-     #if MQTTBROKER
-       mqttPublish();
-     #endif
-
-    }
-      //}
 } else {
 
- //Serial.println("Waiting for Data............");
-
+ Serial.println("Waiting for Data............");
   }
  }
 
 void sendCommand()  {
-  /*
-    command1 = 36; //random(25);
-    command2 = random(16);
-    command3 = random(16);
-    command4 = random(4);
-    command5 = random(256);
-    command6 = random(25); */
+  
   mac[0] = command1;
   mac[1] = command2;
   mac[2] = command3;
