@@ -36,7 +36,7 @@
   #define USES_P012 // LCD
   #define USES_P014 // SI7021
   #define USES_P100 // MSGBUS
-  #define USES_P101 // MQTT
+  //#define USES_P101 // MQTT
   #if defined(ESP8266)
    // #define USES_P102 // ESPNOW
   #endif
