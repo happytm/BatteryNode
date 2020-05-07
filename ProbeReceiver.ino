@@ -29,12 +29,11 @@ uint8_t data[12];
 const char* location;
 
 int sensorValue1; int sensorValue2; int sensorValue3; int sensorValue4; int sensorValue5;
-int deviceStatus1; int deviceStatus2; int deviceStatus3; int deviceStatus4; int deviceStatus5;
+//int deviceStatus1; int deviceStatus2; int deviceStatus3; int deviceStatus4; int deviceStatus5;
 //int sensorType1; int sensorType2; int sensorType3; int sensorType4; int sensorType5;
 int command1 = 36; int command2;  int command3;  int command4;  int command5; int command6;
 uint8_t mac[6] = {command1, command2, command3, command4, command5, command6};
 char topic1[50]; char topic2[50]; char topic3[50]; char topic4[50]; char topic5[50]; char topic6[50]; char topic7[50]; char topic8[50]; char topic9[50]; char topic10[50]; char topic11[50]; char topic12[50];
-
 const char* sensorType1; const char* sensorType2; const char* sensorType3; const char* sensorType4;
 
 //uint8_t securityCode[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at remote sensors to compare.
@@ -74,7 +73,52 @@ class myMQTTBroker: public uMQTTBroker
       
       if (topic == "command/")   {
 
-       command1 = atoi(&data[0]);
+       /************************************************************
+        Command structure:  (commands are issued via MQTT payload with topic name "command/"
+
+        Command1 = Device ID Number -       device ID must be 2 digits end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+                                            use any of following for devie ID ending with 6.
+                                            06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
+
+        Command2 = Command type  -     value 1 to 9 is reserved for following commands(must have 0 as first digit):
+                                       
+                                       01 = digitalWright or analogWrite.
+                                            Example command payload 36/01/00 0r 01/ for digitalWrite.
+                                            Example command payload 36/01/02 to 256/ for analogWrite.
+                                       02 = digitalRead.
+                                            Example command payload 36/02/01 to 05 or 12 to 16/ 
+                                       03 = analogRead, 
+                                       04=  Reserved, 
+                                       05 = Neopixel etc.
+                                            Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
+                                       06 = change sensoor types.First byte must be target device id and 
+                                            second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be changed according to hardware setup.
+                                            Example command payload 36/06/16/26/36/46/.
+                                      
+                                       07 = change apChannel, 
+                                       08 = change sleeptime. 
+                                            Example command payload 36/08/00 to 255/ (Sleep Time in minutes).  
+                                       09 = Activate alternative code for OTA,Wifimanager ETC.
+                                            Example command payload 36/09/00 or 01/(01 to activate alternative Code).
+                                           
+                                            value 10 to 20 is reserved for following commands:
+                                       10 = change define DUPLEX, 11 = change define SEURITY, 12 = change define OTA, 13 = change define uMQTTBROKER etc.
+                                   
+        Command3 = Command  pinNumber  -    pinNumber in case of command type 01 to 04 above. Neopixel LED number in case of command type 05.
+                                            Predefined number to represent value of command type 11 to 20 above.
+                                            00 or 01 to represent false/or true for defines in case of command type 21 to 30. 
+                                                        
+        Command4 = Command pinValue  -      00 or 255 in case of command type 01 (digitalWrite & analogWrite)  or RED neopixel value in case of command type 05.
+        
+        Command5 = Command extraValue1  -   00 to 255 for GREEN neopixel in case of command type 05                        
+                                            or sensorType value in case of command 06.
+        Command6 = Command extraValue2  -   00 to 255 for BLUE neopixel in case of command type 05 
+                                            or sensorType value in case of command 06. 
+                                   
+*************************************************************/
+       
+        
+        command1 = atoi(&data[0]);
         Serial.println(command1);
         command2 = atoi(&data[3]);
         Serial.println(command2);
@@ -163,52 +207,26 @@ void sendCommand()  {
   wifi_set_macaddr(SOFTAP_IF, mac);
 }
 
-/*
-void mqttPublish()    {
-
-  sprintf(topic1, "%s%i%s%i%s", "Sensordata/", device, "/", device, "/");
-  sprintf(topic2, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType1, "/");
-  sprintf(topic3, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType2, "/");
-  sprintf(topic4, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType3, "/");
-  sprintf(topic5, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType4, "/");
-  sprintf(topic6, "%s%i%s%i%s", "Sensordata/", device, "/", sensorType5, "/");
-  
-
-
-  // myBroker.publish(topic1, (String)device);
-  // myBroker.publish("SensorData/device/", (String)device);
-  myBroker.publish(topic2, (String)voltage);
-  myBroker.publish(topic3, (String)sensorValue1);
-  myBroker.publish(topic4, (String)sensorValue2);
-  myBroker.publish(topic5, (String)sensorValue3);
-  myBroker.publish(topic6, (String)sensorValue4);
-  
-  
-
-  // wait a second
-
-  delay(5000);
-}
-*/
 
 void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived) {
      
       
-     if (dataReceived.mac[0] == PresencePerson1[0] && dataReceived.mac[1] == PresencePerson1[1] && dataReceived.mac[2] == PresencePerson1[2])
-  { // write code to match MAC ID of cell phone to predefined variable and store presence/absense in new variable.
-    Serial.println("################ Person 1 arrived ###################### ");
-    myBroker.publish("Sensordata/Person1/", "Home");
-    Serial.print("Signal Strength of remote sensor: ");
-    Serial.println(dataReceived.rssi);
-    myBroker.publish("Sensordata/Signal/", (String)dataReceived.rssi);
+     
+    if (dataReceived.mac[0] == PresencePerson1[0] && dataReceived.mac[1] == PresencePerson1[1] && dataReceived.mac[2] == PresencePerson1[2]){ // write code to match MAC ID of cell phone to predefined variable and store presence/absense in new variable.
+      Serial.println("################ Person 1 arrived ###################### ");
+      myBroker.publish("Sensordata/Person1/", "Home");
+      Serial.print("Signal Strength of remote sensor: ");
+      Serial.println(dataReceived.rssi);
+      myBroker.publish("Sensordata/Signal/", (String)dataReceived.rssi);
 
     if (dataReceived.rssi > rssiThreshold) // Adjust according to signal strength by trial & error.
     { // write code to match MAC ID of cell phone to predefined variable and store presence/absense in new variable.
-    myBroker.publish("Sensordata/Person1/in/", room);
+      myBroker.publish("Sensordata/Person1/in/", room);
 
     }
-  }
- 
+   }
+  
+      
      if (dataReceived.mac[0] == 6 || dataReceived.mac[0] == 16 || dataReceived.mac[0] == 26 || dataReceived.mac[0] == 36 || dataReceived.mac[0] == 46 || dataReceived.mac[0] == 56 || dataReceived.mac[0] == 66 || dataReceived.mac[0] == 76 || dataReceived.mac[0] == 86 || dataReceived.mac[0] == 96 || dataReceived.mac[0] == 106 || dataReceived.mac[0] == 116 || dataReceived.mac[0] == 126 || dataReceived.mac[0] == 136 || dataReceived.mac[0] == 146 || dataReceived.mac[0] == 156 || dataReceived.mac[0] == 166 || dataReceived.mac[0] == 176 || dataReceived.mac[0] == 186 || dataReceived.mac[0] == 196 || dataReceived.mac[0] == 206 || dataReceived.mac[0] == 216 || dataReceived.mac[0] == 226 || dataReceived.mac[0] == 236 || dataReceived.mac[0] == 246) // only accept data from certain devices.
       {
      
@@ -258,23 +276,8 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
 
         } else {
 
-           device = dataReceived.mac[0];
-    
-           voltage = dataReceived.mac[1];
-           voltage = voltage * 2 / 100;
-
-           sensorValue1 = dataReceived.mac[2];
-           sensorValue2 = dataReceived.mac[3];
-   
-        if (sensorType4 == "Pressure"){  
-            sensorValue3 = dataReceived.mac[4];
-            sensorValue3 = sensorValue3 * 4;
-        } else {    
-            sensorValue3 = dataReceived.mac[4];
-        }
-            sensorValue4 = dataReceived.mac[5];
-        }
-        
+             device = dataReceived.mac[0];
+             
              if (device == 06) location = "Livingroom";
              if (device == 16) location = "Kitchen";
              if (device == 26) location = "Bedroom1";
@@ -291,36 +294,78 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
              if (device == 136) location = "Garage";
              if (device == 146) location = "Water Tank";
              if (device == 156) location = "Solar Tracker";
-
     
-       
-       if (voltage > 2) {
-        int len = json(sensorValues, "s|Location", location, "f3|Volts", voltage, "s|Sensor1", sensorType1, "i|SensorValue1", sensorValue1, "s|Sensor2", sensorType2, "i|SensorValue2", sensorValue2, "s|Sensor3", sensorType3, "i|SensorValue3", sensorValue3, "s|Sensor4", sensorType4, "i|SensorValue4", sensorValue4);
-     // int len = json(sensorValues, "s|location", location, "f3|Volts", voltage, sensorType1, sensorValue1, "i|SensorValue2", sensorValue2, "i|SensorValue3", sensorValue3, "i|SensorValue4", sensorValue4);
-     // Serial.println(String(sensorValues));
+           voltage = dataReceived.mac[1];
+           voltage = voltage * 2 / 100;
+
+           sensorValue1 = dataReceived.mac[2];
+           sensorValue2 = dataReceived.mac[3];
+   
+        if (sensorType4 == "Pressure"){  
+            sensorValue3 = dataReceived.mac[4];
+            sensorValue3 = sensorValue3 * 4;
+        } else {    
+            sensorValue3 = dataReceived.mac[4];
+        }
+            sensorValue4 = dataReceived.mac[5];
+        }
+        
+        if (voltage > 2.50 && voltage < 3.60) {
+        int len = json(sensorValues, "s|Location", location, "f3|Voltage", voltage, "s|Sensor1", sensorType1, "i|SensorValue1", sensorValue1, "s|Sensor2", sensorType2, "i|SensorValue2", sensorValue2, "s|Sensor3", sensorType3, "i|SensorValue3", sensorValue3, "s|Sensor4", sensorType4, "i|SensorValue4", sensorValue4);
+        //Serial.println(String(sensorValues));
+        //delay(100);
         myBroker.publish("SensorValues/", String(sensorValues));
         Serial.println();
+        
+        sprintf(topic1, "%s%s%s%s", location, "/", "Voltage", "/");
+        sprintf(topic2, "%s%s%s%s", location, "/", sensorType1, "/");
+        sprintf(topic3, "%s%s%s%s", location, "/", sensorType2, "/");
+        sprintf(topic4, "%s%s%s%s", location, "/", sensorType3, "/");
+        sprintf(topic5, "%s%s%s%s", location, "/", sensorType4, "/");
+  
+        myBroker.publish(topic1, (String)voltage);
+        myBroker.publish(topic2, (String)sensorValue1);
+        myBroker.publish(topic3, (String)sensorValue2);
+        myBroker.publish(topic4, (String)sensorValue3);
+        myBroker.publish(topic5, (String)sensorValue4);
+  
         
         if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
            myBroker.publish("Warning/Battery Low/", location);
          }
-   
-       } 
+        }       
 
+       if (dataReceived.mac[3] == apChannel) {  
+
+        int deviceStatus1; int deviceStatus2; int deviceStatus3;  int deviceStatus4; int deviceStatus5;    
+
+        deviceStatus1 = (dataReceived.mac[1]);
+        deviceStatus2 = (dataReceived.mac[2]);
+        deviceStatus3 = (dataReceived.mac[3]);
+        deviceStatus4 = (dataReceived.mac[4]);
+        deviceStatus5 = (dataReceived.mac[5]);
+               
+        int len = json(deviceStatus, "s|Location", location, "i|rssi", dataReceived.rssi, "i|mode", deviceStatus1, "i|ip", deviceStatus2, "i|channel", deviceStatus3, "i|sleeptime", deviceStatus4, "i|uptime", deviceStatus5);
+     // Serial.println(String(deviceStatus));
+        delay(100);
+        myBroker.publish("DeviceStatus/", String(deviceStatus));
+       
+        sprintf(topic1, "%s%s%s%s", location, "/", "rssi", "/");
+        sprintf(topic2, "%s%s%s%s", location, "/", "mode", "/");
+        sprintf(topic3, "%s%s%s%s", location, "/", "ip", "/");
+        sprintf(topic4, "%s%s%s%s", location, "/", "channel", "/");
+        sprintf(topic5, "%s%s%s%s", location, "/", "sleeptime", "/");
+        sprintf(topic6, "%s%s%s%s", location, "/", "uptime", "/");
+
+        myBroker.publish(topic1, (String)dataReceived.rssi);
+        myBroker.publish(topic2, (String)deviceStatus1);
+        myBroker.publish(topic3, (String)deviceStatus2);
+        myBroker.publish(topic4, (String)deviceStatus3);
+        myBroker.publish(topic5, (String)deviceStatus4);
+        myBroker.publish(topic6, (String)deviceStatus5);
     
-    if (dataReceived.mac[3] == apChannel) {  
-
-      deviceStatus1 = (dataReceived.mac[1]);
-      deviceStatus2 = (dataReceived.mac[2]);
-      deviceStatus3 = (dataReceived.mac[3]);
-      deviceStatus4 = (dataReceived.mac[4]);
-      deviceStatus5 = (dataReceived.mac[5]);
-      
-      int len = json(deviceStatus, "s|Location", location, "i|SingnalStrength", dataReceived.rssi, "i|DeviceMode", deviceStatus1, "i|DeviceIP", deviceStatus2, "i|WiFiChannel", deviceStatus3, "i|SleepTime", deviceStatus4, "i|UpTime", deviceStatus5);
-   //   Serial.println(String(deviceStatus));
-      myBroker.publish("DeviceStatus/", String(deviceStatus));
-    //  delay(100);
        }
-   }
-}  
+      } 
+     }
+ 
           
