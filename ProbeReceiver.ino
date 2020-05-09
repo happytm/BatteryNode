@@ -8,8 +8,8 @@
 #define  MQTTBROKER           true
 
 #include <ESP8266WiFi.h>
-#include "uMQTTBroker.h"
-#include "JsonLogger.h"
+#include "uMQTTBroker.h"   // https://github.com/martin-ger/uMQTTBroker
+#include "JsonLogger.h"    // https://github.com/ravelab/JsonLogger
 
 char sensorTypes[256], sensorValues[512], deviceStatus[256];
 
@@ -19,8 +19,8 @@ int apChannel = 7;
 char* room = "Livingroom";  // Needed for person locator.Each location must run probeReceiver sketch to implement person locator.
 int rssiThreshold = -50; // Adjust according to signal strength by trial & error.
 char apssid[] = "ESP";
-char ssid[] = "ssid";     // your network SSID (name)
-char pass[] = "password"; // your network password
+char ssid[] = "yourssid";     // your network SSID (name)
+char pass[] = "yourpassword"; // your network password
 //bool WiFiAP = false;      // Do yo want the ESP as AP?
 
 int device;
@@ -54,22 +54,22 @@ extern "C" void preinit() {
 class myMQTTBroker: public uMQTTBroker
 {
   public:
-    virtual bool onConnect(IPAddress addr, uint16_t client_count) {
+      virtual bool onConnect(IPAddress addr, uint16_t client_count) {
       Serial.println(addr.toString() + " connected");
       return true;
     }
 
-    virtual bool onAuth(String username, String password) {
+      virtual bool onAuth(String username, String password) {
       Serial.println("Username/Password: " + username + "/" + password);
       return true;
     }
 
-    virtual void onData(String topic, const char *data, uint32_t length) {
+      virtual void onData(String topic, const char *data, uint32_t length) {
 
       char data_str[length + 1];
       os_memcpy(data_str, data, length);
       data_str[length] = '\0';
-      Serial.println("received topic '" + topic + (String)data_str);
+      Serial.println("Published topic '" + topic + "  with paylod  " + (String)data_str);
       
       if (topic == "command/")   {
 
@@ -234,45 +234,45 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
         
         if (dataReceived.mac[1] == 06) { // only accept data from device with voltage as a sensor type at byte 1.
          
-          if (dataReceived.mac[2] == 16) sensorType1 = "Temperature";
-          if (dataReceived.mac[2] == 26) sensorType1 = "Humidity";
-          if (dataReceived.mac[2] == 36) sensorType1 = "Pressure";
-          if (dataReceived.mac[2] == 46) sensorType1 = "Light";
-          if (dataReceived.mac[2] == 56) sensorType1 = "OpenClose";
-          if (dataReceived.mac[2] == 66) sensorType1 = "Level";
-          if (dataReceived.mac[2] == 76) sensorType1 = "Presence";
-          if (dataReceived.mac[2] == 86) sensorType1 = "Motion";
-          if (dataReceived.mac[2] == 96) sensorType1 = "Custom";
+          if (dataReceived.mac[2] == 16) sensorType1 = "temperature";
+          if (dataReceived.mac[2] == 26) sensorType1 = "humidity";
+          if (dataReceived.mac[2] == 36) sensorType1 = "pressure";
+          if (dataReceived.mac[2] == 46) sensorType1 = "light";
+          if (dataReceived.mac[2] == 56) sensorType1 = "open/close";
+          if (dataReceived.mac[2] == 66) sensorType1 = "level";
+          if (dataReceived.mac[2] == 76) sensorType1 = "presence";
+          if (dataReceived.mac[2] == 86) sensorType1 = "motion";
+          if (dataReceived.mac[2] == 96) sensorType1 = "custom";
 
-          if (dataReceived.mac[3] == 16) sensorType2 = "Temperature";
-          if (dataReceived.mac[3] == 26) sensorType2 = "Humidity";
-          if (dataReceived.mac[3] == 36) sensorType2 = "Pressure";
-          if (dataReceived.mac[3] == 46) sensorType2 = "Light";
-          if (dataReceived.mac[3] == 56) sensorType2 = "OpenClose";
-          if (dataReceived.mac[3] == 66) sensorType2 = "Level";
-          if (dataReceived.mac[3] == 76) sensorType2 = "Presence";
-          if (dataReceived.mac[3] == 86) sensorType2 = "Motion";
-          if (dataReceived.mac[3] == 96) sensorType2 = "Custom";
+          if (dataReceived.mac[3] == 16) sensorType2 = "temperature";
+          if (dataReceived.mac[3] == 26) sensorType2 = "humidity";
+          if (dataReceived.mac[3] == 36) sensorType2 = "pressure";
+          if (dataReceived.mac[3] == 46) sensorType2 = "light";
+          if (dataReceived.mac[3] == 56) sensorType2 = "open/close";
+          if (dataReceived.mac[3] == 66) sensorType2 = "level";
+          if (dataReceived.mac[3] == 76) sensorType2 = "presence";
+          if (dataReceived.mac[3] == 86) sensorType2 = "motion";
+          if (dataReceived.mac[3] == 96) sensorType2 = "custom";
 
-          if (dataReceived.mac[4] == 16) sensorType3 = "Temperature";
-          if (dataReceived.mac[4] == 26) sensorType3 = "Humidity";
-          if (dataReceived.mac[4] == 36) sensorType3 = "Pressure";
-          if (dataReceived.mac[4] == 46) sensorType3 = "Light";
-          if (dataReceived.mac[4] == 56) sensorType3 = "OpenClose";
-          if (dataReceived.mac[4] == 66) sensorType3 = "Level";
-          if (dataReceived.mac[4] == 76) sensorType3 = "Presence";
-          if (dataReceived.mac[4] == 86) sensorType3 = "Motion";
-          if (dataReceived.mac[4] == 96) sensorType3 = "Custom";
+          if (dataReceived.mac[4] == 16) sensorType3 = "temperature";
+          if (dataReceived.mac[4] == 26) sensorType3 = "humidity";
+          if (dataReceived.mac[4] == 36) sensorType3 = "pressure";
+          if (dataReceived.mac[4] == 46) sensorType3 = "light";
+          if (dataReceived.mac[4] == 56) sensorType3 = "open/close";
+          if (dataReceived.mac[4] == 66) sensorType3 = "level";
+          if (dataReceived.mac[4] == 76) sensorType3 = "presence";
+          if (dataReceived.mac[4] == 86) sensorType3 = "motion";
+          if (dataReceived.mac[4] == 96) sensorType3 = "custom";
 
-          if (dataReceived.mac[5] == 16) sensorType4 = "Temperature";
-          if (dataReceived.mac[5] == 26) sensorType4 = "Humidity";
-          if (dataReceived.mac[5] == 36) sensorType4 = "Pressure";
-          if (dataReceived.mac[5] == 46) sensorType4 = "Light";
-          if (dataReceived.mac[5] == 56) sensorType4 = "OpenClose";
-          if (dataReceived.mac[5] == 66) sensorType4 = "Level";
-          if (dataReceived.mac[5] == 76) sensorType4 = "Presence";
-          if (dataReceived.mac[5] == 86) sensorType4 = "Motion";
-          if (dataReceived.mac[5] == 96) sensorType4 = "Custom";
+          if (dataReceived.mac[5] == 16) sensorType4 = "temperature";
+          if (dataReceived.mac[5] == 26) sensorType4 = "humidity";
+          if (dataReceived.mac[5] == 36) sensorType4 = "pressure";
+          if (dataReceived.mac[5] == 46) sensorType4 = "light";
+          if (dataReceived.mac[5] == 56) sensorType4 = "open/close";
+          if (dataReceived.mac[5] == 66) sensorType4 = "level";
+          if (dataReceived.mac[5] == 76) sensorType4 = "presence";
+          if (dataReceived.mac[5] == 86) sensorType4 = "motion";
+          if (dataReceived.mac[5] == 96) sensorType4 = "custom";
 
         } else {
 
@@ -301,7 +301,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
            sensorValue1 = dataReceived.mac[2];
            sensorValue2 = dataReceived.mac[3];
    
-        if (sensorType4 == "Pressure"){  
+        if (sensorType4 == "pressure"){  
             sensorValue3 = dataReceived.mac[4];
             sensorValue3 = sensorValue3 * 4;
         } else {    
@@ -317,11 +317,11 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
         myBroker.publish("SensorValues/", String(sensorValues));
         Serial.println();
         
-        sprintf(topic1, "%s%s%s%s", location, "/", "Voltage", "/");
-        sprintf(topic2, "%s%s%s%s", location, "/", sensorType1, "/");
-        sprintf(topic3, "%s%s%s%s", location, "/", sensorType2, "/");
-        sprintf(topic4, "%s%s%s%s", location, "/", sensorType3, "/");
-        sprintf(topic5, "%s%s%s%s", location, "/", sensorType4, "/");
+        sprintf(topic1, "%s%s%s%s", location, "/", "voltage", "");
+        sprintf(topic2, "%s%s%s%s", location, "/", sensorType1, "");
+        sprintf(topic3, "%s%s%s%s", location, "/", sensorType2, "");
+        sprintf(topic4, "%s%s%s%s", location, "/", sensorType3, "");
+        sprintf(topic5, "%s%s%s%s", location, "/", sensorType4, "");
   
         myBroker.publish(topic1, (String)voltage);
         myBroker.publish(topic2, (String)sensorValue1);
@@ -350,12 +350,12 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
         delay(100);
         myBroker.publish("DeviceStatus/", String(deviceStatus));
        
-        sprintf(topic1, "%s%s%s%s", location, "/", "rssi", "/");
-        sprintf(topic2, "%s%s%s%s", location, "/", "mode", "/");
-        sprintf(topic3, "%s%s%s%s", location, "/", "ip", "/");
-        sprintf(topic4, "%s%s%s%s", location, "/", "channel", "/");
-        sprintf(topic5, "%s%s%s%s", location, "/", "sleeptime", "/");
-        sprintf(topic6, "%s%s%s%s", location, "/", "uptime", "/");
+        sprintf(topic1, "%s%s%s%s", location, "/", "rssi", "");
+        sprintf(topic2, "%s%s%s%s", location, "/", "mode", "");
+        sprintf(topic3, "%s%s%s%s", location, "/", "ip", "");
+        sprintf(topic4, "%s%s%s%s", location, "/", "channel", "");
+        sprintf(topic5, "%s%s%s%s", location, "/", "sleeptime", "");
+        sprintf(topic6, "%s%s%s%s", location, "/", "uptime", "");
 
         myBroker.publish(topic1, (String)dataReceived.rssi);
         myBroker.publish(topic2, (String)deviceStatus1);
@@ -366,6 +366,5 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
     
        }
       } 
-     }
- 
+     } 
           
