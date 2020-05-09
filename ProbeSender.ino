@@ -49,14 +49,8 @@ Command5 = Command value2      -            00 to 255 for GREEN neopixel in case
         
 Command6 = Command value2      -            00 to 255 for BLUE neopixel in case of command type 05 
                                             or sensorType6 value in case of command 06.
+*/
 
-
-/*  To Do:
- *  
- *  - Assign fixed IP - last part of IP could be same as device id of the unit. 
- */
-
-ADC_MODE(ADC_VCC); //vcc read-mode
 
 #define DUPLEX            true    // true if two way communication required with controller (around 130 milliseconds of uptime as opposed to 60 milliseonds if false).
 
@@ -96,18 +90,18 @@ struct {
 #define BOOT_AFTER_UPDATE    false
 HTTPClient http;
 
-const char* ssid = "ssid";
-const char* password = "password";
+const char* ssid = "yourssid";
+const char* password = "yourpassword";
 
 // use any of following for devie ID ending with 6.
 // 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
 
-int device = 36;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+int device = 16;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
 int wifiChannel = 7;     // WiFi Channel for this device. 
 char* gateway = "ESP";   // This name has to be same as main controller's ssid.
 int sleepTime = 1;       // Sleep time in minutes.
 int upTime;              // Device uptime in milliseconds.
-int deviceMode = 0;      // 0 for regular, 1 for autupdate and 2 for AutoConnect.
+int deviceMode;      // 0 for regular, 1 for autupdate and 2 for AutoConnect.
 int deviceIP = device;   // last part of this device's fixed IP
 //int requestStatus;
 //int duplexStatus;
@@ -145,38 +139,100 @@ int warnVolt = 130;   // Start warning when battery level goes below 2.60 volts 
 
 //============Do not need user configuration from here on============================
 
-void setup() {
-   
-  WiFi.scanDelete();  //remove previous scan data from memory
-  Serial.begin(115200);
-             
 
-// Read struct from RTC memory
+
+#define FACTORY_APKEY                    "configesp"
+#define BUILD_NOTES                      ""
+
+// Select features to include into the Core:
+#define FEATURE_RULES                    true
+#define FEATURE_PLUGINS                  true
+#define FEATURE_TIME                     true
+#define FEATURE_I2C                      true
+
+// Some extra features, disabled by default
+#define FEATURE_ADC_VCC                  false
+#define SERIALDEBUG                      true
+
+
+// Select a custom plugin set
+//#define PLUGIN_SET_BASIC
+#define PLUGIN_SET_ALL
+
+#ifdef PLUGIN_SET_BASIC
+  #define USES_P001 // Switch
+  #define USES_P002 // ADC
+#endif
+
+#ifdef PLUGIN_SET_ALL
+  #define USES_P001 // Switch
+  #define USES_P002 // ADC
+  #define USES_P004 // Dallas
+  #define USES_P011 // PME
+  #define USES_P012 // LCD
+  #define USES_P014 // SI7021
+  #define USES_P100 // MSGBUS
+  #define USES_P101 // MQTT
+  #if defined(ESP8266)
+    #define USES_P102 // ESPNOW
+  #endif
+  #define USES_P110 // HTTP
+  //#define USES_P111 // HTTPS
+  #define USES_P200 // Nano Serial
+  #define USES_P201 // Tuya LSC
+  #if defined(ESP32)
+    #define USES_P203 // M5
+  #endif
+  #define USES_P254 // Local Log
+  #define USES_P255 // Debugging stuff
+#endif
+
+
+// End of config section, do not remove this:
+// Could not move setup() to base tab, preprocessor gets confused (?)
+// So we just call setup2() from here
+
+#include "Globals.h"
+
+void setup() {
+  
+  // Read struct from RTC memory
 if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) 
   {
-    Serial.print("RTC memory: ");
+   // Serial.print("RTC memory: ");
     printMemory();
-    Serial.println();
+    //Serial.println();
     uint32_t crcOfData = calculateCRC32((uint8_t*) &rtcData.data[0], sizeof(rtcData.data));
-    Serial.print("CRC32 Data: ");
-    Serial.println(crcOfData, HEX);
-    Serial.print("CRC32 from RTC: ");
-    Serial.println(rtcData.crc32, HEX);
+    //Serial.print("CRC32 Data: ");
+    //Serial.println(crcOfData, HEX);
+    //Serial.print("CRC32 from RTC: ");
+    //Serial.println(rtcData.crc32, HEX);
     if (crcOfData != rtcData.crc32) {
-      Serial.println("CRC32 in RTC memory doesn't match CRC32 of data. Data is probably invalid!");
+      //Serial.println("CRC32 in RTC memory doesn't match CRC32 of data. Data is probably invalid!");
     
     } else {
-      Serial.println("CRC32 check ok, data is valid.");
+      //Serial.println("CRC32 check ok, data is valid.");
      }
   } 
-   
+    
+     deviceMode =rtcData.data[8];
+     
+  if (deviceMode == 2) {
+        rtcData.data[8] = 0;
+        setup2(); // Start alternative firmware EspCoreRules Code for WiFi setup & Webserver.
+  
+  } else {
+    WiFi.scanDelete();  //remove previous scan data from memory
+    Serial.begin(115200);
+    
+    rtcData.data[8] = 0;
     sensorType[0] = rtcData.data[0];   // Device ID
     sensorType[1] = rtcData.data[1];   // Voltage
     sensorType[2] = rtcData.data[2];   // Sensor Tytp 1
     sensorType[3] = rtcData.data[3];   // Sensor Tytp 2
     sensorType[4] = rtcData.data[4];   // Sensor Tytp 3
     sensorType[5] = rtcData.data[5];   // Sensor Tytp 4
-
+    
   wifi_set_macaddr(STATION_IF, sensorType);
   probeRequest();
   Serial.print("Sensor Type values sent to controller: ");
@@ -187,8 +243,7 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
   Serial.print("Sensors values sent to controller: ");
   Serial.println(WiFi.macAddress());
 
-
-#if DUPLEX
+ 
     delay(60);  // Minimum 60 milliseonds delay required to receive message from controller reliably.
 
     receivedDevice = WiFi.BSSID(0)[0];
@@ -249,12 +304,8 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
               }
       
       
-  }  else 
-    {
-    Serial.println("Message from controller did not arrive, let me try again to get message data........................................");
-    ESP.restart();
-    }
-
+  }  
+  
     // Update CRC32 of data
      rtcData.crc32 = calculateCRC32((uint8_t*) &rtcData.data[0], sizeof(rtcData.data));
      // Write struct to RTC memory
@@ -264,27 +315,17 @@ if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData)))
       Serial.println();
      }
 
-#endif
-    
-    delay(1);
-  
-}      // Setup ends here
+     delay(1);
 
-//========================Main Loop================================
-
-void loop() {
-
-#if DUPLEX
-    
-   gpioControl();
+      gpioControl();
 
 if (receivedDevice == device && receivedCommand == 9)  {
    
-   otaControl();
+      otaControl();
       
     }  
-#endif
 
+   rtcData.data[8] = deviceMode;
    rtcData.data[9] = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
    upTime = rtcData.data[9];
    sendStatus();
@@ -293,12 +334,12 @@ if (receivedDevice == device && receivedCommand == 9)  {
    Serial.print("I will wakeup in: ");
    Serial.print(sleepTime);
    Serial.println(" Minutes");
-   delay(5000); ESP.restart();   // For testing only.
+   delay(50000); ESP.restart();   // For testing or mains powered devices only.
    //ESP.deepSleepInstant(sleepTime * 60000000, WAKE_NO_RFCAL); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
     
-}     // end of main loop.
-//=========================Main Loop ends==========================
-
+  
+  }   
+}
 
 //=========================Probe request function starts===========
 
@@ -342,20 +383,20 @@ void sensorValues() {
  //Functions for all sensors used on this device goes here and activated by command received from controller.
  //Values received from sensors replaces 4 random values of sensorData array.
     
-    if (sensorType[2] == 16) 
+    if (sensorType[2] == 16)    // If 16 (BME280 sensor) is chosen here the sensor value is Temperature.
     {
 
-      sensorType[3] = 26;
-      sensorType[4] = 36;
+      sensorType[3] = 26;   // If sensorType 16 (BME280 sensor) is chosen for sensorType[2] above sensor type must be 26 (Humidity) here.
+      sensorType[4] = 36;   // If sensorType 16 (BME280 sensor) is chosen for sensorType[2] above sensor type must be 36 (Pressure) here.
       Serial.println();
       Serial.println("Activate function for BME280");
-      sensorData[2] = 1;         //temperature;
-      sensorData[3] = 2;        //humidity;
+      sensorData[2] = random(100);         //temperature;
+      sensorData[3] = random(100);        //humidity;
       sensorData[4] = random(1024) / 4;   //pressure;
     
     } else if (sensorType[2] == 46) {
 
-      sensorData[2] = 60;  
+      sensorData[2] = random(100);  
       Serial.println("Activate function for APDS9960 Light Sensor");
       Serial.println();
     
