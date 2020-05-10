@@ -69,7 +69,7 @@ class myMQTTBroker: public uMQTTBroker
       char data_str[length + 1];
       os_memcpy(data_str, data, length);
       data_str[length] = '\0';
-      Serial.println("Published topic '" + topic + "  with paylod  " + (String)data_str);
+      Serial.println("Published topic '" + topic + "  with payload  " + (String)data_str);
       
       if (topic == "command/")   {
 
@@ -314,7 +314,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
         int len = json(sensorValues, "s|Location", location, "f3|Voltage", voltage, "s|Sensor1", sensorType1, "i|SensorValue1", sensorValue1, "s|Sensor2", sensorType2, "i|SensorValue2", sensorValue2, "s|Sensor3", sensorType3, "i|SensorValue3", sensorValue3, "s|Sensor4", sensorType4, "i|SensorValue4", sensorValue4);
         //Serial.println(String(sensorValues));
         //delay(100);
-        myBroker.publish("SensorValues/", String(sensorValues));
+        myBroker.publish("SensorValues", String(sensorValues));
         Serial.println();
         
         sprintf(topic1, "%s%s%s%s", location, "/", "voltage", "");
@@ -331,7 +331,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
   
         
         if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
-           myBroker.publish("Warning/Battery Low/", location);
+           myBroker.publish("Warning/Battery Low", location);
          }
         }       
 
@@ -348,7 +348,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
         int len = json(deviceStatus, "s|Location", location, "i|rssi", dataReceived.rssi, "i|mode", deviceStatus1, "i|ip", deviceStatus2, "i|channel", deviceStatus3, "i|sleeptime", deviceStatus4, "i|uptime", deviceStatus5);
      // Serial.println(String(deviceStatus));
         delay(100);
-        myBroker.publish("DeviceStatus/", String(deviceStatus));
+        myBroker.publish("DeviceStatus", String(deviceStatus));
        
         sprintf(topic1, "%s%s%s%s", location, "/", "rssi", "");
         sprintf(topic2, "%s%s%s%s", location, "/", "mode", "");
