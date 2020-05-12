@@ -12,6 +12,8 @@
 #include "JsonLogger.h"    // https://github.com/ravelab/JsonLogger
 
 char sensorTypes[256], sensorValues[512], deviceStatus[256];
+char str [512];// = {};
+char s [60];
 
 //   Your WiFi config here
 
@@ -19,9 +21,8 @@ int apChannel = 7;
 char* room = "Livingroom";  // Needed for person locator.Each location must run probeReceiver sketch to implement person locator.
 int rssiThreshold = -50; // Adjust according to signal strength by trial & error.
 char apssid[] = "ESP";
-char ssid[] = "yourssid";     // your network SSID (name)
-char pass[] = "yourpassword"; // your network password
-//bool WiFiAP = false;      // Do yo want the ESP as AP?
+char ssid[] = "HAPPYHOME";     // your network SSID (name)
+char pass[] = "kb1henna"; // your network password
 
 int device;
 float voltage;
@@ -29,15 +30,15 @@ uint8_t data[12];
 const char* location;
 
 int sensorValue1; int sensorValue2; int sensorValue3; int sensorValue4; int sensorValue5;
-//int deviceStatus1; int deviceStatus2; int deviceStatus3; int deviceStatus4; int deviceStatus5;
-//int sensorType1; int sensorType2; int sensorType3; int sensorType4; int sensorType5;
 int command1 = 36; int command2;  int command3;  int command4;  int command5; int command6;
 uint8_t mac[6] = {command1, command2, command3, command4, command5, command6};
-char topic1[50]; char topic2[50]; char topic3[50]; char topic4[50]; char topic5[50]; char topic6[50]; char topic7[50]; char topic8[50]; char topic9[50]; char topic10[50]; char topic11[50]; char topic12[50];
+char topic1[50]; char topic2[50]; char topic3[50]; char topic4[50]; char topic5[50]; char topic6[50]; // char topic7[50]; char topic8[50]; char topic9[50]; char topic10[50]; char topic11[50]; char topic12[50];
 const char* sensorType1; const char* sensorType2; const char* sensorType3; const char* sensorType4;
+int deviceStatus1; int deviceStatus2; int deviceStatus3;  int deviceStatus4; int deviceStatus5; 
+const char* statusType1 = "rssi"; const char *statusType2 = "mode"; const char *statusType3 = "ip"; const char *statusType4 = "channel"; const char *statusType5 = "sleeptime"; const char *statusType6 = "uptime";
 
 //uint8_t securityCode[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at remote sensors to compare.
-uint8_t PresencePerson1[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
+uint8_t PresencePerson1[6] = {0xD0, 0xFC, 0xCC, 0x24, 0xC0, 0x8A}; // Mac ID of Cell phone #1.
 uint8_t PresencePerson2[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #2.
 uint8_t PresencePerson3[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #3.
 uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #4.
@@ -189,11 +190,12 @@ void setup()
   myBroker.subscribe("#");
 }
 
-
 void loop()
 {
 
+    
 }
+
 
 void sendCommand()  {
   
@@ -238,7 +240,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
           if (dataReceived.mac[2] == 26) sensorType1 = "humidity";
           if (dataReceived.mac[2] == 36) sensorType1 = "pressure";
           if (dataReceived.mac[2] == 46) sensorType1 = "light";
-          if (dataReceived.mac[2] == 56) sensorType1 = "open/close";
+          if (dataReceived.mac[2] == 56) sensorType1 = "openclose";
           if (dataReceived.mac[2] == 66) sensorType1 = "level";
           if (dataReceived.mac[2] == 76) sensorType1 = "presence";
           if (dataReceived.mac[2] == 86) sensorType1 = "motion";
@@ -248,7 +250,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
           if (dataReceived.mac[3] == 26) sensorType2 = "humidity";
           if (dataReceived.mac[3] == 36) sensorType2 = "pressure";
           if (dataReceived.mac[3] == 46) sensorType2 = "light";
-          if (dataReceived.mac[3] == 56) sensorType2 = "open/close";
+          if (dataReceived.mac[3] == 56) sensorType2 = "openclose";
           if (dataReceived.mac[3] == 66) sensorType2 = "level";
           if (dataReceived.mac[3] == 76) sensorType2 = "presence";
           if (dataReceived.mac[3] == 86) sensorType2 = "motion";
@@ -258,7 +260,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
           if (dataReceived.mac[4] == 26) sensorType3 = "humidity";
           if (dataReceived.mac[4] == 36) sensorType3 = "pressure";
           if (dataReceived.mac[4] == 46) sensorType3 = "light";
-          if (dataReceived.mac[4] == 56) sensorType3 = "open/close";
+          if (dataReceived.mac[4] == 56) sensorType3 = "openclose";
           if (dataReceived.mac[4] == 66) sensorType3 = "level";
           if (dataReceived.mac[4] == 76) sensorType3 = "presence";
           if (dataReceived.mac[4] == 86) sensorType3 = "motion";
@@ -268,7 +270,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
           if (dataReceived.mac[5] == 26) sensorType4 = "humidity";
           if (dataReceived.mac[5] == 36) sensorType4 = "pressure";
           if (dataReceived.mac[5] == 46) sensorType4 = "light";
-          if (dataReceived.mac[5] == 56) sensorType4 = "open/close";
+          if (dataReceived.mac[5] == 56) sensorType4 = "openclose";
           if (dataReceived.mac[5] == 66) sensorType4 = "level";
           if (dataReceived.mac[5] == 76) sensorType4 = "presence";
           if (dataReceived.mac[5] == 86) sensorType4 = "motion";
@@ -311,12 +313,25 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
         }
         
         if (voltage > 2.50 && voltage < 3.60) {
-        int len = json(sensorValues, "s|Location", location, "f3|Voltage", voltage, "s|Sensor1", sensorType1, "i|SensorValue1", sensorValue1, "s|Sensor2", sensorType2, "i|SensorValue2", sensorValue2, "s|Sensor3", sensorType3, "i|SensorValue3", sensorValue3, "s|Sensor4", sensorType4, "i|SensorValue4", sensorValue4);
+        //int len = json(sensorValues, "s|location", location, "f3|Voltage", voltage, "s|Sensor1", sensorType1, "i|SensorValue1", sensorValue1, "s|Sensor2", sensorType2, "i|SensorValue2", sensorValue2, "s|Sensor3", sensorType3, "i|SensorValue3", sensorValue3, "s|Sensor4", sensorType4, "i|SensorValue4", sensorValue4);
         //Serial.println(String(sensorValues));
         //delay(100);
-        myBroker.publish("SensorValues", String(sensorValues));
-        Serial.println();
+        //myBroker.publish("SensorValues", String(sensorValues));
         
+        //sprintf (s, "{"); strcat (str, s);
+        sprintf (s, "\"%s\":\"%s\"", "location", location);    strcat (str, s);
+        sprintf (s, ",\"%s\":\"%.2f\"", "voltage", voltage);    strcat (str, s);
+
+        sprintf (s, ",\"%s\":\"%d\"", sensorType1, sensorValue1); strcat (str, s);
+        sprintf (s, ",\"%s\":\"%d\"", sensorType2, sensorValue2); strcat (str, s);
+        sprintf (s, ",\"%s\":\"%d\"", sensorType3, sensorValue3); strcat (str, s);
+        sprintf (s, ",\"%s\":\"%d\"", sensorType4, sensorValue4); strcat (str, s);
+        sprintf (s, "}"); strcat (str, s);
+      
+        myBroker.publish("sensorValues", str);
+        sprintf (str, "{");
+        //Serial.println();
+        /*
         sprintf(topic1, "%s%s%s%s", location, "/", "voltage", "");
         sprintf(topic2, "%s%s%s%s", location, "/", sensorType1, "");
         sprintf(topic3, "%s%s%s%s", location, "/", sensorType2, "");
@@ -328,7 +343,7 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
         myBroker.publish(topic3, (String)sensorValue2);
         myBroker.publish(topic4, (String)sensorValue3);
         myBroker.publish(topic5, (String)sensorValue4);
-  
+        */
         
         if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
            myBroker.publish("Warning/Battery Low", location);
@@ -337,34 +352,53 @@ void onProbeRequest(const WiFiEventSoftAPModeProbeRequestReceived& dataReceived)
 
        if (dataReceived.mac[3] == apChannel) {  
 
-        int deviceStatus1; int deviceStatus2; int deviceStatus3;  int deviceStatus4; int deviceStatus5;    
-
+        
         deviceStatus1 = (dataReceived.mac[1]);
         deviceStatus2 = (dataReceived.mac[2]);
         deviceStatus3 = (dataReceived.mac[3]);
         deviceStatus4 = (dataReceived.mac[4]);
         deviceStatus5 = (dataReceived.mac[5]);
                
-        int len = json(deviceStatus, "s|Location", location, "i|rssi", dataReceived.rssi, "i|mode", deviceStatus1, "i|ip", deviceStatus2, "i|channel", deviceStatus3, "i|sleeptime", deviceStatus4, "i|uptime", deviceStatus5);
-     // Serial.println(String(deviceStatus));
-        delay(100);
-        myBroker.publish("DeviceStatus", String(deviceStatus));
-       
+      //   int len = json(deviceStatus, "s|location", location, "i|rssi", dataReceived.rssi, "i|mode", deviceStatus1, "i|ip", deviceStatus2, "i|channel", deviceStatus3, "i|sleeptime", deviceStatus4, "i|uptime", deviceStatus5);
+      //   Serial.println(String(deviceStatus));
+      //   delay(100);
+      //   myBroker.publish("DeviceStatus", String(deviceStatus));
+
+        //sprintf (s, "{"); strcat (str, s);
+        sprintf (s, "\"%s\":\"%s\"", "location", location);    strcat (str, s);
+        sprintf (s, ",\"%s\":\"%i\"", statusType1, dataReceived.rssi); strcat (str, s);
+        sprintf (s, ",\"%s\":\"%d\"", statusType2, deviceStatus1); strcat (str, s);
+        sprintf (s, ",\"%s\":\"%d\"", statusType3, deviceStatus2); strcat (str, s);
+        sprintf (s, ",\"%s\":\"%d\"", statusType4, deviceStatus3); strcat (str, s);
+        sprintf (s, ",\"%s\":\"%d\"", statusType5, deviceStatus4); strcat (str, s);
+        sprintf (s, ",\"%s\":\"%d\"", statusType6, deviceStatus5); strcat (str, s);
+        sprintf (s, "}"); strcat (str, s);
+        
+        myBroker.publish("DeviceStatus", str);
+        sprintf (str, "{"); 
+        //Serial.println(str);
+        
+       /*
         sprintf(topic1, "%s%s%s%s", location, "/", "rssi", "");
         sprintf(topic2, "%s%s%s%s", location, "/", "mode", "");
         sprintf(topic3, "%s%s%s%s", location, "/", "ip", "");
         sprintf(topic4, "%s%s%s%s", location, "/", "channel", "");
         sprintf(topic5, "%s%s%s%s", location, "/", "sleeptime", "");
         sprintf(topic6, "%s%s%s%s", location, "/", "uptime", "");
-
+        
+        
+        
         myBroker.publish(topic1, (String)dataReceived.rssi);
         myBroker.publish(topic2, (String)deviceStatus1);
         myBroker.publish(topic3, (String)deviceStatus2);
         myBroker.publish(topic4, (String)deviceStatus3);
         myBroker.publish(topic5, (String)deviceStatus4);
         myBroker.publish(topic6, (String)deviceStatus5);
-    
+        */
+        
+        
        }
       } 
-     } 
+     }
+
           
