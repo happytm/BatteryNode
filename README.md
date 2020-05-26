@@ -1,5 +1,9 @@
 # Very simple DIY Low Power low cost sensors, Local standalone (no cloud service required) IOT Network.
 
+## Help needed to improve the software:
+
+I have hardware background so please help me improve the code. Specially I would like to but so far unsuccessful to make ProbeReceiver.ino code to work for ESP32 device.They have different event handler for proberequests linked at  https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/WiFiClientEvents/WiFiClientEvents.ino.
+
 # Features:
 
 ## Very low power consumption.
