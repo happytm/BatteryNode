@@ -1,6 +1,8 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 
+//#define SPLITMQTTMESSAGES    true  
+
 char sensorTypes[256], sensorValues[512], deviceStatus[256];
 char str [512];// = {};
 char s [60];
@@ -24,15 +26,14 @@ uint8_t data[12];
 const char* location;
 
 int sensorValue1; int sensorValue2; int sensorValue3; int sensorValue4; int sensorValue5;
-int command1 = 36; int command2;  int command3;  int command4;  int command5; int command6;
-//uint8_t mac[6] = {command1, command2, command3, command4, command5, command6};
+int command1 = 06; int command2 =06;  int command3 = 16;  int command4 = 26;  int command5 = 36; int command6 = 46;
+uint8_t mac[6] = {static_cast<uint8_t>(command1), static_cast<uint8_t>(command2), static_cast<uint8_t>(command3), static_cast<uint8_t>(command4), static_cast<uint8_t>(command5), static_cast<uint8_t>(command6)};
 char topic1[50]; char topic2[50]; char topic3[50]; char topic4[50]; char topic5[50]; char topic6[50]; // char topic7[50]; char topic8[50]; char topic9[50]; char topic10[50]; char topic11[50]; char topic12[50];
 const char* sensorType1; const char* sensorType2; const char* sensorType3; const char* sensorType4;
 int deviceStatus1; int deviceStatus2; int deviceStatus3;  int deviceStatus4; int deviceStatus5; 
 const char* statusType1 = "rssi"; const char *statusType2 = "mode"; const char *statusType3 = "ip"; const char *statusType4 = "channel"; const char *statusType5 = "sleeptime"; const char *statusType6 = "uptime";
 
 //uint8_t securityCode[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Security code must be same at remote sensors to compare.
-
 uint8_t PresencePerson2[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #1.
 uint8_t PresencePerson2[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #2.
 uint8_t PresencePerson3[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of Cell phone #3.
@@ -40,29 +41,79 @@ uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of 
 
 // ==================== end of TUNEABLE PARAMETERS ====================
 
+/*
+   if (topic == "command")   {
+        command1 = atoi(&data[0]);
+        Serial.println(command1);
+        command2 = atoi(&data[3]);
+        Serial.println(command2);
+        command3 = atoi(&data[6]);
+        Serial.println(command3);
+        command4 = atoi(&data[9]);
+        Serial.println(command4);
+        command5 = atoi(&data[12]);
+        Serial.println(command5);
+        command6 = atoi(&data[15]);
+        Serial.println(command6);
 
+      }
+*/
+
+        
+        
 void setup()
 {
     Serial.begin(115200);
 
     delay(1000);
 
+    // Examples of different ways to register wifi events
+   // WiFi.onEvent(WiFiEvent);
+
+
     WiFi.mode(WIFI_AP);
     WiFi.softAP(apSSID, apPassword, apChannel, hidden);
     esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
     Serial.printf("The AP mac address is %s\n", WiFi.softAPmacAddress().c_str());
 
+
+
     Serial.println();
     Serial.println();
     Serial.println("Waiting for probe requests ... ");
 
-    WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
+     //WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_AP_STACONNECTED);
+     WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
 }
 
 void loop()
 {
-    
+    //delay(5000);
 }
+
+
+void sendCommand()  {
+  
+  mac[0] = command1;
+  mac[1] = command2;
+  mac[2] = command3;
+  mac[3] = command4;
+  mac[4] = command5;
+  mac[5] = command6;
+  
+  Serial.print("Command sent to remote device :  ");
+  Serial.print(mac[0]); Serial.print("/");
+  Serial.print(mac[1]); Serial.print("/");
+  Serial.print(mac[2]); Serial.print("/");
+  Serial.print(mac[3]); Serial.print("/");
+  Serial.print(mac[4]); Serial.print("/");
+  Serial.print(mac[5]); Serial.println("/");
+  Serial.println();
+  Serial.println();
+  esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
+  //wifi_set_macaddr(SOFTAP_IF, mac);
+}
+
 
 
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
@@ -100,7 +151,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
      if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
       {
      
-    //    sendCommand();
+        sendCommand();
         
         if (info.ap_probereqrecved.mac[1] == 06) { // only accept data from device with voltage as a sensor type at byte 1.
          
@@ -196,6 +247,8 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
         sprintf (s, ",\"%s\":\"%d\"", sensorType4, sensorValue4); strcat (str, s);
         sprintf (s, "}"); strcat (str, s);
         
+        Serial.println("Following ## Sensor Values ## receiced from remote device:");
+        Serial.println();
         Serial.println(str);
         Serial.println();
        // myBroker.publish("sensorValues", str);
@@ -245,6 +298,8 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
         sprintf (s, ",\"%s\":\"%d\"", statusType6, deviceStatus5); strcat (str, s);
         sprintf (s, "}"); strcat (str, s);
         
+        Serial.println("Following ## Device Status ## receiced from remote device:");
+        Serial.println();
         Serial.println(str);
         Serial.println();
         //myBroker.publish("deviceStatus", str);
@@ -270,3 +325,4 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
        }
       } 
      }
+
