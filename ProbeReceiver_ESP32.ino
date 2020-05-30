@@ -1,5 +1,17 @@
+// This example uses an ESP32 Development Board
+// to connect to shiftr.io.
+//
+// You can check on your device after a successful
+// connection here: https://shiftr.io/try.
+//
+// by Joël Gähwiler
+// https://github.com/256dpi/arduino-mqtt
+
+
+
 #include <WiFi.h>
 #include <esp_wifi.h>
+#include <MQTT.h>
 
 //#define SPLITMQTTMESSAGES    true  
 
@@ -17,8 +29,12 @@ const char* apPassword = "";
 const int apChannel = 7;
 const int hidden = 0; // If hidden is 1 probe request event handling does not work ?
 
-char ssid[] = "yourssid";     // your network SSID (name)
-char pass[] = "yourpassword"; // your network password
+
+char ssid[] = "ssid";     // your network SSID (name)
+char password[] = "password"; // your network password
+
+
+
 
 int device;
 float voltage;
@@ -59,7 +75,39 @@ uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of 
       }
 */
 
-        
+WiFiClient net;
+MQTTClient client;
+
+unsigned long lastMillis = 0;
+
+void connect() {
+  Serial.print("checking wifi...");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(1000);
+  }
+
+  Serial.print("\nconnecting...");
+  while (!client.connect("arduino", "try", "try")) {
+    Serial.print(".");
+    delay(1000);
+  }
+
+  Serial.println("\nconnected!");
+
+  client.subscribe("command");
+  //client.unsubscribe("/hello");
+}
+
+  void messageReceived(String &topic, String &payload) {
+  Serial.println("Message received with topic  = "+ topic + " & payload = " + payload);
+
+  // Note: Do not use the client in the callback to publish, subscribe or
+  // unsubscribe as it may cause deadlocks when other things arrive while
+  // sending and receiving acknowledgments. Instead, change a global variable,
+  // or push to a queue and handle it in the loop after calling `client.loop()`.
+}
+    
         
 void setup()
 {
@@ -67,29 +115,78 @@ void setup()
 
     delay(1000);
 
-    // Examples of different ways to register wifi events
-   // WiFi.onEvent(WiFiEvent);
+    
+    
+    WiFi.mode(WIFI_STA);
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+    WiFi.begin(ssid, password);
 
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
 
-    WiFi.mode(WIFI_AP);
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.print("IP address:  ");
+    Serial.println(WiFi.localIP());
+
+    
     WiFi.softAP(apSSID, apPassword, apChannel, hidden);
     esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
     Serial.printf("The AP mac address is %s\n", WiFi.softAPmacAddress().c_str());
 
-
+    Serial.println("Connected to the WiFi network");
+   
+    
+    WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
 
     Serial.println();
     Serial.println();
     Serial.println("Waiting for probe requests ... ");
 
-     //WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_AP_STACONNECTED);
-     WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
-}
+    // Note: Local domain names (e.g. "Computer.local" on OSX) are not supported
+    // by Arduino. You need to set the IP address directly.
+
+    
+    
+    client.begin("192.168.0.4", net);
+    client.onMessage(messageReceived);
+
+    connect();
+     
+    
+}  // End of setup
+
+
 
 void loop()
 {
-    //delay(5000);
-}
+  client.loop();
+  delay(10);  // <- fixes some issues with WiFi stability
+
+  
+  
+  if (!client.connected()) {
+   connect();
+  }
+
+  
+  //client.publish("SensorValues", String(sensorValues));
+  //Serial.println("Message Published with topic = SensorValues");
+
+  // publish a message roughly every second.
+  if (millis() - lastMillis > 10000) {
+    lastMillis = millis();
+    //client.publish("/hello", "world");
+    //Serial.println("Message Published");
+  }
+ 
+  
+ }  // End of Loop
+
 
 
 void sendCommand()  {
@@ -110,14 +207,14 @@ void sendCommand()  {
   Serial.print(mac[5]); Serial.println("/");
   Serial.println();
   Serial.println();
-  esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
-  //wifi_set_macaddr(SOFTAP_IF, mac);
+  esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);  // 
+  //wifi_set_macaddr(SOFTAP_IF, mac);     // for ESP8266
 }
 
 
 
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
-    
+  /*  
   Serial.print("Probe Received :  ");
   for(int i = 0; i< 6; i++){
     Serial.printf("%02X", info.ap_probereqrecved.mac[i]);
@@ -147,7 +244,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
     }
    }
   
-      
+   */   
      if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
       {
      
@@ -236,7 +333,8 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
         
        // int len = json(sensorValues, "s|location", location, "f3|Voltage", voltage, "s|Sensor1", sensorType1, "i|SensorValue1", sensorValue1, "s|Sensor2", sensorType2, "i|SensorValue2", sensorValue2, "s|Sensor3", sensorType3, "i|SensorValue3", sensorValue3, "s|Sensor4", sensorType4, "i|SensorValue4", sensorValue4);
        // myBroker.publish("SensorValues", String(sensorValues));
-       
+       //client.publish("SensorValues", String(sensorValues));
+
         //sprintf (s, "{"); strcat (str, s);
         sprintf (s, "\"%s\":\"%s\"", "location", location);    strcat (str, s);
         sprintf (s, ",\"%s\":\"%.2f\"", "voltage", voltage);    strcat (str, s);
@@ -251,7 +349,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
         Serial.println();
         Serial.println(str);
         Serial.println();
-       // myBroker.publish("sensorValues", str);
+        
         sprintf (str, "{");
         
         
@@ -325,4 +423,3 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
        }
       } 
      }
-
