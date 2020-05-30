@@ -8,14 +8,13 @@
 // https://github.com/256dpi/arduino-mqtt
 
 
-
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <MQTT.h>
 
 //#define SPLITMQTTMESSAGES    true  
 
-char sensorTypes[256], sensorValues[512], deviceStatus[256];
+char sensorTypes[256], sensorValues[256], deviceStatus[256];
 char str [512];// = {};
 char s [60];
 
@@ -133,14 +132,14 @@ void setup()
     Serial.print("IP address:  ");
     Serial.println(WiFi.localIP());
 
-    
+    //WiFi.mode(WIFI_AP);  // This causes problem for MQTT connection.
     WiFi.softAP(apSSID, apPassword, apChannel, hidden);
     esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
     Serial.printf("The AP mac address is %s\n", WiFi.softAPmacAddress().c_str());
 
     Serial.println("Connected to the WiFi network");
    
-    
+    //WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_AP_STACONNECTED);
     WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
 
     Serial.println();
@@ -151,8 +150,8 @@ void setup()
     // by Arduino. You need to set the IP address directly.
 
     
-    
-    client.begin("192.168.0.4", net);
+    client.begin("broker.shiftr.io", net);
+    //client.begin("192.168.0.4", net);
     client.onMessage(messageReceived);
 
     connect();
@@ -174,11 +173,9 @@ void loop()
   }
 
   
-  //client.publish("SensorValues", String(sensorValues));
-  //Serial.println("Message Published with topic = SensorValues");
-
+  
   // publish a message roughly every second.
-  if (millis() - lastMillis > 10000) {
+  if (millis() - lastMillis > 1000) {
     lastMillis = millis();
     //client.publish("/hello", "world");
     //Serial.println("Message Published");
@@ -349,6 +346,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
         Serial.println();
         Serial.println(str);
         Serial.println();
+        client.publish("SensorValues", String(str));
         
         sprintf (str, "{");
         
@@ -401,6 +399,8 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
         Serial.println(str);
         Serial.println();
         //myBroker.publish("deviceStatus", str);
+        client.publish("deviceStatus", String(str));
+
         sprintf (str, "{"); 
         
         
