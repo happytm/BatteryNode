@@ -10,7 +10,7 @@
 
 #include <WiFi.h>
 #include <esp_wifi.h>
-#include <MQTT.h>
+#include <MQTT.h>      // https://github.com/256dpi/arduino-mqtt
 
 //#define SPLITMQTTMESSAGES    true  
 
@@ -18,7 +18,7 @@ char sensorTypes[256], sensorValues[256], deviceStatus[256];
 char str [512];// = {};
 char s [60];
 
-//   Your WiFi config here
+//   Your WiFi & MQTT config below:
 
 
 char* room = "Livingroom";  // Needed for person locator.Each location must run probeReceiver sketch to implement person locator.
@@ -33,15 +33,13 @@ char ssid[] = "ssid";     // your network SSID (name)
 char password[] = "password"; // your network password
 
 
-
-
 int device;
 float voltage;
 uint8_t data[12];
 const char* location;
 
 int sensorValue1; int sensorValue2; int sensorValue3; int sensorValue4; int sensorValue5;
-int command1 = 06; int command2 =06;  int command3 = 16;  int command4 = 26;  int command5 = 36; int command6 = 46;
+int command1; int command2;  int command3;  int command4;  int command5; int command6;
 uint8_t mac[6] = {static_cast<uint8_t>(command1), static_cast<uint8_t>(command2), static_cast<uint8_t>(command3), static_cast<uint8_t>(command4), static_cast<uint8_t>(command5), static_cast<uint8_t>(command6)};
 char topic1[50]; char topic2[50]; char topic3[50]; char topic4[50]; char topic5[50]; char topic6[50]; // char topic7[50]; char topic8[50]; char topic9[50]; char topic10[50]; char topic11[50]; char topic12[50];
 const char* sensorType1; const char* sensorType2; const char* sensorType3; const char* sensorType4;
@@ -56,23 +54,7 @@ uint8_t PresencePerson4[6] = {0x36, 0x33, 0x33, 0x33, 0x33, 0x33}; // Mac ID of 
 
 // ==================== end of TUNEABLE PARAMETERS ====================
 
-/*
-   if (topic == "command")   {
-        command1 = atoi(&data[0]);
-        Serial.println(command1);
-        command2 = atoi(&data[3]);
-        Serial.println(command2);
-        command3 = atoi(&data[6]);
-        Serial.println(command3);
-        command4 = atoi(&data[9]);
-        Serial.println(command4);
-        command5 = atoi(&data[12]);
-        Serial.println(command5);
-        command6 = atoi(&data[15]);
-        Serial.println(command6);
 
-      }
-*/
 
 WiFiClient net;
 MQTTClient client;
@@ -100,7 +82,24 @@ void connect() {
 
   void messageReceived(String &topic, String &payload) {
   Serial.println("Message received with topic  = "+ topic + " & payload = " + payload);
+  
+  if (topic == "command")   {
+        command1 = atoi(&payload[0]);
+        Serial.println(command1);
+        command2 = atoi(&payload[3]);
+        Serial.println(command2);
+        command3 = atoi(&payload[6]);
+        Serial.println(command3);
+        command4 = atoi(&payload[9]);
+        Serial.println(command4);
+        command5 = atoi(&payload[12]);
+        Serial.println(command5);
+        command6 = atoi(&payload[15]);
+        Serial.println(command6);
 
+  }
+
+  
   // Note: Do not use the client in the callback to publish, subscribe or
   // unsubscribe as it may cause deadlocks when other things arrive while
   // sending and receiving acknowledgments. Instead, change a global variable,
@@ -173,7 +172,9 @@ void loop()
   }
 
   
-  
+  //client.publish("SensorValues", String(sensorValues));
+  //Serial.println("Message Published with topic = SensorValues");
+
   // publish a message roughly every second.
   if (millis() - lastMillis > 1000) {
     lastMillis = millis();
@@ -187,7 +188,7 @@ void loop()
 
 
 void sendCommand()  {
-  
+
   mac[0] = command1;
   mac[1] = command2;
   mac[2] = command3;
@@ -206,12 +207,12 @@ void sendCommand()  {
   Serial.println();
   esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);  // 
   //wifi_set_macaddr(SOFTAP_IF, mac);     // for ESP8266
-}
+ }
 
 
 
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
-  /*  
+    
   Serial.print("Probe Received :  ");
   for(int i = 0; i< 6; i++){
     Serial.printf("%02X", info.ap_probereqrecved.mac[i]);
@@ -241,7 +242,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info){
     }
    }
   
-   */   
+      
      if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
       {
      
