@@ -107,7 +107,7 @@ struct SettingsStruct
   boolean       AutoConnect = true;
   boolean       AutoAPOnFailure = true;
   byte          BSSID[6];
-  byte          WifiChannel=0;
+  byte          WifiChannel=7;
   byte          IP[4];
   byte          Gateway[4];
   byte          Subnet[4];

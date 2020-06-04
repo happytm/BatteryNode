@@ -256,8 +256,7 @@ void P101_MSGBusAnnounceMe() {
   payload +=  WiFi.macAddress();
   payload += "\"}";
   P101_MQTTclient->publish(topic.c_str(), payload.c_str());
-  P101_MQTTclient->publish("SensorValues", sensorValues);
-  
 }
 
 #endif
+

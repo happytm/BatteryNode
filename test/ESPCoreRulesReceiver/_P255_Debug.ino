@@ -185,8 +185,8 @@ boolean Plugin_255(byte function, String& cmd, String& params)
           Settings.ForceAPMode = (force == 1);
           char ap_ssid[40];
           ap_ssid[0] = 0;
-          strcpy(ap_ssid, "ESP_");
-          sprintf_P(ap_ssid, PSTR("%s%s"), ap_ssid, Settings.Name);
+          strcpy(ap_ssid, "ESP");
+          //sprintf_P(ap_ssid, PSTR("%s%s"), ap_ssid, Settings.Name);
           WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey,6,false);
           WifiAPMode(state == 1);          
         }

@@ -157,3 +157,4 @@ void Plugin_011_Write(byte cmd, byte Par1, byte Par2)
   Wire.endTransmission();
 }
 #endif
+

@@ -56,3 +56,4 @@ Variables, to be used in rules:
 %sysname%                 System name that has been configured
 %systime%                 Time in HH:MM
 */
+

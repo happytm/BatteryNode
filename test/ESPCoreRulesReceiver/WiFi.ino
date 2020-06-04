@@ -12,11 +12,11 @@ void WifiInit() {
     WiFi.forceSleepWake();
     delay(1);
   #endif
-  WiFi.mode(WIFI_STA);
+   WiFi.mode(WIFI_STA);
 
   if(WifiConnect(2)){
-  //}else
-  //{
+  }else
+  {
     WifiAPMode(true);    
   }
   #if SERIALDEBUG
@@ -107,14 +107,19 @@ void WifiAPconfig()
   char ap_ssid[40];
   ap_ssid[0] = 0;
   strcpy(ap_ssid, "ESP");
- // sprintf_P(ap_ssid, PSTR("%s%s"), ap_ssid, Settings.Name);
+  //sprintf_P(ap_ssid, PSTR("%s%s"), ap_ssid, Settings.Name);
   if(SecuritySettings.WifiAPKey[0] == 0)
     strcpy(SecuritySettings.WifiAPKey, FACTORY_APKEY);
+  
+  
+  //WiFi.softAP(ap_ssid, "<notused>", apChannel, 0, 0);   //(gateway, "<notused>", 7, 1, 0) for hidden SSID.
+  WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey,apChannel,false);
   #if SERIALDEBUG
     Serial.print("Wifi AP config with key:");
     Serial.println(SecuritySettings.WifiAPKey);
+    Serial.println("AP started with IP address: " + WiFi.softAPIP().toString() + " & SSID " + ap_ssid);
+
   #endif
-  WiFi.softAP(ap_ssid, SecuritySettings.WifiAPKey,wifiChannel,false);
 }
 
 
@@ -171,6 +176,7 @@ boolean WifiConnect(byte connectAttempts)
   #endif
       
   if (WiFi.status() == WL_CONNECTED){
+    
     return true;
   }else
   {
@@ -198,10 +204,12 @@ boolean WifiConnect(byte connectAttempts)
           Serial.println(WiFi.status());
           Serial.print("Wificonnect:");
           Serial.println(tryConnect);
+          Serial.println("Connecting to " + (String)SecuritySettings.WifiSSID + " with fixed WiFi Channel set to " + (String)apChannel);
+
         #endif
 
         if (tryConnect == 1){
-          if(Settings.WifiChannel == 0) 
+          if(Settings.WifiChannel == apChannel) 
             WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey);
           else
             WiFi.begin(SecuritySettings.WifiSSID, SecuritySettings.WifiKey, Settings.WifiChannel, Settings.BSSID);
@@ -221,6 +229,8 @@ boolean WifiConnect(byte connectAttempts)
         if (WiFi.status() == WL_CONNECTED)
         {
           #if SERIALDEBUG
+            Serial.println("");
+            Serial.println("WiFi connected to " + (String)SecuritySettings.WifiSSID + " with IP address: " + WiFi.localIP().toString());
             Serial.print("Wificonnected:");
             Serial.print(millis());
             Serial.println(" mS:");

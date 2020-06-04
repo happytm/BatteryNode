@@ -840,3 +840,4 @@ int Calculate(const char *input, float* result)
   return CALCULATE_OK;
 }
 #endif
+
