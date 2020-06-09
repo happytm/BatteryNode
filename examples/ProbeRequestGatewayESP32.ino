@@ -25,8 +25,8 @@ const char* apPassword = "";
 const int apChannel = 7;
 const int hidden = 0; // If hidden is 1 probe request event handling does not work ?
 
-char ssid[] = "HAPPYHOME";     // your network SSID (name)
-char password[] = "kb1henna"; // your network password
+char ssid[] = "";     // your network SSID (name)
+char password[] = ""; // your network password
 
 int device;
 float voltage;
