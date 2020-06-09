@@ -11,6 +11,7 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <MQTT.h>      // https://github.com/256dpi/arduino-mqtt
+#include "SPIFFS.h"
 
 char str [512];
 char s [60];
@@ -24,8 +25,8 @@ const char* apPassword = "";
 const int apChannel = 7;
 const int hidden = 0; // If hidden is 1 probe request event handling does not work ?
 
-char ssid[] = "";     // your network SSID (name)
-char password[] = ""; // your network password
+char ssid[] = "HAPPYHOME";     // your network SSID (name)
+char password[] = "kb1henna"; // your network password
 
 int device;
 float voltage;
@@ -134,11 +135,33 @@ void setup()
   // Note: Local domain names (e.g. "Computer.local" on OSX) are not supported
   // by Arduino. You need to set the IP address directly.
 
-  client.begin("broker.shiftr.io", net);
-  //client.begin("192.168.0.4", net);
+  client.begin("broker.shiftr.io", net); // Use username "try" and password "try" from Mqtt client to access this broker.
+  //client.begin("192.168.0.3", net);
   client.onMessage(messageReceived);
 
   connect();
+
+  if (!SPIFFS.begin(true)) {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+
+  //--------- Write to file
+  File fileToWrite = SPIFFS.open("/test.txt", FILE_WRITE);
+
+  if (!fileToWrite) {
+    Serial.println("There was an error opening the file for writing");
+    return;
+  }
+
+  if (fileToWrite.println(str)) {
+    Serial.println("File was written");;
+  } else {
+    Serial.println("File write failed");
+  }
+
+  fileToWrite.close();
+
 
 }  // End of setup
 
@@ -291,9 +314,9 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) {
 
     if (voltage > 2.50 && voltage < 3.60) {
 
+      sprintf (str, "{");
       sprintf (s, "\"%s\":\"%s\"", "location", location);    strcat (str, s);
       sprintf (s, ",\"%s\":\"%.2f\"", "voltage", voltage);    strcat (str, s);
-
       sprintf (s, ",\"%s\":\"%d\"", sensorType1, sensorValue1); strcat (str, s);
       sprintf (s, ",\"%s\":\"%d\"", sensorType2, sensorValue2); strcat (str, s);
       sprintf (s, ",\"%s\":\"%d\"", sensorType3, sensorValue3); strcat (str, s);
@@ -306,7 +329,35 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) {
       Serial.println();
       client.publish("SensorValues", String(str));
 
-      sprintf (str, "{");
+      File fileToAppend = SPIFFS.open("/test.json", FILE_APPEND);
+
+      if (!fileToAppend) {
+        Serial.println("There was an error opening the file for appending");
+        return;
+      }
+
+      if (fileToAppend.println(str)) {
+        Serial.println("File content was appended");
+      } else {
+        Serial.println("File append failed");
+      }
+
+      fileToAppend.close();
+
+      File fileToTest = SPIFFS.open("/test.json");
+
+      if (!fileToTest) {
+        Serial.println("Failed to open file for reading");
+        return;
+      }
+
+      Serial.print("Total File size: ");
+
+      Serial.println(fileToTest.size());
+
+      fileToTest.close();
+
+      // sprintf (str, "{");
 
       if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
         //  myBroker.publish("Warning/Battery Low", location);
@@ -320,7 +371,8 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) {
       deviceStatus3 = (info.ap_probereqrecved.mac[3]);
       deviceStatus4 = (info.ap_probereqrecved.mac[4]);
       deviceStatus5 = (info.ap_probereqrecved.mac[5]);
-
+      
+      sprintf (str, "{");
       sprintf (s, "\"%s\":\"%s\"", "location", location);    strcat (str, s);
       sprintf (s, ",\"%s\":\"%i\"", statusType1, info.ap_probereqrecved.rssi); strcat (str, s);
       sprintf (s, ",\"%s\":\"%d\"", statusType2, deviceStatus1); strcat (str, s);
@@ -336,8 +388,36 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) {
       Serial.println();
 
       client.publish("deviceStatus", String(str));
+      
 
-      sprintf (str, "{");
+      File fileToAppend = SPIFFS.open("/test.json", FILE_APPEND);
+
+      if (!fileToAppend) {
+        Serial.println("There was an error opening the file for appending");
+        return;
+      }
+
+      if (fileToAppend.println(str)) {
+        Serial.println("File content was appended");
+      } else {
+        Serial.println("File append failed");
+      }
+
+      fileToAppend.close();
+
+      File fileToTest = SPIFFS.open("/test.json");
+
+      if (!fileToTest) {
+        Serial.println("Failed to open file for reading");
+        return;
+      }
+
+      Serial.print("Total File size: ");
+
+      Serial.println(fileToTest.size());
+
+      fileToTest.close();
+
 
     }
   }
