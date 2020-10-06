@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  
+  <title>Network Monitor</title>
+  
+ <script src="js/jquery.min.js"></script>
+  
+  <link href="css/tabulator_midnight.min.css" rel="stylesheet"/>
+  
+  <script src="js/tabulator.min.js"></script>
+
+ 
+
+<script>
+$(document).ready(function(){
+  $("form").submit(function(){
+    alert("Submitted");
+  });
+});
+
+
+
+$(document).ready(function(){
+    $('.combine').on('change', function(){
+        var payload = $('#device').val() + '/' + $('#command').val() + '/' + $('#command1').val() + '/' + $('#command2').val() + '/' + $('#command3').val() + '/' + $('#command4').val();
+        $('#result').val(payload);
+        
+    });
+})
+
+</script>
+  
+</head>
+<body> 
+  
+  <form action="">
+  
+  
+<SELECT class="combine" id ="device" name = "a">
+    <option>Room</option>
+    <option>Livingroom</option>
+    <option>Kitchen</option>
+    <option>Bedroom1</option>
+    <option>Bedroom2</option>
+    <option>Bathroom1</option>
+    <option>Bathroom2</option>
+    <option>Laundry</option>
+    <option>Office</option>
+</SELECT>
+<SELECT class="combine" id ="command" name = "b">
+    <option>Command Type</option>
+    <option>Set Sensor Types</option>
+    <option>DigitalWrite</option>
+    <option>AnalogWrite</option>
+    <option>DigitalRead</option>
+    <option>AnalogRead</option>
+    <option>Neopixel</option>
+    <option>Set AP Channel</option>
+    <option>Set SleepTime</option>
+    <option>Set Mode</option>
+</SELECT>
+<SELECT class="combine" id ="command1" name = "c" >
+    <option>Command1</option>
+    <option>00</option>
+    <option>01</option>
+    <option>02</option>
+    <option>03</option>
+    <option>04</option>
+    <option>05</option>
+    <option>06</option>
+    <option>12</option>
+    <option>13</option>
+    <option>14</option>
+    <option>15</option>
+    <option>16</option>
+    <option>26</option>
+    <option>36</option>
+    <option>46</option>
+    <option>56</option>
+    <option>66</option>
+    <option>76</option>
+    <option>86</option>
+    <option>96</option>
+    <option>106</option>
+    <option>116</option>
+    <option>126</option>
+    <option>136</option>
+    <option>146</option>
+    <option>156</option>
+    <option>166</option>
+    <option>176</option>
+    <option>186</option>
+    <option>196</option>
+    <option>206</option>
+    <option>216</option>
+    <option>226</option>
+    <option>236</option>
+    <option>246</option>
+    <option>256</option>
+    
+</SELECT>
+
+<SELECT class="combine" id ="command2" name = "d">
+    <option>Command2</option>
+    <option>00</option>
+    <option>01</option>
+    <option>02</option>
+    <option>03</option>
+    <option>04</option>
+    <option>05</option>
+    <option>06</option>
+    <option>12</option>
+    <option>13</option>
+    <option>14</option>
+    <option>15</option>
+    <option>16</option>
+    <option>26</option>
+    <option>36</option>
+    <option>46</option>
+    <option>56</option>
+    <option>66</option>
+    <option>76</option>
+    <option>86</option>
+    <option>96</option>
+    <option>106</option>
+    <option>116</option>
+    <option>126</option>
+    <option>136</option>
+    <option>146</option>
+    <option>156</option>
+    <option>166</option>
+    <option>176</option>
+    <option>186</option>
+    <option>196</option>
+    <option>206</option>
+    <option>216</option>
+    <option>226</option>
+    <option>236</option>
+    <option>246</option>
+    <option>256</option>
+</SELECT>
+<SELECT class="combine" id ="command3" name = "e">
+    <option>Command3</option>
+    <option>00</option>
+    <option>01</option>
+    <option>02</option>
+    <option>03</option>
+    <option>04</option>
+    <option>05</option>
+    <option>06</option>
+    <option>12</option>
+    <option>13</option>
+    <option>14</option>
+    <option>15</option>
+    <option>16</option>
+    <option>26</option>
+    <option>36</option>
+    <option>46</option>
+    <option>56</option>
+    <option>66</option>
+    <option>76</option>
+    <option>86</option>
+    <option>96</option>
+    <option>106</option>
+    <option>116</option>
+    <option>126</option>
+    <option>136</option>
+    <option>146</option>
+    <option>156</option>
+    <option>166</option>
+    <option>176</option>
+    <option>186</option>
+    <option>196</option>
+    <option>206</option>
+    <option>216</option>
+    <option>226</option>
+    <option>236</option>
+    <option>246</option>
+    <option>256</option>
+</SELECT>
+<SELECT class="combine" id ="command4" name = "f" >
+    <option>Command4</option>
+    <option>00</option>
+    <option>01</option>
+    <option>02</option>
+    <option>03</option>
+    <option>04</option>
+    <option>05</option>
+    <option>06</option>
+    <option>12</option>
+    <option>13</option>
+    <option>14</option>
+    <option>15</option>
+    <option>16</option>
+    <option>26</option>
+    <option>36</option>
+    <option>46</option>
+    <option>56</option>
+    <option>66</option>
+    <option>76</option>
+    <option>86</option>
+    <option>96</option>
+    <option>106</option>
+    <option>116</option>
+    <option>126</option>
+    <option>136</option>
+    <option>146</option>
+    <option>156</option>
+    <option>166</option>
+    <option>176</option>
+    <option>186</option>
+    <option>196</option>
+    <option>206</option>
+    <option>216</option>
+    <option>226</option>
+    <option>236</option>
+    <option>246</option>
+    <option>256</option>
+</SELECT>
+
+<input type="text" id="result" name="send" value="" />
+<input type="submit" value="Submit">
+
+</form>
+
+ <div id="example-table"></div> 
+ 
+ 
+ 
+  
+<script>    
+  
+const url = "test.json";
+
+var table = new Tabulator("#example-table", {
+    
+	
+	ajaxConfig:{
+        method: 'GET'
+    },
+    ajaxURL: url, //ajax URL
+    index:"MessageID",
+    autoResize:true,
+    
+    placeholder:"Awaiting Data...",
+	responsiveLayout: "collapse",
+        responsiveLayoutCollapseStartOpen: false,
+        layout: "fitColumns",
+        movableColumns: true,
+        groupBy: "",
+	
+    columns:[ //Define Table Columns
+        {
+                formatter: "responsiveCollapse",
+                width: 30,
+                minWidth: 30,
+                align: "center",
+                resizable: false,
+                headerSort: false,
+                frozen: true,
+                title: "Expand&nbsp;&nbsp;<i class='fa fa-plus-circle'></i> ",
+                field: "expand",
+                headerVertical: "flip",
+                headerTooltip: "click to expand more details",
+                headerContext: "function(e,column){ this.send({ui_control:{callback:'headerContext'},position:{\"x\":e.x,\"y\":e.y},payload:column._column.field}); e.preventDefault(); }"
+            },
+		{title:"Date", field:"date", headerVertical: "flip"},
+        {title:"Time", field:"time", headerVertical: "flip"},
+        {title:"Location", field:"location", headerVertical: "flip"},
+        {title:"Voltage", field:"voltage", headerVertical: "flip"},
+		{title:"RSSI", field:"rssi", headerVertical: "flip"},
+        {title:"Temperature", field:"temperature", headerVertical: "flip"},
+        {title:"Humidity", field:"humidity", headerVertical: "flip"},
+		{title:"Pressure", field:"pressure", headerVertical: "flip"},
+        {title:"Light", field:"light", headerVertical: "flip"},
+		{title:"OpenClose", field:"openclose", headerVertical: "flip"},
+	    {title:"Presence", field:"presence", headerVertical: "flip"},
+        {title:"Level", field:"level", headerVertical: "flip"},
+		{title:"Motion", field:"motion", headerVertical: "flip"},
+        {title:"Custom", field:"custom", headerVertical: "flip"},
+		{title:"DeviceMode", field:"mode", headerVertical: "flip"},
+        {title:"DeviceIP", field:"ip", headerVertical: "flip"},
+        {title:"WiFiChannel", field:"channel", headerVertical: "flip"},
+        {title:"SleepTime", field:"sleeptime", headerVertical: "flip"},
+        {title:"UpTime", field:"uptime", headerVertical: "flip"},
+        
+    ],
+
+    ajaxResponse:function(url, params, response){
+        //url - the URL of the request
+        //params - the parameters passed with the request
+        //response - the JSON object returned in the body of the response.
+        return response.tableData; //return the tableData property of a response json object
+        //return response; //pass the data array into Tabulator
+    },
+
+    
+});
+
+//fetch(url).then(r => r.json()).then(res => table.setData(res));
+
+
+  </script>
+  
+  <script> 
+ $(document).ready(function(){
+    $('.combine').on('change', function(){
+        var payload = $('#device').val() + '/' + $('#commandType').val() + '/' + $('#commandValue1').val()+ '/' + $('#commandValue2').val() + '/' + $('#commandValue3').val() 
+       + '/' + $('#commandValue4').val();
+        
+       $('#command').val(payload);
+    });
+}) 
+  
+</script>  
+
+  
+</body>
+</html>
