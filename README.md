@@ -17,7 +17,7 @@ Whole network can be accesed using any android or ios MQTT front end dashboard c
 
 ## Build it, position towards maximum sun exposure and forget about it. 
 
-No need to charge small 100 mAh LIR2450 coin cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section.
+No need to charge small 100 mAh LIR2450 coin cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section is used.
 
 ## Very low cost DIY sensors.
 
