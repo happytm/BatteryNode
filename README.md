@@ -1,8 +1,6 @@
 # Very simple DIY Low Power low cost sensors, Local standalone (no cloud service required) IOT Network.
 
-## Help needed to improve the software:
 
-I have hardware background so please help me improve the code. Although the code is very simple I am sure there are better ways to write this code more efficiently where you can help. 
 
 # Features:
 
