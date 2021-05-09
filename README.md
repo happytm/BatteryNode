@@ -64,7 +64,7 @@ commands are issued via MQTT payload with topic name "command/". At least first 
 ```                                            
 #### Command2 = Command type  (required for all commands)   -         
 ```c
-- value 01 to 09 is reserved for following commands(must have 0 as first digit):
+- value 91 to 99 is reserved for following commands:
 
  - 91 = digitalWright or analogWrite.
            - Example command payload 36/01/01 to 05 or 12 to 16/00 0r 01/ for digitalWrite.
