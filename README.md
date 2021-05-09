@@ -66,23 +66,23 @@ commands are issued via MQTT payload with topic name "command/". At least first 
 ```c
 - value 01 to 09 is reserved for following commands(must have 0 as first digit):
 
- - 01 = digitalWright or analogWrite.
+ - 91 = digitalWright or analogWrite.
            - Example command payload 36/01/01 to 05 or 12 to 16/00 0r 01/ for digitalWrite.
            - Example command payload 36/01/01 to 05 or 12 to 160/2 to 256/ for analogWrite.
- - 02 = digitalRead.
+ - 92 = digitalRead.
            - Example command payload 36/02/01 to 05 or 12 to 16/
- - 03 = analogRead,
- - 04 = Reserved,
- - 05 = Neopixel etc.
+ - 93 = analogRead,
+ - 94 = Reserved,
+ - 95 = Neopixel etc.
            - Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
- - 06 =      change sensor types.First byte must be target device id and
+ - 96 =      change sensor types.First byte must be target device id and
            - second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be changed according to hardware.
            - Example command payload 36/06/16/26/36/46/.
 
-  - 07 =     change wifiChannel.
-  - 08 =     change sleepTime.
+  - 97 =     change wifiChannel.
+  - 98 =     change sleepTime.
            - Example command payload 36/08/00 to 255/ (Sleep Time in minutes).
-  - 09 =     Activate alternative code for OTA,Wifimanager ETC.
+  - 99 =     Activate alternative code for OTA,Wifimanager ETC.
            - Example command payload 36/09/00 or 255/  (01 to activate Auto firmware update).
 ```
 #### Command3 = Command  pinNumber  -    (required for all commands)        
