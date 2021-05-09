@@ -87,26 +87,26 @@ commands are issued via MQTT payload with topic name "command/". At least first 
 ```
 #### Command3 = Command  pinNumber  -    (required for all commands)        
 ```c
-- pinNumber in case of command type 01 to 04 above. 
-- Neopixel LED number in case of command type 05.
-- Value in case of command type 06,07,08 & 09 commandtype.
-- sensorType4 value in case of command 06.
+- pinNumber in case of command type 91 to 94 above. 
+- Neopixel LED number in case of command type 95.
+- Value in case of command type 96,97,98 & 99 commandtype.
+- sensorType4 value in case of command 96.
 ```                                            
 #### Command4 = Command value1      -            
 ```c
-- 00 or 255 in case of command type 01 (digitalWrite & analogWrite)  
-- or RED neopixel value in case of command type 05 
-- or sensorType4 value in case of command 06.
+- 00 or 255 in case of command type 91 (digitalWrite & analogWrite)  
+- or RED neopixel value in case of command type 95 
+- or sensorType4 value in case of command 96.
 ```
 #### Command5 = Command value2      -            
 ```c
-- 00 to 255 for GREEN neopixel in case of command type 05 
-- or sensorType5 value in case of command 06.
+- 00 to 255 for GREEN neopixel in case of command type 95 
+- or sensorType5 value in case of command 96.
 ```        
 #### Command6 = Command value3      -            
 ```c
-- 00 to 255 for BLUE neopixel in case of command type 05 
-- or sensorType6 value in case of command 06.
+- 00 to 255 for BLUE neopixel in case of command type 95 
+- or sensorType6 value in case of command 96.
 ```
 
 Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
@@ -115,6 +115,7 @@ Most suitable use cases around typical home - Weather Station, Door/Window senso
 ## Tested with following MQTT front end GUI client software:
 
 MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US (preffered).
+            basic javascript automationpossible with this App. See https://github.com/ByTE1974/byte1974.github.io/tree/master/mqttdash/js
 
 MQTT Dashboard : 
 https://play.google.com/store/apps/details?id=com.thn.iotmqttdashboard&hl=en_US
