@@ -113,15 +113,15 @@ if (receivedDevice == device)
       value2 = WiFi.BSSID(0)[4];
       value3 = WiFi.BSSID(0)[5];
       
-       if (receivedCommand == 7)
+       if (receivedCommand == 97)
        {
          apChannel = pinNumber;
          
-       } else if (receivedCommand == 8 && pinNumber != 0)
+       } else if (receivedCommand == 98 && pinNumber != 0)
        {
          sleepTime = pinNumber;    // Save sleep time in minutes.
       
-       } else if (receivedCommand == 9)
+       } else if (receivedCommand == 99)
        {
          deviceMode = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
        }
@@ -153,7 +153,7 @@ void loop() {
 
   gpioControl();
 
-  if (receivedDevice == device && receivedCommand == 9)  
+  if (receivedDevice == device && receivedCommand == 99)  
   {
     otaControl();
   }
@@ -218,7 +218,7 @@ void gpioControl()   {
   if (receivedDevice = device)   {
 
     if ((pinNumber >= 1 && pinNumber <= 5) || (pinNumber >= 12 && pinNumber <= 16))   {
-      if (receivedCommand == 1)    {
+      if (receivedCommand == 91)    {
 
         if (value1 == 1)
         {
