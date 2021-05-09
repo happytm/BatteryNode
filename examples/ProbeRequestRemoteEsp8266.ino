@@ -59,6 +59,8 @@ int value1;           // 0 or 1 in case of digitalwrte, 0 to 255 in case of anal
 int value2;           // 0 to 255 - value for GREEN neopixel or value for sensorType 5.
 int value3;           // 0 to 255 - value for BLUE neopixel or value for sensorType 6.
 
+uint8_t Date[3], Time[2];
+
 int warnVolt = 130;   // Start warning when battery level goes below 2.60 volts (260/2 = 130).
 
 
@@ -84,30 +86,32 @@ void setup() {
   delay(60);  // Minimum 60 milliseonds delay required to receive message from controller reliably.
 
   receivedDevice = WiFi.BSSID(0)[0];
-
+  receivedCommand = WiFi.BSSID(0)[1];
+  
 if (receivedDevice == device)  
  {   //match first byte of gateway's mac id with this devices's ID here.
+    if (receivedCommand > 31)
+     { 
+      Serial.print("Command received from Gateway: ");
+      Serial.println(&WiFi.BSSIDstr(0)[0]);
+      Serial.println();
+      //Serial.print("This Device MAC ID is: ");
+      //Serial.println(WiFi.macAddress());
+      //Serial.print("This Device Name is: ");
+      //Serial.println(WiFi.hostname());
+      Serial.print("Gateway Name is: ");
+      Serial.println(WiFi.SSID(0));
+      Serial.print("Gateway Channel is: ");
+      Serial.println(WiFi.channel(0));
 
-    Serial.print("Message received from Controller: ");
-    Serial.println(&WiFi.BSSIDstr(0)[0]);
-    Serial.println();
-    //Serial.print("This Device MAC ID is: ");
-    //Serial.println(WiFi.macAddress());
-    //Serial.print("This Device Name is: ");
-    //Serial.println(WiFi.hostname());
-    Serial.print("Gateway Name is: ");
-    Serial.println(WiFi.SSID(0));
-    Serial.print("Gateway Channel is: ");
-    Serial.println(WiFi.channel(0));
+      uint8_t* receivedData[6] =  {WiFi.BSSID(0)};
 
-    uint8_t* receivedData[6] =  {WiFi.BSSID(0)};
-
-    receivedDevice = WiFi.BSSID(0)[0];
-    receivedCommand = WiFi.BSSID(0)[1];
-    pinNumber = WiFi.BSSID(0)[2];
-    value1 = WiFi.BSSID(0)[3];
-    value2 = WiFi.BSSID(0)[4];
-    value3 = WiFi.BSSID(0)[5];
+     // receivedDevice = WiFi.BSSID(0)[0];
+     // receivedCommand = WiFi.BSSID(0)[1];
+      pinNumber = WiFi.BSSID(0)[2];
+      value1 = WiFi.BSSID(0)[3];
+      value2 = WiFi.BSSID(0)[4];
+      value3 = WiFi.BSSID(0)[5];
       
        if (receivedCommand == 7)
        {
@@ -123,16 +127,22 @@ if (receivedDevice == device)
        }
 
 
- }  else
+ }  else       //if receivedCommand is between 0 & 31.
  {
-    Serial.println("Message from controller did not arrive, let me try again to get message data........................................");
-    //ESP.restart();
+    
+    Date[0] = WiFi.BSSID(0)[1];
+    Date[1] = WiFi.BSSID(0)[2];
+    Date[2] = WiFi.BSSID(0)[3];
+    Time[0] = WiFi.BSSID(0)[4];
+    Time[1] = WiFi.BSSID(0)[5];
+    Serial.print("Time received from Gateway is: "); Serial.print(Date[0]); Serial.print("/"); Serial.print(Date[1]); Serial.print("/"); Serial.print(Date[2]); Serial.print(" "); Serial.print(Time[0]); Serial.print(":"); Serial.print(Time[1]);
  }
-
+ 
 #endif
 
  delay(1);
 
+  }
 }      // Setup ends here
 
 //========================Main Loop================================
@@ -346,6 +356,6 @@ void sendStatus() {
   wifi_set_macaddr(STATION_IF, deviceStatus);
   probeRequest();
   
-  Serial.print("Device status values sent to controller: ");
+  Serial.print("Device status values sent to Gateway: ");
   Serial.println(WiFi.macAddress());
 }
