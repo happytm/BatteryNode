@@ -88,23 +88,23 @@ commands are issued via MQTT payload with topic name "command/". At least first 
 - pinNumber in case of command type 91 to 94 above. 
 - Neopixel LED number in case of command type 95.
 - Value in case of command type 96,97,98 & 99 commandtype.
-- sensorType4 value in case of command 96.
+
 ```                                            
 #### Command4 = Command value1      -            
 ```c
 - 00 or 255 in case of command type 91 (digitalWrite & analogWrite)  
 - or RED neopixel value in case of command type 95 
-- or sensorType4 value in case of command 96.
+
 ```
 #### Command5 = Command value2      -            
 ```c
 - 00 to 255 for GREEN neopixel in case of command type 95 
-- or sensorType5 value in case of command 96.
+
 ```        
 #### Command6 = Command value3      -            
 ```c
 - 00 to 255 for BLUE neopixel in case of command type 95 
-- or sensorType6 value in case of command 96.
+
 ```
 
 Most suitable use cases around typical home - Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection sensor, Soil moisture sensor for garden etc. 
