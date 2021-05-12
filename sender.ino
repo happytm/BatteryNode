@@ -9,7 +9,7 @@ ADC_MODE(ADC_VCC); //vcc read-mode
 
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
-#define binFile "https://raw.githubusercontent.com/happytm/BatteryNode/master/sender.bin"
+#define binFile "https://raw.githubusercontent.com/happytm/BatteryNode/master/sender.ino.d1_mini.bin"
 #define BOOT_AFTER_UPDATE    false
 HTTPClient http;
 
@@ -40,7 +40,7 @@ int deviceIP = device;   // last part of this device's fixed IP
 
 // Sensor types to be sent to Gateway
 
-uint8_t sensorType[6] = {device, battery, 46, 36, 26, 16}; // Change last 4 bytes according to sensor type used.
+//uint8_t sensorType[6] = {device, battery, 46, 36, 26, 16}; // Change last 4 bytes according to sensor type used.
 
 // Sensor values to be sent to Gateway
 
@@ -70,12 +70,12 @@ void setup() {
 
   WiFi.scanDelete();  //remove previous scan data from memory
   Serial.begin(115200);
-
+  /*
   wifi_set_macaddr(STATION_IF, sensorType);
   probeRequest();
   Serial.print("Sensor Types sent to controller: ");
   Serial.println(WiFi.macAddress());
-
+  */
   sensorValues();
   probeRequest();
   Serial.print("Sensors values sent to controller: ");
@@ -162,7 +162,7 @@ void loop() {
 
   upTime = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
   
-  sendStatus();
+  //sendStatus();
   
   Serial.print("Total time I spent before going to sleep: ");
   Serial.println(upTime);
@@ -218,7 +218,7 @@ void gpioControl()   {
   if (receivedDevice = device)   {
 
     if ((pinNumber >= 1 && pinNumber <= 5) || (pinNumber >= 12 && pinNumber <= 16))   {
-      if (receivedCommand == 91)    {
+      if (receivedCommand == 1)    {
 
         if (value1 == 1)
         {
