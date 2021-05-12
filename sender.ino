@@ -20,7 +20,7 @@ const char* password = "kb1henna";
 // use any of following for devie ID ending with 6.
 // 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
 
-int device = 26;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+int device = 6;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
 int battery = 6;         // Battery voltage sensor Type.
 int apChannel = 7;       // WiFi Channel for this device.
 char* gateway = "ESP";   // This name has to be same as main controller's ssid.
