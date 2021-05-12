@@ -67,23 +67,21 @@ commands are issued via MQTT payload with topic name "command/". At least first 
 - value 91 to 99 is reserved for following commands:
 
  - 91 = digitalWright or analogWrite.
-           - Example command payload 36/01/01 to 05 or 12 to 16/00 0r 01/ for digitalWrite.
-           - Example command payload 36/01/01 to 05 or 12 to 160/2 to 256/ for analogWrite.
+           - Example command payload 36/91/<01 to 05 or 12 to 16>/<00 0r 01>/ for digitalWrite.
+           - Example command payload 36/91/<01 to 05 or 12 to 160>/<2 to 256>/ for analogWrite(pwm).
  - 92 = digitalRead.
-           - Example command payload 36/02/01 to 05 or 12 to 16/
+           - Example command payload 36/92/<01 to 05 or 12 to 16>/
  - 93 = analogRead,
  - 94 = Reserved,
  - 95 = Neopixel etc.
-           - Example command payload 36/05/01 to 05 or 12 to 16/00 to 256/00 to 256/00 to 256/
- - 96 =      change sensor types.First byte must be target device id and
-           - second byte must be 06 (sensor type voltage). Rest of 4 bytes (each ending with 6) can be changed according to hardware.
-           - Example command payload 36/06/16/26/36/46/.
+           - Example command payload 36/95/<01 to 05 or 12 to 16>/<00 to 256>/<00 to 256>/<00 to 256>/
+ 
 
   - 97 =     change wifiChannel.
   - 98 =     change sleepTime.
-           - Example command payload 36/08/00 to 255/ (Sleep Time in minutes).
-  - 99 =     Activate alternative code for OTA,Wifimanager ETC.
-           - Example command payload 36/09/00 or 255/  (01 to activate Auto firmware update).
+           - Example command payload 36/98/<00 to 255>/ (Sleep Time in minutes).
+  - 99 =     Activate alternative code for OTA,alternative sketch to be run on the device ETC.
+           - Example command payload 36/99/<00 or 255>/  (01 to activate Auto over the air firmware update (OTA)).
 ```
 #### Command3 = Command  pinNumber  -    (required for all commands)        
 ```c
