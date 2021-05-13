@@ -2,8 +2,8 @@
 #include <esp_wifi.h>
 #include <TinyMqtt.h>   // Thanks to https://github.com/hsaturn/TinyMqtt
 
-const char* ssid = "HAPPYHOME"; // Your WiFi SSID
-const char* password = "kb1henna"; // Your WiFi Password
+const char* ssid = ""; // Your WiFi SSID
+const char* password = ""; // Your WiFi Password
 const char* apSSID = "ESP";
 const char* apPassword = "";
 const int apChannel = 7;
