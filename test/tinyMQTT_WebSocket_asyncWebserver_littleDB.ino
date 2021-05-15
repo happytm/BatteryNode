@@ -1,7 +1,7 @@
 #define MQTT              true
 #define WEBSOCKETS        true
 #define ASYNCWEBSERVER    true
-#define LITTLEDB          false
+#define LITTLEDB          true
 
 #include <WiFi.h>
 
@@ -140,7 +140,7 @@ void setup()
   res = execQuery("create db test_db");
   res = execQuery("use db test_db");
   
-  String schem = "timestamp id, date int, time int, location tinyint, sensorData text, deviceData text";
+  String schem = "timestamp id, date int, time int, location text, sensorData text, deviceData text";
   schem.trim();
   res = execQuery("create table test_tbl (" + schem + ")");
   
@@ -306,7 +306,7 @@ void loop()
 
 void processData()
 {
-               device = random(25,26);
+               device = random(25,28);
                int voltage = random (260, 330);
                int temperature = random (1,110);
                int humidity = random (1,100);
@@ -321,7 +321,7 @@ void processData()
  
                myClient.publish("Sensor", sensorData);
 
-               device = random(1,100);
+               device = random(25,28);
                int rssi = random (-30, -90);
                int deviceMode = random (1,3);
                int WiFiChannel = random (1,11);
@@ -347,17 +347,17 @@ void getData()
   for(i=0; i< count; i++) {
     query = "insert into test_tbl values (";
     query.concat(i);
-    query.concat(", 0515211250, 051521,26 ");
+    query.concat(", 0515211250, 051521,26,");
     query.concat(i);
-    query.concat(", ");
-    query.concat(i);
+    //query.concat(", ");
+    //query.concat(i);
     query.concat(", insert select multiple rows )");
     execQuery(query);
    }
 
    
     execQuery("select from test_tbl where location=insert select multiple rows");
-    for(i=0; i< count; i++) {
+    for(i=0; i< selectedRows->rowsLen; i++) {
     
     String dateofrecord = getText(selectedRows->rows[i], "date");
     Serial.print("Date:  "); Serial.println(dateofrecord); 
