@@ -132,7 +132,8 @@ void setup()
   Time = " " + America.dateTime("Hi");
   
   delay(1000);
-  //LITTLEFS.format();
+  LITTLEFS.begin(true);
+ //LITTLEFS.format();
 
   int8_t res;
 
