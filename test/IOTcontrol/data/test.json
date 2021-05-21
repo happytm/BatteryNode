@@ -1,6 +1,0 @@
-[
-{"location":"Bedroom1","voltage":"2.62","temperature":"8","humidity":"44","pressure":"41","light":"75"},
-{"location":"Kitchen","voltage":"2.82","temperature":"75","humidity":"48","pressure":"42","light":"65"},
-{"location":"Livingroom","voltage":"2.88","temperature":"72","humidity":"45","pressure":"46","light":"62"},
-{"location":"bathroom1","voltage":"2.99","temperature":"80","humidity":"52","pressure":"48","light":"45"},
-]
