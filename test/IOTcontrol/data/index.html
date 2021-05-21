@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+<head>
+        
+		<title>Pivot Demo</title>
+         <!-- external libs from cdnjs -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-basic-latest.min.js"></script>
+        <!-- optional: mobile support with jqueryui-touch-punch -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+        
+        <!-- PivotTable.js libs from ../dist -->
+        <link rel="stylesheet" type="text/css" href="pivot.min.css">
+        <script type="text/javascript" src="pivot.min.js"></script>
+        <script type="text/javascript" src="d3_renderers.min.js"></script>
+        <script type="text/javascript" src="plotly_renderers.min.js"></script>
+        <script type="text/javascript" src="export_renderers.min.js"></script>
+
+		<!-- Script for websocket server -->	
+<script>
+
+
+
+
+</script>
+<script type="text/javascript">
+    
+	var ws = null;
+    function ge(s){ return document.getElementById(s);}
+    function ce(s){ return document.createElement(s);}
+    function stb(){ window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight); }
+    function sendBlob(str){
+      var buf = new Uint8Array(str.length);
+      for (var i = 0; i < str.length; ++i) buf[i] = str.charCodeAt(i);
+      ws.send(buf);
+    }
+    function addMessage(m){
+      var msg = ce("div");
+      msg.innerText = m;
+      ge("dbg").appendChild(msg);
+      stb();
+    }
+    function startSocket(){
+     ws = new WebSocket ('ws://'+'192.168.0.3'+'/ws',['arduino']);
+	 
+	 
+	 //  ws = new WebSocket('ws://'+document.location.host+'/ws',['arduino']);
+      ws.binaryType = "arraybuffer";
+      ws.onopen = function(e){
+        addMessage("Connected");
+      };
+      ws.onclose = function(e){
+        addMessage("Disconnected");
+      };
+      ws.onerror = function(e){
+        console.log("ws error", e);
+        addMessage("Error");
+      };
+       
+	  ws.onmessage = function(e){
+        display.value += event.data + "\n";
+        var textarea = document.getElementById('messages');
+        textarea.scrollTop = textarea.scrollHeight;
+		
+		var msg = "";
+        if(e.data instanceof ArrayBuffer){
+          msg = "BIN:";
+          var bytes = new Uint8Array(e.data);
+		  bytes [0] = 16;
+		  bytes [1] = 26;
+		  bytes [2] = 36;
+		  bytes [3] = 46;
+		  bytes [4] = 56;
+		  bytes [5] = 66;
+		  
+          for (var i = 0; i < bytes.length; i++) {
+            msg += String.fromCharCode(bytes[i]);
+			ws.send (msg);
+          }
+        } else {
+          msg = "TXT:"+e.data;
+        }
+        addMessage(msg);
+      };
+      
+	  
+	  ge("input_el").onkeydown = function(e){
+        stb();
+        if(e.keyCode == 13 && ge("input_el").value != ""){
+          ws.send(ge("input_el").value);
+          ge("input_el").value = "";
+        }
+      }
+    }
+    function startEvents(){
+      var es = new EventSource('/events');
+      es.onopen = function(e) {
+        addMessage("Events Opened");
+      };
+      es.onerror = function(e) {
+        if (e.target.readyState != EventSource.OPEN) {
+          addMessage("Events Closed");
+        }
+      };
+      es.onmessage = function(e) {
+        addMessage("Event: " + e.data);
+      };
+      es.addEventListener('ota', function(e) {
+        addMessage("Event[ota]: " + e.data);
+      }, false);
+    }
+    function onBodyLoad(){
+      startSocket();
+      startEvents();
+    }
+</script>  
+
+        <style>
+            html { height:100%; }
+            body {
+                font-family: Verdana;
+                min-height: 95%;
+               
+            }
+			
+			
+            .whiteborder {border-color: white;}
+            .greyborder {border-color: lightgrey;}
+            #filechooser {
+                color: #555;
+                text-decoration: underline;;
+                cursor: pointer; /* "hand" cursor */
+            }
+            .node {
+              border: solid 1px white;
+              font: 10px sans-serif;
+              line-height: 12px;
+              overflow: hidden;
+              position: absolute;
+              text-indent: 2px;
+            }
+			
+			<style>
+   #hideValuesOnSelect {
+      display: none;
+   }
+</style>
+        </style>
+        
+</head>
+    
+    <body id="body" onload="onBodyLoad()">
+        <script type="text/javascript">
+    // This example loads the "Canadian Parliament 2012"
+    // dataset from a CSV instead of from JSON.
+
+    $(function(){
+	    
+        var renderers = $.extend(
+                    $.pivotUtilities.renderers,
+                    $.pivotUtilities.plotly_renderers,
+                    $.pivotUtilities.d3_renderers,
+                    $.pivotUtilities.export_renderers
+                    );
+      
+        Papa.parse("http://192.168.0.3/sensors.csv", {
+            download: true,
+            skipEmptyLines: true,
+            complete: function(parsed){
+                $("#output").pivotUI(parsed.data, {
+                    
+					rows: [""], cols: ["Timestamp"],
+					aggregatorName: "List Unique Values",
+                    vals: ["Temperature"],
+					rendererName: "Line Chart",
+					
+                   
+					
+                });
+            }
+        });
+         
+        var dragging = function(evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    evt.originalEvent.dataTransfer.dropEffect = 'copy';
+                    $("body").removeClass("whiteborder").addClass("greyborder");
+                };
+
+                var endDrag = function(evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    evt.originalEvent.dataTransfer.dropEffect = 'copy';
+                    $("body").removeClass("greyborder").addClass("whiteborder");
+                };
+
+                var dropped = function(evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    $("body").removeClass("greyborder").addClass("whiteborder");
+                    parseAndPivot(evt.originalEvent.dataTransfer.files[0]);
+                };
+
+                $("html")
+                    .on("dragover", dragging)
+                    .on("dragend", endDrag)
+                    .on("dragexit", endDrag)
+                    .on("dragleave", endDrag)
+                    .on("drop", dropped);
+        
+     });
+        </script>
+        <p><a href="index.htm">&laquo; Back to Home</a></p>
+     
+       <div id="input_div">
+       <input type="text" value="" id="input_el"></br>
+	   <textarea rows="5" cols="35" id="display" value="" spellcheck="false"  readonly="true" style="font-size:16px;line-height: 1em;">Connecting to server... 
+       </textarea>
+	   
+	   <textarea rows="5" cols="61" id="rules" value="" spellcheck="false"  readonly="true" style="font-size:16px;line-height: 1em;">Future home for command reference.
+       </textarea>
+	   
+<form action="">
+  
+<SELECT class="combine" id ="command" name = "a">
+    
+	<option>Command Type</option>
+    <option>Set Sensor Types</option>
+    <option>DigitalWrite</option>
+    <option>AnalogWrite</option>
+    <option>DigitalRead</option>
+    <option>AnalogRead</option>
+    <option>Neopixel</option>
+    <option>Set AP Channel</option>
+    <option>Set SleepTime</option>
+    <option>Set Mode</option>
+</SELECT>
+
+<SELECT class="combine" id ="device" name = "b">
+    <option>Room</option>
+    <option>Livingroom</option>
+    <option>Kitchen</option>
+    <option>Bedroom1</option>
+    <option>Bedroom2</option>
+    <option>Bathroom1</option>
+    <option>Bathroom2</option>
+    <option>Laundry</option>
+    <option>Office</option>
+</SELECT>
+
+<SELECT class="combine" id ="command1" name = "c" >
+    <option>Command1</option>
+    <option>00</option>
+    <option>01</option>
+    <option>02</option>
+    <option>03</option>
+    <option>04</option>
+    <option>05</option>
+    <option>06</option>
+    <option>12</option>
+    <option>13</option>
+    <option>14</option>
+    <option>15</option>
+    <option>16</option>
+    <option>26</option>
+    <option>36</option>
+    <option>46</option>
+    <option>56</option>
+    <option>66</option>
+    <option>76</option>
+    <option>86</option>
+    <option>96</option>
+    <option>106</option>
+    <option>116</option>
+    <option>126</option>
+    <option>136</option>
+    <option>146</option>
+    <option>156</option>
+    <option>166</option>
+    <option>176</option>
+    <option>186</option>
+    <option>196</option>
+    <option>206</option>
+    <option>216</option>
+    <option>226</option>
+    <option>236</option>
+    <option>246</option>
+    <option>256</option>
+    
+</SELECT>
+
+<SELECT class="combine" id ="command2" name = "d">
+    <option>Command2</option>
+    <option>00</option>
+    <option>01</option>
+    <option>02</option>
+    <option>03</option>
+    <option>04</option>
+    <option>05</option>
+    <option>06</option>
+    <option>12</option>
+    <option>13</option>
+    <option>14</option>
+    <option>15</option>
+    <option>16</option>
+    <option>26</option>
+    <option>36</option>
+    <option>46</option>
+    <option>56</option>
+    <option>66</option>
+    <option>76</option>
+    <option>86</option>
+    <option>96</option>
+    <option>106</option>
+    <option>116</option>
+    <option>126</option>
+    <option>136</option>
+    <option>146</option>
+    <option>156</option>
+    <option>166</option>
+    <option>176</option>
+    <option>186</option>
+    <option>196</option>
+    <option>206</option>
+    <option>216</option>
+    <option>226</option>
+    <option>236</option>
+    <option>246</option>
+    <option>256</option>
+</SELECT>
+<SELECT class="combine" id ="command3" name = "e">
+    <option>Command3</option>
+    <option>00</option>
+    <option>01</option>
+    <option>02</option>
+    <option>03</option>
+    <option>04</option>
+    <option>05</option>
+    <option>06</option>
+    <option>12</option>
+    <option>13</option>
+    <option>14</option>
+    <option>15</option>
+    <option>16</option>
+    <option>26</option>
+    <option>36</option>
+    <option>46</option>
+    <option>56</option>
+    <option>66</option>
+    <option>76</option>
+    <option>86</option>
+    <option>96</option>
+    <option>106</option>
+    <option>116</option>
+    <option>126</option>
+    <option>136</option>
+    <option>146</option>
+    <option>156</option>
+    <option>166</option>
+    <option>176</option>
+    <option>186</option>
+    <option>196</option>
+    <option>206</option>
+    <option>216</option>
+    <option>226</option>
+    <option>236</option>
+    <option>246</option>
+    <option>256</option>
+</SELECT>
+<SELECT class="combine" id ="command4" name = "f" >
+    <option>Command4</option>
+    <option>00</option>
+    <option>01</option>
+    <option>02</option>
+    <option>03</option>
+    <option>04</option>
+    <option>05</option>
+    <option>06</option>
+    <option>12</option>
+    <option>13</option>
+    <option>14</option>
+    <option>15</option>
+    <option>16</option>
+    <option>26</option>
+    <option>36</option>
+    <option>46</option>
+    <option>56</option>
+    <option>66</option>
+    <option>76</option>
+    <option>86</option>
+    <option>96</option>
+    <option>106</option>
+    <option>116</option>
+    <option>126</option>
+    <option>136</option>
+    <option>146</option>
+    <option>156</option>
+    <option>166</option>
+    <option>176</option>
+    <option>186</option>
+    <option>196</option>
+    <option>206</option>
+    <option>216</option>
+    <option>226</option>
+    <option>236</option>
+    <option>246</option>
+    <option>256</option>
+</SELECT></br>
+
+
+
+<script>
+var attachEvent = function(node, event, listener, useCapture) {
+  // Method for FF, Opera, Chrome, Safari
+  if ( window.addEventListener ) {
+    node.addEventListener(event, listener, useCapture || false);
+  }
+  // IE has its own method
+  else {
+    node.attachEvent('on'+event, listener);
+  }
+};
+
+// Once the window loads and the DOM is ready, attach the event to the main
+attachEvent(window, "load", function() {
+  var main_select = document.getElementById("command");
+
+  var selectHandler = function() {
+     var option1 = document.getElementById("command1"),
+         option2 = document.getElementById("command2");
+         option3 = document.getElementById("command3");
+		 option4 = document.getElementById("command4");
+		 
+     // Show and hide the appropriate select's
+     if ( this.value == "Neopixel" || this.value == "AnalogWrite" ) {
+       // Show all
+       option1.style.display = "";
+       option2.style.display = "";
+	   option3.style.display = "";
+	   option4.style.display = "";
+	   
+     } else if ( this.value == "Set Sensor Types" ) {
+       // Show all
+       option1.style.display = "";
+       option2.style.display = "";
+	   option3.style.display = "";
+	   option4.style.display = "";
+	   
+     } else {
+       // Hide last three
+       option1.style.display = "";
+       option2.style.display = "none";
+	   option3.style.display = "none";
+	   option4.style.display = "none";
+     }
+  };
+
+  // Use the onchange and onkeypress events to detect when the 
+  // value of main_select has changed
+  attachEvent(main_select, "change", selectHandler);
+  attachEvent(main_select, "keypress", selectHandler);
+});
+
+$(document).ready(function(){
+  $("form").submit(function(){
+    //alert("Submitted");
+	
+	ws.send(ge("result").value);
+    ge("result").value = "";
+  });
+});
+
+$(document).ready(function(){
+    var payload; 
+    $('.combine').on('change', function(){
+        var payload = $('#device').val() + '/' + $('#command').val() + '/' + $('#command1').val() + '/' + $('#command2').val() + '/' + $('#command3').val() + '/' + $('#command4').val();
+        $('#result').val(payload); 
+    });
+})
+
+</script>
+
+<input type="text" id="result" size = "60" name="send" value="" />
+<input type="submit" value="Submit">
+
+</form>
+        
+<div id="output" style="margin: 10px;"></div>
+
+
+</body>
+</html>

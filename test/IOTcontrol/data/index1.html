@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pivot Demo From Local CSV</title>
+        
+        <!-- external libs from cdnjs -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-basic-latest.min.js"></script>
+
+        <!-- PivotTable.js libs from ../dist -->
+        <link rel="stylesheet" type="text/css" href="pivot.min.css">
+        <script type="text/javascript" src="pivot.min.js"></script>
+        <script type="text/javascript" src="d3_renderers.min.js"></script>
+        <script type="text/javascript" src="plotly_renderers.min.js"></script>
+        <script type="text/javascript" src="export_renderers.min.js"></script>
+
+        <style>
+            html { height:100%; }
+            body {
+                font-family: Verdana;
+                min-height: 95%;
+                border: 5px dotted;
+            }
+            .whiteborder {border-color: white;}
+            .greyborder {border-color: lightgrey;}
+            #filechooser {
+                color: #555;
+                text-decoration: underline;;
+                cursor: pointer; /* "hand" cursor */
+            }
+            .node {
+              border: solid 1px white;
+              font: 10px sans-serif;
+              line-height: 12px;
+              overflow: hidden;
+              position: absolute;
+              text-indent: 2px;
+            }
+        </style>
+    </head>
+    <body class="whiteborder">
+        
+	<script type="text/javascript">
+            $(function(){
+                var renderers = $.extend(
+                    $.pivotUtilities.renderers,
+                    $.pivotUtilities.plotly_renderers,
+                    $.pivotUtilities.d3_renderers,
+                    $.pivotUtilities.export_renderers
+                    );
+
+                var parseAndPivot = function(f) {
+                    $("#output").html("<p align='center' style='color:grey;'>(processing...)</p>")
+                    Papa.parse(f, {
+                        skipEmptyLines: true,
+                        error: function(e){ alert(e) },
+                        complete: function(parsed){
+                            $("#output").pivotUI(parsed.data, { renderers: renderers }, true);
+                        }
+                    });
+                };
+
+                $("#csv").bind("change", function(event){
+                    parseAndPivot(event.target.files[0]);
+                });
+
+                $("#textarea").bind("input change", function(){
+                    parseAndPivot($("#textarea").val());
+                });
+
+                var dragging = function(evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    evt.originalEvent.dataTransfer.dropEffect = 'copy';
+                    $("body").removeClass("whiteborder").addClass("greyborder");
+                };
+
+                var endDrag = function(evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    evt.originalEvent.dataTransfer.dropEffect = 'copy';
+                    $("body").removeClass("greyborder").addClass("whiteborder");
+                };
+
+                var dropped = function(evt) {
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    $("body").removeClass("greyborder").addClass("whiteborder");
+                    parseAndPivot(evt.originalEvent.dataTransfer.files[0]);
+                };
+
+                $("html")
+                    .on("dragover", dragging)
+                    .on("dragend", endDrag)
+                    .on("dragexit", endDrag)
+                    .on("dragleave", endDrag)
+                    .on("drop", dropped);
+             });
+        </script>
+       
+        <p align="center" style="line-height: 1.5">
+            
+            <label id="filechooser">Click here to choose a CSV file<input id="csv" type="file" style="display:none"/></label>
+            <br /><br />
+            
+            <br />
+            <em></em>
+        </p>
+
+        <div id="output" style="margin: 10px;"></div>
+
+    </body>
+</html>
