@@ -1,20 +1,60 @@
+// Based on https://github.com/sascha432/ESPAsyncWebServer
+// To do : 
 #define PROBEREQUESTS     true
 #define MQTT              true
-#define WEBSOCKETS        true
-#define ASYNCWEBSERVER    true
+#define APPENDTOSPIFFS    true // If false stops appending to file but still shows file size.
+#define STANDALONE        true // To do RTC manual time input 
 
 #include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncTCP.h>
+#include <FS.h>
+#include <SPIFFS.h>
+#include <SPIFFSEditor.h>
+#include <ArduinoOTA.h>
+#include <ESPmDNS.h>
+#include "time.h"
 
-const char* ssid = ""; // Your WiFi SSID
-const char* password = ""; // Your WiFi Password
+const char* ssid = "";
+const char* password = "";
 const char* apSSID = "ESP";
 const char* apPassword = "";
 const int apChannel = 7;
 const int hidden = 0; // If hidden is 1 probe request event handling does not work ?
 
-//char sensorData [256];
-//char deviceData [256];
-char s [256];
+const char* http_username = "admin";
+const char* http_password = "admin";
+
+#if PROBEREQUESTS
+#include <esp_wifi.h>
+#endif
+
+#if MQTT
+#include <TinyMqtt.h>   // Thanks to https://github.com/hsaturn/TinyMqtt
+std::string sentTopic = "data";
+std::string receivedTopic = "command";
+MqttBroker broker(1883);
+MqttClient myClient(&broker);
+#endif
+
+//#define MYFS SPIFFS
+
+const char* ntpServer = "pool.ntp.org";
+unsigned long epoch; 
+
+unsigned long getTime() {
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    //Serial.println("Failed to obtain time");
+    return(0);
+  }
+  time(&now);
+  return now;
+}
+ 
+char str [256];
+char s [70];
 String deviceData;
 String sensorData;
 int device;
@@ -42,51 +82,86 @@ int Office[4] =     {16,26,36,36};
 int Tank[4] =       {16,26,36,36};
 int Solar[4] =      {16,26,36,36};
 
-
 #if PROBEREQUESTS
 #include <esp_wifi.h>
 #endif
 
-#if MQTT
-#include <TinyMqtt.h>   // Thanks to https://github.com/hsaturn/TinyMqtt
-#endif
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+AsyncEventSource events("/events");
 
-#if WEBSOCKETS
-#include <ArduinoWebsockets.h>  // Thanks to https://github.com/gilmaimon/ArduinoWebsockets
-using namespace websockets;
-WebsocketsServer WSserver;
-#endif
+void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+  if(type == WS_EVT_CONNECT){
+    Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
+    client->printf("You are connected Client %u :)", client->id());
+    client->ping();
+  } else if(type == WS_EVT_DISCONNECT){
+    Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
+  } else if(type == WS_EVT_ERROR){
+    Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+  } else if(type == WS_EVT_PONG){
+    Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+  } else if(type == WS_EVT_DATA){
+    AwsFrameInfo * info = (AwsFrameInfo*)arg;
+    String msg = "";
+    if(info->final && info->index == 0 && info->len == len){
+      //the whole message is in a single frame and we got all of it's data
+      Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
 
+      if(info->opcode == WS_TEXT){
+        for(size_t i=0; i < info->len; i++) {
+          msg += (char) data[i];
+        }
+      } else {
+        char buff[3];
+        for(size_t i=0; i < info->len; i++) {
+          sprintf(buff, "%02x ", (uint8_t) data[i]);
+          msg += buff ;
+        }
+      }
+      Serial.printf("%s\n",msg.c_str());
 
+      if(info->opcode == WS_TEXT)
+        
+        client->text(msg);
+      else
+        client->binary("I got your binary message");
+    } else {
+      //message is comprised of multiple frames or the frame is split into multiple packets
+      if(info->index == 0){
+        if(info->num == 0)
+          Serial.printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+          Serial.printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+      }
 
-#if ASYNCWEBSERVER
-#include <ESPAsyncWebServer.h>  // Install manually to arduino folder
+      Serial.printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
 
-int index_html_gz_len = 2145;
-const uint8_t index_html_gz[] = {
- 0x1f,0x8b,0x08,0x08,0xaf,0x22,0x9f,0x60,0x00,0xff,0x69,0x6e,0x64,0x65,0x78,0x2e,0x68,0x74,0x6d,0x6c,0x2e,0x67,0x7a,0x00,0x75,0x56,0x51,0x6f,0xdb,0x36,0x10,0x7e,0x8e,0x7e,0xc5,0x41,0x0f,0xb3,0x8c,0x2c,0x52,0x96,0x16,0x43,0x10,0xcb,0x06,0x9a,0x62,0xd9,0x06,0xb4,0x2f,0x4d,0x86,0x3d,0x74,0x7d,0xa0,0x24,0x3a,0xe6,0x4a,0x91,0x02,0x49,0xd9,0xf5,0xd6,0xfc,0xf7,0x7e,0x27,0xc9,0xb6,0xec,0x24,0x82,0x6c,0xc9,0xe4,0xdd,0xc7,0xbb,0xef,0x3e,0x1e,0x9d,0xaf,0x42,0xad,0x17,0x51,0x5e,0xd8,0x6a,0x8b,0xc7,0xea,0x6a,0xf1,0xb7,0x2c,0xee,0x6d,0xf9,0x55,0x06,0x9f,0x67,0xf8,0x99,0x17,0xae,0xfb,0x44,0x79,0xb3,0xc8,0x95,0x69,0xda,0x40,0xaa,0x9a,0xc7,0x5e,0x9a,0xf0,0x51,0x7a,0x2f,0x1e,0x65,0x4c,0x61,0xdb,0xc8,0x79,0x1c,0xe4,0xb7,0x10,0x93,0x57,0xff,0xe1,0xfd,0xed,0x65,0x4c,0x6b,0xa1,0x5b,0xbc,0x5e,0xfe,0x9a,0xe1,0x8e,0x79,0x8d,0x36,0x04,0x6b,0xc8,0x9a,0x52,0xab,0xf2,0x6b,0x87,0x51,0x3d,0xc0,0x29,0x99,0xc6,0x8b,0x7b,0xbc,0xd3,0x7b,0x5b,0xd7,0xc2,0x54,0x79,0xd6,0x5b,0x2e,0xf2,0xac,0x81,0x5b,0xab,0xbb,0x15,0x9d,0x2c,0xa5,0x5a,0xcb,0x6a,0xb7,0xea,0x62,0xb0,0xf6,0xf4,0x13,0x0d,0x63,0x9e,0x76,0x46,0xb4,0x74,0xb6,0x26,0x2f,0xdd,0x5a,0x3a,0x12,0x4d,0x23,0x85,0xa3,0x42,0x6a,0xbb,0xa1,0x28,0xcf,0x5a,0x4e,0xd8,0x97,0x4e,0x35,0xa1,0x0f,0x7d,0xc2,0xa1,0x67,0xff,0x8a,0xb5,0xe8,0x47,0x27,0x8b,0x28,0x52,0x4b,0x4a,0xe2,0x3d,0x17,0x31,0x29,0x43,0x1b,0x65,0x2a,0xbb,0x99,0xd2,0xff,0xd1,0x1a,0x70,0x1b,0x4f,0x73,0x32,0x72,0x43,0x7b,0x23,0x38,0x6c,0xfc,0x4d,0x96,0xc5,0x74,0x3e,0xd8,0xa6,0xda,0x96,0x22,0x28,0x6b,0xd2,0x95,0xf5,0xc1,0x88,0x5a,0x62,0x2a,0xbe,0xb9,0xbe,0xbc,0x7e,0x1b,0x4f,0x67,0x94,0x65,0x64,0x1b,0x09,0xe0,0x3d,0x42,0x69,0x8d,0x91,0x25,0x7b,0x00,0x3f,0xb5,0xa6,0x9b,0x9e,0xd3,0xb2,0x35,0xfd,0x60,0xc2,0xab,0x47,0xf0,0xbb,0xe0,0x0b,0x09,0x82,0x35,0x0e,0x9e,0x2a,0x11,0x44,0x3f,0x18,0x45,0xd1,0xde,0xfc,0xc0,0xf0,0x10,0xf4,0xa8,0x6c,0x80,0xad,0x6c,0xd9,0xd6,0x18,0x49,0x1f,0x65,0xf8,0x4d,0x4b,0x7e,0xbd,0xdd,0xfe,0x59,0x25,0x93,0x91,0xd9,0x64,0x9a,0x76,0x85,0x9c,0x45,0xda,0x3e,0x26,0x13,0xae,0x93,0x32,0x8f,0x37,0x34,0x41,0x26,0x23,0xb3,0xe9,0x2c,0x42,0xc0,0xbc,0x5e,0x72,0x3c,0xfa,0x34,0x0a,0x87,0x11,0x4e,0xca,0xb8,0x0b,0x4c,0xab,0x71,0x3c,0xa5,0x93,0x22,0xc8,0x21,0xa4,0x64,0xa2,0xd5,0x04,0x48,0x5a,0xa5,0x0a,0xec,0xb8,0x3f,0x1e,0x3e,0x7e,0x80,0xf1,0x09,0xd0,0x2c,0x7a,0x35,0x9b,0x13,0x4b,0x64,0xc4,0x8a,0x30,0xd5,0xfb,0x95,0xd2,0x55,0xa2,0x55,0x17,0xe5,0xd9,0x19,0x27,0x60,0x4d,0xbd,0x67,0xe7,0x40,0xba,0x5c,0x07,0xc4,0x49,0x11,0xb1,0x28,0x58,0x31,0x76,0xc9,0x63,0x29,0x93,0x3e,0xa5,0xf9,0x7c,0x4e,0x13,0x1f,0x1c,0x68,0x99,0xd0,0xf7,0xef,0xb4,0x9b,0x81,0x64,0x7c,0x10,0xa6,0x84,0x35,0xdd,0x77,0xd3,0x0c,0x82,0xda,0xe1,0xfe,0xeb,0xe1,0xee,0xe2,0x9a,0x96,0xd6,0xd5,0x22,0x04,0xc8,0xb5,0x77,0xef,0xaa,0x38,0x2a,0xef,0x10,0xf8,0xb3,0x0a,0x77,0x95,0xf8,0xf4,0x92,0xd4,0xb9,0x2a,0xfb,0xc8,0x66,0x40,0x12,0x5a,0x3a,0x16,0xe6,0xef,0x16,0x5a,0x67,0x98,0xb1,0xb5,0xe5,0xaf,0xbd,0xf8,0x6e,0x88,0x85,0x3b,0xf2,0x7e,0xea,0x13,0x7e,0x29,0x9f,0x5b,0x6d,0x8b,0x21,0x9b,0x42,0x19,0xe1,0xb6,0xaf,0x85,0x3e,0x9a,0x25,0xe1,0xa9,0x80,0x1f,0x61,0xd3,0x52,0x58,0x41,0xd8,0x50,0x3b,0x22,0x40,0x43,0xc1,0x6d,0x82,0x25,0xe1,0x9c,0xd8,0x52,0xd1,0x2e,0x97,0x88,0x6b,0x10,0x33,0x8b,0xa3,0xde,0xde,0x69,0x2b,0xc2,0x9b,0xab,0x77,0x9d,0x01,0xb6,0x5d,0xab,0xf5,0x6c,0x98,0xea,0xc6,0x6e,0x7b,0x9f,0xe3,0x99,0x3b,0xa5,0xe5,0x27,0x29,0xaa,0x7e,0x02,0x3b,0x75,0x34,0x90,0x20,0xbf,0xb1,0x05,0x2a,0x8f,0x25,0xaa,0x93,0xb2,0x43,0x42,0x2c,0x50,0x3a,0xba,0x4e,0x97,0xec,0xcc,0xd2,0x20,0x1c,0x74,0x97,0x3a,0xe9,0x5b,0x1d,0x66,0xcf,0x5c,0x4e,0x13,0xe0,0x68,0xc6,0x43,0xc9,0x11,0x6a,0xdf,0x1b,0xf2,0x39,0xd9,0xd6,0xf5,0xdc,0x29,0x4f,0x06,0xdd,0x6b,0x25,0x9d,0xfc,0x99,0x7b,0x11,0xf8,0x1b,0xe8,0x42,0x35,0xde,0x5c,0x81,0x67,0x94,0x96,0x01,0x59,0x46,0x8d,0x05,0x9d,0xa0,0xa2,0x2e,0xa4,0xf3,0x3b,0x0a,0x0f,0xdb,0xbe,0x13,0x03,0xd7,0xfa,0x68,0xcd,0xb4,0xd8,0x06,0xf9,0x41,0x9a,0xc7,0xb0,0xe2,0x26,0x45,0xfc,0xd3,0x33,0xfa,0xb8,0x84,0xaf,0xab,0xe7,0x1f,0xf3,0x59,0x7e,0x13,0x75,0xa3,0x25,0xfd,0x72,0xf9,0x25,0x9e,0x45,0x10,0x37,0x25,0xbc,0x34,0xef,0xec,0xcb,0x19,0x1e,0xf9,0x09,0x0f,0xa9,0xee,0x56,0xc3,0xd4,0xf9,0xf9,0x74,0x14,0xe1,0x39,0x42,0x1c,0xe2,0x3b,0xe2,0xe8,0xb3,0xfa,0x32,0x92,0xf4,0xde,0x1e,0x95,0x3c,0x66,0x9b,0x08,0x56,0xd8,0xcc,0xa5,0xb6,0x5e,0x72,0xa5,0x99,0xcc,0xb0,0x02,0x85,0xb8,0x37,0x4c,0xe1,0xcb,0x1d,0x17,0x2d,0xc1,0xd3,0x05,0xb3,0xcb,0xb4,0x7b,0xd5,0x25,0x13,0x37,0xce,0x06,0x5b,0x5a,0x0d,0x46,0x9c,0xdd,0x20,0x77,0xea,0x70,0x7d,0x57,0x82,0x91,0x37,0xce,0x2c,0x16,0x72,0x69,0x5b,0x5d,0xe1,0xac,0xe9,0xa6,0x77,0x07,0x10,0x96,0x95,0x5a,0x47,0xf4,0x74,0x22,0x3a,0xb4,0xb9,0xea,0x9d,0x1f,0xcb,0xe9,0xd0,0x57,0x90,0xd5,0x53,0x04,0x87,0x33,0x5c,0x7d,0x6b,0xea,0xf3,0x39,0x39,0x0d,0x38,0xd7,0xdd,0x26,0x3f,0x9c,0x44,0xa3,0xb8,0x90,0x73,0xe7,0x58,0xa5,0x7c,0xe4,0x30,0x22,0x3d,0x91,0xd4,0x40,0x3a,0x08,0xfb,0x19,0x80,0x87,0xb8,0x24,0x14,0x17,0xc8,0xb7,0x4d,0x63,0x1d,0xf7,0xa8,0x62,0x4b,0x5b,0x26,0x66,0xa0,0x81,0xe1,0x06,0x00,0xf4,0xf8,0x3c,0xeb,0x8f,0x4e,0x9c,0xac,0xd9,0xf0,0x5f,0x22,0xeb,0xfe,0x5a,0xfc,0x00,0xb8,0x02,0x65,0x28,0x61,0x08,0x00,0x00
- };
- 
- AsyncWebServer webserver(80);
-#endif
+      if(info->opcode == WS_TEXT){
+        for(size_t i=0; i < len; i++) {
+          msg += (char) data[i];
+        }
+      } else {
+        char buff[3];
+        for(size_t i=0; i < len; i++) {
+          sprintf(buff, "%02x ", (uint8_t) data[i]);
+          msg += buff ;
+        }
+      }
+      Serial.printf("%s\n",msg.c_str());
 
-
-#if MQTT
-std::string sentTopic = "data";
-std::string receivedTopic = "command";
-
-MqttBroker broker(1883);
-MqttClient myClient(&broker);
-#endif
-
-#if WEBSOCKETS
-void handle_message(WebsocketsMessage msg) {
-  
-  Serial.print("Message Received from javascript websocket client: ");
-  Serial.println(msg.data());
-  
+      if((info->index + len) == info->len){
+        Serial.printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+        if(info->final){
+          Serial.printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+          if(info->message_opcode == WS_TEXT)
+            client->text(msg);
+          else
+            client->binary("I got your binary message");
+        }
+      }
+    }
   }
-#endif
+}
 
 void receivedMessage(const MqttClient* source, const Topic& topic, const char* payload, size_t length)
 {
@@ -100,52 +175,147 @@ void receivedMessage(const MqttClient* source, const Topic& topic, const char* p
     mac[3] = atoi(&payload[9]);
     mac[4] = atoi(&payload[12]);
     mac[5] = atoi(&payload[15]);
+    
   }
 }
+
 void sendCommand()  {
 
   esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
   Serial << "Command sent to remote device :  " << mac[0] << "/" << mac[1] << "/" << mac[2] << "/" << mac[3] << "/" << mac[4] << "/" << mac[5] << "/" << endl;
  }
 
-
-
-void setup()
-{
-   Serial.begin(115200);
-  delay(500);
-
-  Serial << "Starting client and AP......." << endl;
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial << '-';
-    delay(500);
-  }
-
-  Serial << "Connected to " << ssid << " IP address: " << WiFi.localIP() << endl;
-
+void setup(){
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(apSSID, apPassword, apChannel, hidden);
   esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
-  Serial << "The AP mac address is " << WiFi.softAPmacAddress().c_str() << endl;
-  Serial << "Access point started at " << apSSID << " with IP address: " << WiFi.localIP() << endl;
  
-#if ASYNCWEBSERVER
-    webserver.on("/", HTTP_GET, [](AsyncWebServerRequest * request) 
-    {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, sizeof(index_html_gz));
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
-    });
-    
-    webserver.begin();
-#endif
-    
-#if WEBSOCKETS
-    WSserver.listen(8084);
-#endif
+  WiFi.begin(ssid, password);
+  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.printf("STA: Failed!\n");
+    WiFi.disconnect(false);
+    delay(1000);
+    WiFi.begin(ssid, password);
+  }
+  
+  Serial.print(F("*CONNECTED* IP:"));
+  Serial.println(WiFi.localIP());
+
+  configTime(0, 0, ntpServer);
+  epoch = getTime();
+  Serial.print("Epoch Time: ");
+  Serial.println(epoch);
+  
+  //Send OTA events to the browser
+  ArduinoOTA.onStart([]() { events.send("Update Start", "ota"); });
+  ArduinoOTA.onEnd([]() { events.send("Update End", "ota"); });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    char p[32];
+    sprintf(p, "Progress: %u%%\n", (progress/(total/100)));
+    events.send(p, "ota");
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    if(error == OTA_AUTH_ERROR) events.send("Auth Failed", "ota");
+    else if(error == OTA_BEGIN_ERROR) events.send("Begin Failed", "ota");
+    else if(error == OTA_CONNECT_ERROR) events.send("Connect Failed", "ota");
+    else if(error == OTA_RECEIVE_ERROR) events.send("Recieve Failed", "ota");
+    else if(error == OTA_END_ERROR) events.send("End Failed", "ota");
+  });
+  ArduinoOTA.setHostname(apSSID);
+  ArduinoOTA.begin();
+
+  MDNS.addService("http","tcp",80);
+
+
+  if (SPIFFS.begin()) {
+
+    Serial.print(F("FS mounted\n"));
+  } else {
+    Serial.print(F("FS mount failed\n"));  
+  }
+
+  ws.onEvent(onWsEvent);
+  server.addHandler(&ws);
+
+  events.onConnect([](AsyncEventSourceClient *client){
+    client->send("hello!",NULL,millis(),1000);
+  });
+  server.addHandler(&events);
+
+  server.addHandler(new SPIFFSEditor(SPIFFS, http_username,http_password));
+
+  server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", String(ESP.getFreeHeap()));
+  });
+
+  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.htm");
+
+  server.onNotFound([](AsyncWebServerRequest *request){
+    Serial.printf("NOT_FOUND: ");
+    if(request->method() == HTTP_GET)
+      Serial.printf("GET");
+    else if(request->method() == HTTP_POST)
+      Serial.printf("POST");
+    else if(request->method() == HTTP_DELETE)
+      Serial.printf("DELETE");
+    else if(request->method() == HTTP_PUT)
+      Serial.printf("PUT");
+    else if(request->method() == HTTP_PATCH)
+      Serial.printf("PATCH");
+    else if(request->method() == HTTP_HEAD)
+      Serial.printf("HEAD");
+    else if(request->method() == HTTP_OPTIONS)
+      Serial.printf("OPTIONS");
+    else
+      Serial.printf("UNKNOWN");
+      Serial.printf(" http://%s%s\n", request->host().c_str(), request->url().c_str());
+
+    if(request->contentLength()){
+      Serial.printf("_CONTENT_TYPE: %s\n", request->contentType().c_str());
+      Serial.printf("_CONTENT_LENGTH: %u\n", request->contentLength());
+    }
+
+      int headers = request->headers();
+      int i;
+      for(i=0;i<headers;i++){
+        AsyncWebHeader* h = request->getHeader(i);
+        Serial.printf("_HEADER[%s]: %s\n", h->name().c_str(), h->value().c_str());
+    }
+
+      int params = request->params();
+      for(i=0;i<params;i++){
+        AsyncWebParameter* p = request->getParam(i);
+        if(p->isFile()){
+          Serial.printf("_FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
+        } else if(p->isPost()){
+          Serial.printf("_POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+        } else {
+          Serial.printf("_GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+      }
+    }
+
+    request->send(404);
+  });
+  server.onFileUpload([](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final){
+    if(!index)
+      Serial.printf("UploadStart: %s\n", filename.c_str());
+      Serial.printf("%s", (const char*)data);
+      if(final)
+      Serial.printf("UploadEnd: %s (%u)\n", filename.c_str(), index+len);
+  });
+  server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    if(!index)
+      Serial.printf("BodyStart: %u\n", total);
+      Serial.printf("%s", (const char*)data);
+      if(index + len == total)
+      Serial.printf("BodyEnd: %u\n", total);
+  });
+  
+  //Followin line must be added before server.begin() to allow local lan request see : https://github.com/me-no-dev/ESPAsyncWebServer/issues/726
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+  server.begin();
 
 #if MQTT
     broker.begin();
@@ -158,35 +328,39 @@ void setup()
 
 #if PROBEREQUESTS
     WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
-    Serial << "Waiting for probe requests ... " << endl;
+//    Serial << "Waiting for probe requests ... " << endl;
 #endif
-  
-}  // End of Setup
 
+#if APPENDTOSPIFFS
+  /*
+  // --------Only for first time to create first line of file for column headings-----------
+  // Comment out following whole block after first use.
+  //--------- Write to file
+  File fileToWrite = SPIFFS.open("/sensors.csv", FILE_WRITE);
 
-void loop()
-{
-#if MQTT
-  broker.loop();  // Don't forget to add loop for every broker and clients
-  myClient.loop();
-#endif
-  
-#if WEBSOCKETS
-  auto client = WSserver.accept();
-  client.onMessage(handle_message);
-  client.send("Device Data: " + deviceData);
-  client.send("SensorData: " + sensorData);
-  
-  while (client.available()) {
-  client.poll();
+  if (!fileToWrite) {
+    Serial.println("There was an error opening the file for writing");
+    return;
   }
+  String columns = "epoch,location,voltage,rssi,temperature,humidity,pressure,light";
+  if (fileToWrite.println(columns)) {
+    Serial.println("File was written");;
+  } else {
+    Serial.println("File write failed");
+  }
+
+  fileToWrite.close();
+  //----------------------------------------------------------------------------------------------
+*/
 #endif
+
+} // End of setup
+
+void loop(){
+  ArduinoOTA.handle();
+  ws.cleanupClients();
   
- static auto next=millis();               // The next line is an efficient delay() replacement
- if (millis() > next){next += 10000;}
-
-} // End of Loop
-
+}  // End of loop
 
 #if PROBEREQUESTS
 
@@ -203,7 +377,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
        {
 
-       sendCommand();
+      //sendCommand();
 
       if (info.ap_probereqrecved.mac[1] == 06) 
       { // only accept data from device with voltage as a sensor type at byte 1.
@@ -244,59 +418,121 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
 
       if (voltage > 2.50 && voltage < 3.60) 
       {
-      /*
-      sprintf (sensorData, "{");
-      sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (sensorData, s);
-      sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (sensorData, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (sensorData, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (sensorData, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (sensorData, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (sensorData, s);
-      sprintf (s, "}"); strcat (sensorData, s);
+      
+      sprintf (str, "{");
+      sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);
+      sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (str, s);
+      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);
+      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);
+      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);
+      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);
+      sprintf (s, "}"); strcat (str, s);
               
       Serial.println();
       Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");
-      Serial.println(sensorData);
+      Serial.println(str);
       Serial.println();
-      */
-      sensorData = ("{" + String(info.ap_probereqrecved.mac[0], DEC) + "," + String(info.ap_probereqrecved.mac[1], DEC) + "," + String(info.ap_probereqrecved.mac[2], DEC) + "," + String(info.ap_probereqrecved.mac[3], DEC) + "," + String(info.ap_probereqrecved.mac[4], DEC) + "," + String(info.ap_probereqrecved.mac[5], DEC) + "}");
+      /*
+      sensorData = (",[" + Date + "," + Time + "," + String(info.ap_probereqrecved.mac[0], DEC) + "," + String(info.ap_probereqrecved.mac[1], DEC) + "," + String(info.ap_probereqrecved.mac[2], DEC) + "," + String(info.ap_probereqrecved.mac[3], DEC) + "," + String(info.ap_probereqrecved.mac[4], DEC) + "," + String(info.ap_probereqrecved.mac[5], DEC) + "]");
       Serial.println();
       Serial.print("Received Sensor data: "); 
       Serial.println(sensorData);
       Serial.println();
- 
-      static auto next=millis();               // The next line is an efficient delay() replacement
-      if (millis() > next){next += 10000;}
-      myClient.publish("Sensor", sensorData);
+      
+     // myClient.publish("Sensor", sensorData);
+     // myClient.publish("Sensor", str);
+      */
+      #if APPENDTOSPIFFS
+      File fileToAppend = SPIFFS.open("/sensors.csv", FILE_APPEND);
 
+      if (!fileToAppend) {
+        Serial.println("There was an error opening the file for appending");
+        return;
+      }
+      epoch = getTime();
+      String a = (String(epoch) + "," + String(info.ap_probereqrecved.mac[0], DEC) + "," + String(info.ap_probereqrecved.mac[1], DEC) + "," + String(info.ap_probereqrecved.rssi) + "," + String(sensorValues[0], DEC) + "," + String(sensorValues[1], DEC) + "," + String(sensorValues[2], DEC) + "," + String(sensorValues[3], DEC));
+      
+      if (fileToAppend.println(a)) {
+        Serial.println("File content was appended");
+      } else {
+        Serial.println("File append failed");
+      }
+
+      fileToAppend.close();
+      #endif
+      
+      File fileToTest = SPIFFS.open("/sensors.csv");
+
+      if (!fileToTest) {
+        Serial.println("Failed to open file for reading");
+        return;
+      }
+
+      Serial.print("Total File size: ");
+      Serial.println(fileToTest.size());
+
+      fileToTest.close();
+      
+      
       if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
          //myClient.publish("Warning/Battery Low", location);
        }
      }
 
    if (info.ap_probereqrecved.mac[3] == apChannel) {
-     /*
-     sprintf (deviceData, "{");
-     sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (deviceData, s);
-     sprintf (s, ",\"%s\":\"%i\"", "RSSI", info.ap_probereqrecved.rssi); strcat (deviceData, s);
-     sprintf (s, ",\"%s\":\"%i\"", "MODE", deviceStatus[0]); strcat (deviceData, s);
-     sprintf (s, ",\"%s\":\"%i\"", "CHANNEL", deviceStatus[1]); strcat (deviceData, s);
-     sprintf (s, ",\"%s\":\"%i\"", "IP", deviceStatus[2]); strcat (deviceData, s);
-     sprintf (s, ",\"%s\":\"%i\"", "Sleeptime", deviceStatus[3]); strcat (deviceData, s);
-     sprintf (s, "}"); strcat (deviceData, s);
+     
+     sprintf (str, "{");
+     sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);
+     sprintf (s, ",\"%s\":\"%i\"", "RSSI", info.ap_probereqrecved.rssi); strcat (str, s);
+     sprintf (s, ",\"%s\":\"%i\"", "MODE", deviceStatus[0]); strcat (str, s);
+     sprintf (s, ",\"%s\":\"%i\"", "CHANNEL", deviceStatus[1]); strcat (str, s);
+     sprintf (s, ",\"%s\":\"%i\"", "IP", deviceStatus[2]); strcat (str, s);
+     sprintf (s, ",\"%s\":\"%i\"", "Sleeptime", deviceStatus[3]); strcat (str, s);
+     sprintf (s, "}"); strcat (str, s);
                            
      Serial.println();
      Serial.println("Following ## Device Status ## receiced from remote device & published via MQTT: ");
      Serial.println(str);
      Serial.println();
-     */
-     deviceData = ("{" + String(info.ap_probereqrecved.mac[0], DEC) + "," + String(info.ap_probereqrecved.mac[1], DEC) + "," + String(info.ap_probereqrecved.mac[2], DEC) + "," + String(info.ap_probereqrecved.mac[3], DEC) + "," + String(info.ap_probereqrecved.mac[4], DEC) + "," + String(info.ap_probereqrecved.mac[5], DEC) + "}");
+     /*
+     deviceData = (",[" + Date + "," + Time + ","  + String(info.ap_probereqrecved.mac[0], DEC) + "," + String(info.ap_probereqrecved.mac[1], DEC) + "," + String(info.ap_probereqrecved.mac[2], DEC) + "," + String(info.ap_probereqrecved.mac[3], DEC) + "," + String(info.ap_probereqrecved.mac[4], DEC) + "," + String(info.ap_probereqrecved.mac[5], DEC) + "]");
      Serial.print("Received Status data : "); 
      Serial.println(deviceData);
      Serial.println();
                       
-     myClient.publish("Device", deviceData);
+     //myClient.publish("Device", deviceData);
+     //myClient.publish("Device", str);
+      
+      #if APPENDTOSPIFFS
+      File fileToAppend = SPIFFS.open("/sensors.csv", FILE_APPEND);
+
+      if (!fileToAppend) {
+        Serial.println("There was an error opening the file for appending");
+        return;
+      }
+
+      if (fileToAppend.println(str)) {
+        Serial.println("File content was appended");
+      } else {
+        Serial.println("File append failed");
+      }
+
+      fileToAppend.close();
+      #endif
+      */
+      File fileToTest = SPIFFS.open("/sensors.csv");
+
+      if (!fileToTest) {
+        Serial.println("Failed to open file for reading");
+        return;
+      }
+
+      Serial.print("Total File size: ");
+      Serial.println(fileToTest.size());
+
+      fileToTest.close();
+      
    }
   }
 }
-#endif                    
+#endif     
