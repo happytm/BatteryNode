@@ -39,13 +39,13 @@ The device can auto update firmware via Github if specific .bin file is availabl
 
 ### Installation:
 
-To use the code at minimum 1 ESP8266 as a slave and 1 ESP32 device (recommended) as a gateway or both ESP8266 devices (as gateway and slave) are required.
-One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.
-There can be as many as 100 battery powered devices which can send data to one gateway device. 
+- To test the code at minimum 1 ESP8266 as a slave and 1 ESP32 device (recommended) as a gateway or both ESP8266 devices (as gateway and slave) are required.
+- One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.
+- There can be as many as 100 battery powered devices which can send data to one gateway device. 
 ### Important: The wifi channel number of your devices needs to be same in order to have least amount of time consumed to exchange the sensor data.
-In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
-Optional : There is a data folder inside example folder. If you need to test simple web interface (work-in-progress) youhave to upload it to SPIFFS area of you ESP32.
-Web interface shows current and historical graphs of sensor data from whole network, allows to issue commands (via websockets) to any slave device on network and allows to manage or edit files on gateway SPIFFS area.
+- In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
+- Optional : There is a data folder inside example folder. If you need to test simple web interface (work-in-progress) youhave to upload it to SPIFFS area of you ESP32.
+- Web interface shows current and historical graphs of sensor data from whole network, allows to issue commands (via websockets) to any slave device on network and allows to   manage or edit files on gateway SPIFFS area.
 
 ### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in remote code)
 
