@@ -22,7 +22,7 @@ const char* password = "";
 
 int device = 6;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
 int battery = 6;         // Battery voltage sensor Type.
-int apChannel = 7;       // WiFi Channel for this device.
+int apChannel = 7;       // WiFi Channel for this device.It must be same as gateway apChannel.
 char* gateway = "ESP";   // This name has to be same as main controller's ssid.
 int sleepTime = 1;       // Sleep time in minutes.
 int upTime;              // Device uptime in milliseconds.
