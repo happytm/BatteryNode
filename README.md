@@ -119,6 +119,9 @@ https://nodered.org/docs/getting-started/android
 https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 
 http://www.of-things.de/battery-life-calculator.php
+      
+## To do:
+ - Web interface for ESP32 Gateway.
 
 ## Special Thanks to:
       
