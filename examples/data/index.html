@@ -144,20 +144,18 @@
               text-indent: 2px;
             }
 			
-			<style>
-   #hideValuesOnSelect {
-      display: none;
-   }
-</style>
+		
+              #hideValuesOnSelect {
+              display: none;
+            }
+
         </style>
         
 </head>
     
     <body id="body" onload="onBodyLoad()">
-        <script type="text/javascript">
-    // This example loads the "Canadian Parliament 2012"
-    // dataset from a CSV instead of from JSON.
-
+    <script type="text/javascript">
+    
     $(function(){
 	    
         var renderers = $.extend(
@@ -172,19 +170,16 @@
             skipEmptyLines: true,
             complete: function(parsed){
                 $("#output").pivotUI(parsed.data, {
-                    
-					rows: [""], cols: ["Timestamp"],
-					aggregatorName: "List Unique Values",
-                    vals: ["Temperature"],
-					rendererName: "Line Chart",
-					
-                   
-					
-                });
-            }
-        });
+
+					  rows: [""], cols: ["Timestamp"],
+					  aggregatorName: "List Unique Values",
+            vals: ["Temperature"],
+					  rendererName: "Line Chart",
+					});
+        }
+    });
          
-        var dragging = function(evt) {
+                    var dragging = function(evt) {
                     evt.stopPropagation();
                     evt.preventDefault();
                     evt.originalEvent.dataTransfer.dropEffect = 'copy';
@@ -215,15 +210,6 @@
      });
         </script>
         
-     
-       <div id="input_div">
-       <input type="text" value="" id="input_el"></br>
-	   <textarea rows="5" cols="35" id="display" value="" spellcheck="false"  readonly="true" style="font-size:16px;line-height: 1em;">Connecting to server... 
-       </textarea>
-	   
-	   <textarea rows="5" cols="61" id="rules" value="" spellcheck="false"  readonly="true" style="font-size:16px;line-height: 1em;">
-       </textarea>
-	   
 <form action="">
   
 <SELECT class="combine" id ="command" name = "a">
@@ -410,31 +396,30 @@
     <option>236</option>
     <option>246</option>
     <option>256</option>
-</SELECT></br>
-
-
+</SELECT>
+<br>
 
 <script>
 var attachEvent = function(node, event, listener, useCapture) {
   // Method for FF, Opera, Chrome, Safari
   if ( window.addEventListener ) {
-    node.addEventListener(event, listener, useCapture || false);
+       node.addEventListener(event, listener, useCapture || false);
   }
   // IE has its own method
   else {
-    node.attachEvent('on'+event, listener);
+       node.attachEvent('on'+event, listener);
   }
 };
 
 // Once the window loads and the DOM is ready, attach the event to the main
 attachEvent(window, "load", function() {
-  var main_select = document.getElementById("command");
+       var main_select = document.getElementById("command");
 
-  var selectHandler = function() {
-      option1 = document.getElementById("command1"),
-      option2 = document.getElementById("command2");
-      option3 = document.getElementById("command3");
-		  option4 = document.getElementById("command4");
+       var selectHandler = function() {
+       option1 = document.getElementById("command1"),
+       option2 = document.getElementById("command2");
+       option3 = document.getElementById("command3");
+		   option4 = document.getElementById("command4");
 		 
      // Show and hide the appropriate select's
      if ( this.value == "Neopixel" || this.value == "Analog Write" ) {
@@ -462,38 +447,38 @@ attachEvent(window, "load", function() {
 
   // Use the onchange and onkeypress events to detect when the 
   // value of main_select has changed
-  attachEvent(main_select, "change", selectHandler);
-  attachEvent(main_select, "keypress", selectHandler);
-});
+     attachEvent(main_select, "change", selectHandler);
+     attachEvent(main_select, "keypress", selectHandler);
+   });
 
 $(document).ready(function(){
-  $("form").submit(function(){
+    $("form").submit(function(){
     //alert("Submitted");
-	
-	ws.send(ge("result").value);
+	  ws.send(ge("result").value);
     ge("result").value = "";
   });
 });
 
 $(document).ready(function(){
-    var payload; 
+        var payload; 
     
-    $('.combine').on('change', function(){
-        
-        var payload = $('#device').val() + '/' + $('#command').val() + '/' + $('#command1').val() + '/' + $('#command2').val() + '/' + $('#command3').val() + '/' + $('#command4').val();
+        $('.combine').on('change', function(){
+        payload = $('#device').val() + '/' + $('#command').val() + '/' + $('#command1').val() + '/' + $('#command2').val() + '/' + $('#command3').val() + '/' + $('#command4').val();
         $('#result').val(payload); 
     });
 })
 
 </script>
 
-<input type="text" id="result" size = "60" name="send" value="" />
+<input type="text" id="result" size = "52" name="send" value="" />
 <input type="submit" value="Submit">
 
 </form>
-        
-<div id="output" style="margin: 10px;"></div>
 
+<textarea rows="2" cols="49" id="display" value="" spellcheck="false"  readonly="true" style="font-size:16px;line-height: 1em;">
+</textarea>
+	   
+<div id="output" style="margin: 10px;"></div>
 
 </body>
 </html>
