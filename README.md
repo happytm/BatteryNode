@@ -121,7 +121,7 @@ https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 http://www.of-things.de/battery-life-calculator.php
       
 ## To do:
- - Web interface for ESP32 Gateway.
+ - Web interface for ESP32 Gateway. There is a data folder within example folder which is WIP for web interface.
 
 ## Special Thanks to:
       
