@@ -39,7 +39,7 @@ The device can auto update firmware via Github if specific .bin file is availabl
 
 ### Installation:
 
-To use the code at minimum 1 ESP8266 as a slave and 1 ESP32 device as a gateway or both ESP8266 devices (as gateway and slave) are required.One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.There can be as many as 100 battery powered devices which can send data to one gateway device. The wifi channel number of your devices needs to be same in order to have least amount of time consumed to exchange the sensor data.In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
+To use the code at minimum 1 ESP8266 as a slave and 1 ESP32 device (recommended) as a gateway or both ESP8266 devices (as gateway and slave) are required.One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.There can be as many as 100 battery powered devices which can send data to one gateway device. The wifi channel number of your devices needs to be same in order to have least amount of time consumed to exchange the sensor data.In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
 
 ### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in remote code)
 
