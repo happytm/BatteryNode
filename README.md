@@ -31,24 +31,17 @@ Simply placing .bin file to github and publishing MQTT command from MQTT client 
 
 # Concept in detail:
 
-Low battery powered ESP8266 devices using Adhoc Network protocol described (inspiration for me) by Anthony Elder at https://github.com/HarringayMakerSpace/sonoff-adhoc. 
-
-
-Excellent uMQTTBroker Library by Martin Ger at https://github.com/martin-ger/uMQTTBroker and very well explained at https://www.youtube.com/watch?v=0K9q4IuB_oA&t=9s. 
-
-The device can auto update firmware via Github if specific .bin file is available.Use payload <deviceid>/09/01 under topic "command/".
-
 This code create small standalone network (maximum of 100) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network topology.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
 
 My testing shows 18 bytes of data (4 different sensor's values with their respective sensor types + 5 different device status data + battery voltage using 1 byte + device indentifier using 1 byte)  is moved within 55 milliseconds on average thereby saving significant battery power.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow ?). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
 
-Presence detection & user locater within home is implemented in ProbeReceiver sketch.
+The device can auto update firmware via Github if specific .bin file is available.Use payload <deviceid>/09/01 under topic "command/".
 
 ### Installation:
 
-To use the code 2 ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver.ino sketch and another device (sleeping most of the time and battery powered) use ProbeSender.ino code.There can be as many as 100 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your home access point (fixed if inernet access required) , needs to be same on all ProbeReceiver and ProbeSender devices in order to have least amount of time consumed to exchange the sensor data.In ProbeReceiver.ino sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.If presence detection (or user's location finder within the home) is required then user's mobile phone's MAC id is also required.
+To use the code atminimum 1 ESP8266 as a slave and 1 ESP32 device as a gateway or both ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver sketch and another device (sleeping most of the time and battery powered) use ProbeSender code.There can be as many as 100 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your devices needs to be same in order to have least amount of time consumed to exchange the sensor data.In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
 
-### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in ProbeSender.ino code)
+### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in ProbeSender code)
 
 ### Command structure:  
 
@@ -113,13 +106,8 @@ Most suitable use cases around typical home - Weather Station, Door/Window senso
 ## Tested with following MQTT front end GUI client software:
 
 MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US (preffered).
-            basic javascript automationpossible with this App. See https://github.com/ByTE1974/byte1974.github.io/tree/master/mqttdash/js
-
-MQTT Dashboard : 
-https://play.google.com/store/apps/details?id=com.thn.iotmqttdashboard&hl=en_US
-
-IOT MQTT Panel : 
-https://play.google.com/store/apps/details?id=snr.lab.iotmqttpanel.prod&hl=en_US
+            basic javascript automation possible with this App. 
+            See https://github.com/ByTE1974/byte1974.github.io/tree/master/mqttdash/js
 
 MQTT Explorer : https://github.com/thomasnordquist/MQTT-Explorer
 
@@ -204,147 +192,5 @@ https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LEDs-Night-Light-USB-Lamp-
 
 https://www.ebay.com/itm/10PCS-Mini-Portable-Bright-3-LED-Night-Light-USB-Lamp-for-PC-Laptop-Reading-KVD/254324352827?var=553856471722&hash=item3b36e9a73b:m:mu0g_K_W0-MeXBHUvm8kxKA
 
-### To do:
-
--Implement code for ESP32 for lora like long distance communication like following:
- - https://www.youtube.com/watch?v=yCLb2eItDyE
- - https://www.youtube.com/watch?v=2rujjTOPIRU
- - https://www.youtube.com/watch?v=PUppoaePi3A
- - https://github.com/jnogues/ESP32-Long-Range-WiFi
-- BME280
-- APDS9960
-- HC-SR04
-- Soil Moisture I2C
-- WS2812 or Neopixel addressable.
-- DS18B20 - addressable.
-- DS2438 1-wire battery monitor/temperature sensor/A/D converter addressable.
-  - http://www.howmuchsnow.com/snow/proto1.html
-  - https://www.ebay.com/itm/10pcs-DS2438-DS2438Z-TR-DS2438Z-SOP-8/292502146541
-  - Blue Enhanced Silicon Photodiode is available from Digi-Key #PDB-V113 
-  - https://github.com/jbechter/arduino-onewire-DS2438/tree/master/examples
-  - https://github.com/jbechter?tab=repositories
-  - http://projects.bechter.com/arduino-onewire/intro.html
-  - https://wp.josh.com/2014/06/23/no-external-pull-up-needed-for-ds18b20-temp-sensor/
-  - http://tj3sat.wikidot.com/forum/t-255274/arduino-code-for-ds2438
 
 
-# uMQTTBroker
-MQTT Broker library for ESP8266 Arduino
-
-You can start an MQTT broker in any ESP Arduino project. Just clone (or download the zip-file and extract it) into the libraries directory of your Arduino ESP8266 installation.
-
-**Important: Use the setting "lwip Variant: 1.4 High Bandwidth" in the "Tools" menu**
-
-lwip 2.0 has some strange behaviour that causes the socket to block after 5 connections.
-
-Thanks to Tuan PM for sharing his MQTT client library https://github.com/tuanpmt/esp_mqtt as a basis with us. The modified code still contains the complete client functionality from the original esp_mqtt lib, but it has been extended by the basic broker service.
-
-The broker does support:
-- MQTT protocoll versions v3.1 and v3.1.1 simultaniously
-- a smaller number of clients (at least 8 have been tested, memory is the issue)
-- retained messages
-- LWT
-- QoS level 0
-- username/password authentication
- 
-The broker does not yet support:
-- QoS levels other than 0
-- many TCP(=MQTT) clients
-- non-clear sessions
-- TLS
-
-If you are searching for a complete ready-to-run MQTT broker for the ESP8266 with additional features (persistent configuration, scripting support and much more) have a look at https://github.com/martin-ger/esp_mqtt .
-
-## API MQTT Broker (C++-style)
-The MQTT broker has a new C++ style API with a broker class:
-```c
-class uMQTTBroker
-{
-public:
-    uMQTTBroker(uint16_t portno=1883, uint16_t max_subscriptions=30, uint16_t max_retained_topics=30);
-
-    void init();
-
-    virtual bool onConnect(IPAddress addr, uint16_t client_count);
-    virtual bool onAuth(String username, String password);
-    virtual void onData(String topic, const char *data, uint32_t length);
-
-    virtual bool publish(String topic, uint8_t* data, uint16_t data_length, uint8_t qos=0, uint8_t retain=0);
-    virtual bool publish(String topic, String data, uint8_t qos=0, uint8_t retain=0);
-    virtual bool subscribe(String topic, uint8_t qos=0);
-    virtual bool unsubscribe(String topic);
-
-    void cleanupClientConnections();
-};
-```
-Use the broker as shown in oo-examples found in https://github.com/martin-ger/uMQTTBroker/tree/master/examples .
-
-## API MQTT Broker (C-style)
-The MQTT broker is started by simply including:
-
-```c
-#include "uMQTTBroker.h"
-```
-and then calling
-```c
-bool MQTT_server_start(uint16_t portno, uint16_t max_subscriptions, uint16_t max_retained_topics);
-```
-in the "setup()" function. Now it is ready for MQTT connections on all activated interfaces (STA and/or AP). The MQTT server will run in the background and you can connect with any MQTT client. Your Arduino project might do other application logic in its loop.
-
-Your code can locally interact with the broker using these functions:
-
-```c
-bool MQTT_local_publish(uint8_t* topic, uint8_t* data, uint16_t data_length, uint8_t qos, uint8_t retain);
-bool MQTT_local_subscribe(uint8_t* topic, uint8_t qos);
-bool MQTT_local_unsubscribe(uint8_t* topic);
-
-
-void MQTT_server_onData(MqttDataCallback dataCb);
-```
-
-With these functions you can publish and subscribe topics as a local client like you would with any remote MQTT broker. The provided dataCb is called on each reception of a matching topic, no matter whether it was published from a remote client or the "MQTT_local_publish()" function.
-
-Username/password authentication is provided with the following interface:
-
-```c
-typedef bool (*MqttAuthCallback)(const char* username, const char *password, struct espconn *pesp_conn);
-
-void MQTT_server_onAuth(MqttAuthCallback authCb);
-
-typedef bool (*MqttConnectCallback)(struct espconn *pesp_conn, uint16_t client_count);
-
-void MQTT_server_onConnect(MqttConnectCallback connectCb);
-```
-
-If an *MqttAuthCallback* function is registered with MQTT_server_onAuth(), it is called on each connect request. Based on username, password, and optionally the connection info (e.g. the IP address) the function has to return *true* for authenticated or *false* for rejected. If a request provides no username and/or password these parameter strings are empty. If no *MqttAuthCallback* function is set, each request will be admitted.
-
-The *MqttConnectCallback* function does a similar check for the connection, but it is called right after the connect request before the MQTT connect request is processed. This is done in order to reject requests from unautorized clients in an early stage. The number of currently connected clients (incl. the current one) is given in the *client_count* paramater. With this info you can reject too many concurrent connections.
-
-If you want to force a cleanup when the broker as a WiFi client (WIFI_STA mode) has lost connectivity to the AP, call:
-```c
-void MQTT_server_cleanupClientCons();
-```
-This will remove all broken connections, publishing LWT if defined.
-
-Sample: in the Arduino setup() initialize the WiFi connection (client or SoftAP, whatever you need) and somewhere at the end add these line:
-```c
-MQTT_server_start(1883, 30, 30);
-```
-
-You can find a sample sketch here https://github.com/martin-ger/uMQTTBroker/tree/master/examples .
-
-## API MQTT Client
-
-To use the MQTT client functionality include:
-
-```c
-#include "MQTT.h"
-```
-
-This code is taken from Ingo Randolf from esp-mqtt-arduino (https://github.com/i-n-g-o/esp-mqtt-arduino). It is a wrapper to tuanpmt's esp_mqtt client library. Look here https://github.com/i-n-g-o/esp-mqtt-arduino/tree/master/examples for code samples.
-
-# Thanks
-- tuanpmt for esp_mqtt (https://github.com/tuanpmt/esp_mqtt )
-- Ingo Randolf for esp-mqtt-arduino (https://github.com/i-n-g-o/esp-mqtt-arduino)
-- Ian Craggs for mqtt_topic
-- many others contributing to open software (for the ESP8266)
