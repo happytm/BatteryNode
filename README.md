@@ -120,7 +120,14 @@ https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 
 http://www.of-things.de/battery-life-calculator.php
 
-## Required Hardware Links:
+## Special Thanks to:
+      
+ - https://github.com/martin-ger/uMQTTBroker
+ - https://github.com/hsaturn/TinyMqtt
+ 
+      
+      
+## Required Hardware Links (for DIY):
 
 ### ESP8266:
 
