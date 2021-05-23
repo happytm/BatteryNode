@@ -438,10 +438,10 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       Serial.print("Received Sensor data: "); 
       Serial.println(sensorData);
       Serial.println();
-      
-     // myClient.publish("Sensor", sensorData);
-     // myClient.publish("Sensor", str);
       */
+      //myClient.publish("Sensor", sensorData);
+      myClient.publish("Sensor", str);
+      
       #if APPENDTOSPIFFS
       File fileToAppend = SPIFFS.open("/sensors.csv", FILE_APPEND);
 
