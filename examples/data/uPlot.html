@@ -1,0 +1,249 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>μPlot Demo</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<link rel="stylesheet" href="uPlot.min.css">
+		<style>
+			body {
+				margin: 0;
+			}
+
+			.u-legend.u-inline .u-value {
+				width: 150px;
+				text-align: left;
+			}
+		
+			
+		</style>
+	</head>
+	<body>
+		<script src="uPlot.iife.min.js"></script>
+		<h2 id="wait">Loading lib....</h2>
+    
+		<script>
+			
+			// converts the legend into a simple tooltip
+			function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255, 249, 196, 0.92)", color: "black" } } = {}) {
+				let legendEl;
+
+				function init(u, opts) {
+					legendEl = u.root.querySelector(".u-legend");
+
+					legendEl.classList.remove("u-inline");
+					className && legendEl.classList.add(className);
+
+					uPlot.assign(legendEl.style, {
+						textAlign: "left",
+						pointerEvents: "none",
+						display: "none",
+						position: "absolute",
+						left: 0,
+						top: 0,
+						zIndex: 100,
+						boxShadow: "2px 2px 10px rgba(0,0,0,0.5)",
+						...style
+					});
+
+					// hide series color markers
+					const idents = legendEl.querySelectorAll(".u-marker");
+
+					for (let i = 0; i < idents.length; i++)
+						idents[i].style.display = "none";
+
+					const overEl = u.root.querySelector(".u-over");
+					overEl.style.overflow = "visible";
+
+					// move legend into plot bounds
+					overEl.appendChild(legendEl);
+
+					// show/hide tooltip on enter/exit
+					overEl.addEventListener("mouseenter", () => {legendEl.style.display = null;});
+					overEl.addEventListener("mouseleave", () => {legendEl.style.display = "none";});
+
+					// let tooltip exit plot
+				//	overEl.style.overflow = "visible";
+				}
+
+				function update(u) {
+					const { left, top } = u.cursor;
+					legendEl.style.transform = "translate(" + left + "px, " + top + "px)";
+				}
+
+				return {
+					hooks: {
+						init: init,
+						setCursor: update,
+					}
+				};
+			}
+
+			function prepData(packed) {
+				console.time("prep");
+
+				// epoch,idl,recv,send,read,writ,used,free
+
+				const numFields = packed[0];
+                console.log(numFields); //8
+				packed = packed.slice(numFields + 1);
+                console.log(packed); //single array array of all sensor data(344)
+				
+				let data = [
+					Array(packed.length/numFields), // timestamp
+					Array(packed.length/numFields), // voltage
+					Array(packed.length/numFields), // rssi
+					Array(packed.length/numFields), // temp
+					Array(packed.length/numFields), // humidity
+					Array(packed.length/numFields), // pressure
+					Array(packed.length/numFields), // light
+					Array(packed.length/numFields), // location
+				];
+				
+			    console.log(data); // (8)arrays of values by sensor type
+
+				for (let i = 0, j = 0; i < packed.length; i += numFields, j++) {
+					//data[2][j] = round2(100 * packed[i+5] / (packed[i+5] + packed[i+6]));
+					data[0][j] = packed[i+0];
+					data[1][j] = packed[i+2] * 2/100;
+					data[2][j] = packed[i+3];
+					data[3][j] = packed[i+4];
+					data[4][j] = packed[i+5];
+					data[5][j] = packed[i+6];
+					data[6][j] = packed[i+7];
+					data[7][j] = packed[i+1];
+				}
+
+			/*
+				function filter(d) {
+					return d.filter((d, i) => Math.round(i/1000) % 5 != 2);
+				}
+
+				data[0] = filter(data[0]);
+				data[1] = filter(data[1]);
+				data[2] = filter(data[2]);
+				data[3] = filter(data[3]);
+			*/
+			/*
+				data[0] = data[0].slice(0, 1000);
+				data[1] = data[1].slice(0, 1000);
+				data[2] = data[2].slice(0, 1000);
+				data[3] = data[3].slice(0, 1000);
+
+				data[1][35] = null;
+				data[1][36] = null;
+				data[2][730] = null;
+			*/
+				console.timeEnd("prep");
+
+				return data;
+				console.log(data);
+			}
+
+			function makeChart(data) {
+				console.time("chart");
+
+				const opts = {
+					title: "Sensor Data",
+					
+					width: 920,
+					height: 500,
+				//	ms:     1,
+				//	cursor: {
+				//		x: false,
+				//		y: false,
+				//	},
+					series: [
+						{},
+						
+						{
+							label: "Voltage",
+							scale: "F",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + " V",
+							stroke: "teal",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "RSSI",
+							scale: "F",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + "",
+							stroke: "maroon",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Temperature",
+							scale: "F",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + " F°",
+							stroke: "lime",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Humidity",
+							scale: "%",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " %",
+							stroke: "olive",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Pressure",
+							scale: "F",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + " mb",
+							stroke: "blue",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Light",
+							scale: "%",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " %",
+							stroke: "orange",
+							width: 1/devicePixelRatio,
+						}
+					],
+					
+					plugins: [
+					
+					legendAsTooltipPlugin()
+					
+				],
+					
+					axes: [
+						{},
+						{
+							scale: "",
+							values: (u, vals, space) => vals.map(v => +v.toFixed(1) + " "),
+						},
+						{
+							side: 1,
+							scale: "F",
+							size: 60,
+							values: (u, vals, space) => vals.map(v => +v.toFixed(2) + ""),
+							grid: {show: false},
+						},
+					],
+				};
+              
+				let uplot = new uPlot(opts, data, document.body);
+        
+				Promise.resolve().then(() => {
+					wait.textContent = "Done!";
+					console.timeEnd("chart");
+				});
+			}
+
+			let wait = document.getElementById("wait");
+			wait.textContent = "Fetching data.json";
+			fetch("data.json").then(r => r.json()).then(packed => {
+				wait.textContent = "Rendering...";
+				let data = prepData(packed);
+				setTimeout(() => makeChart(data), 0);
+			});
+			
+			
+			
+		</script>
+		
+		
+		
+	</body>
+</html>
