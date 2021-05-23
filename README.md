@@ -31,15 +31,19 @@ Simply placing .bin file to github and publishing MQTT command from MQTT client 
 
 # Concept in detail:
 
-This code create small standalone network (maximum of 100) of battery powered esp8266 devices connecting to one esp8266 gateway device in star network topology.Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.There is no need for other home automation software locally or on cloud.
+This code create small standalone network (maximum of 100) of battery powered esp8266 devices connecting to one ESP32 or ESP8266  gateway device in star network topology.
+Each device can be controlled simply by MQTT app like MQTT Dash over local network or over internet if used with DynDNS service like DuckDNS.
+There is no need for other home automation software locally or on cloud.
 
-My testing shows 18 bytes of data (4 different sensor's values with their respective sensor types + 5 different device status data + battery voltage using 1 byte + device indentifier using 1 byte)  is moved within 55 milliseconds on average thereby saving significant battery power.If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow ?). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
+My testing shows 18 bytes of data (4 different sensor's values with their respective sensor types + 5 different device status data + battery voltage using 1 byte + device indentifier using 1 byte)  is moved within 55 milliseconds on average thereby saving significant battery power.
+
+If two way communication required between gateway and remote sensor then data is communiated both ways within 150 milliseconds (more efficient than ESPNow ?). With two way communication activated even control of actuator is possible but not justifiable for battery powered devices.
 
 The device can auto update firmware via Github if specific .bin file is available.Use payload <deviceid>/09/01 under topic "command/".
 
 ### Installation:
 
-To use the code atminimum 1 ESP8266 as a slave and 1 ESP32 device as a gateway or both ESP8266 devices are required.One device (always on and mains powered) use ProbeReceiver sketch and another device (sleeping most of the time and battery powered) use ProbeSender code.There can be as many as 100 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your devices needs to be same in order to have least amount of time consumed to exchange the sensor data.In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
+To use the code at minimum 1 ESP8266 as a slave and 1 ESP32 device as a gateway or both ESP8266 devices (as gateway and slave) are required.One device (always on and mains powered) use ProbeReceiver sketch and another device (sleeping most of the time and battery powered) use ProbeSender code.There can be as many as 100 battery powered devices which can send data to one ProbeReceiver device. The wifi channel number of your devices needs to be same in order to have least amount of time consumed to exchange the sensor data.In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
 
 ### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in ProbeSender code)
 
