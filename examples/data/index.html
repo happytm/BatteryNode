@@ -153,9 +153,12 @@
         
 </head>
     
-    <body id="body" onload="onBodyLoad()">
-    <script type="text/javascript">
-    
+<body id="body" onload="onBodyLoad()">
+
+<script type="text/javascript">
+    // This example loads the "Canadian Parliament 2012"
+    // dataset from a CSV instead of from JSON.
+
     $(function(){
 	    
         var renderers = $.extend(
@@ -164,22 +167,78 @@
                     $.pivotUtilities.d3_renderers,
                     $.pivotUtilities.export_renderers
                     );
-      
+       
         Papa.parse("http://192.168.0.3/sensors.csv", {
             download: true,
             skipEmptyLines: true,
+            
+            
             complete: function(parsed){
-                $("#output").pivotUI(parsed.data, {
+            
+           
 
-					  rows: [""], cols: ["Timestamp"],
-					  aggregatorName: "List Unique Values",
-            vals: ["Temperature"],
-					  rendererName: "Line Chart",
-					});
-        }
-    });
+            for (let i = 0; i < parsed.data.length; i ++) {
+           
+					  var d = new Date(parsed.data[i][0]*1000);
+            parsed.data[i][0] = (("00" + d.getFullYear()).slice(-2) +  ("00" + (d.getMonth() + 1)).slice(-2) +  ("00" + d.getDate()).slice(-2) +  ("00" + d.getHours()).slice(-2) +  ("00" + d.getSeconds()).slice(-2));
+            parsed.data[0][0] = "Timestamp";
+					  
+					  if (parsed.data[i][1] == 6) {
+					    parsed.data[i][1] = "Livingroom";
+					  } else if (parsed.data[i][1] == 16) {
+					    parsed.data[i][1] = "Kitchen";
+					  } else if (parsed.data[i][1] == 26) {
+					    parsed.data[i][1] = "Bedroom1";
+					  } else if (parsed.data[i][1] == 36) {
+					    parsed.data[i][1] = "Bedroom2";
+					  } else if (parsed.data[i][1] == 46) {
+					    parsed.data[i][1] = "Bedroom3";
+					  } else if (parsed.data[i][1] == 56) {
+					    parsed.data[i][1] = "Bedroom4";
+					  } else if (parsed.data[i][1] == 66) {
+					    parsed.data[i][1] = "Bathroom1";
+					  } else if (parsed.data[i][1] == 76) {
+					    parsed.data[i][1] = "Bathroom2";
+					  } else if (parsed.data[i][1] == 86) {
+					    parsed.data[i][1] = "Bathroom3";
+					  } else if (parsed.data[i][1] == 96) {
+					    parsed.data[i][1] = "Bathroom4";
+					  } else if (parsed.data[i][1] == 106) {
+					    parsed.data[i][1] = "Laundry";
+					  } else if (parsed.data[i][1] == 116) {
+					    parsed.data[i][1] = "Boiler Room";
+					  } else if (parsed.data[i][1] == 126) {
+					    parsed.data[i][1] = "Workshop";
+					  } else if (parsed.data[i][1] == 136) {
+					    parsed.data[i][1] = "Garage";
+					  } else if (parsed.data[i][1] == 146) {
+					    parsed.data[i][1] = "Office";
+					  } else if (parsed.data[i][1] == 156) {
+					    parsed.data[i][1] = "Tank";
+					  } else if (parsed.data[i][1] == 166) {
+					    parsed.data[i][1] = "Solar";
+					  } else {
+					    parsed.data[i][1] = "Unknown";
+					    parsed.data[0][1] = "Location";
+					  }  
+					  
+					//console.log(parsed.data[i][1]); // (13)arrays of values by sensor type
+				}                
+                
+          $("#output").pivotUI(parsed.data, {
+                 
+					rows: ["Location"], cols: ["Timestamp"],
+					aggregatorName: "List Unique Values",
+                    vals: ["Temperature"],
+					rendererName: "Line Chart",
+					
+                   
+					
+                });
+            }
+        });
          
-                    var dragging = function(evt) {
+        var dragging = function(evt) {
                     evt.stopPropagation();
                     evt.preventDefault();
                     evt.originalEvent.dataTransfer.dropEffect = 'copy';
@@ -208,7 +267,8 @@
                     .on("drop", dropped);
         
      });
-        </script>
+
+</script>
         
 <form action="">
   
@@ -396,30 +456,31 @@
     <option>236</option>
     <option>246</option>
     <option>256</option>
-</SELECT>
-<br>
+</SELECT></br>
+
+
 
 <script>
 var attachEvent = function(node, event, listener, useCapture) {
   // Method for FF, Opera, Chrome, Safari
   if ( window.addEventListener ) {
-       node.addEventListener(event, listener, useCapture || false);
+    node.addEventListener(event, listener, useCapture || false);
   }
   // IE has its own method
   else {
-       node.attachEvent('on'+event, listener);
+    node.attachEvent('on'+event, listener);
   }
 };
 
 // Once the window loads and the DOM is ready, attach the event to the main
 attachEvent(window, "load", function() {
-       var main_select = document.getElementById("command");
+  var main_select = document.getElementById("command");
 
-       var selectHandler = function() {
-       option1 = document.getElementById("command1"),
-       option2 = document.getElementById("command2");
-       option3 = document.getElementById("command3");
-		   option4 = document.getElementById("command4");
+  var selectHandler = function() {
+      option1 = document.getElementById("command1"),
+      option2 = document.getElementById("command2");
+      option3 = document.getElementById("command3");
+		  option4 = document.getElementById("command4");
 		 
      // Show and hide the appropriate select's
      if ( this.value == "Neopixel" || this.value == "Analog Write" ) {
@@ -447,23 +508,25 @@ attachEvent(window, "load", function() {
 
   // Use the onchange and onkeypress events to detect when the 
   // value of main_select has changed
-     attachEvent(main_select, "change", selectHandler);
-     attachEvent(main_select, "keypress", selectHandler);
-   });
+  attachEvent(main_select, "change", selectHandler);
+  attachEvent(main_select, "keypress", selectHandler);
+});
 
 $(document).ready(function(){
-    $("form").submit(function(){
+  $("form").submit(function(){
     //alert("Submitted");
-	  ws.send(ge("result").value);
+	
+	ws.send(ge("result").value);
     ge("result").value = "";
   });
 });
 
 $(document).ready(function(){
-        var payload; 
+    var payload; 
     
-        $('.combine').on('change', function(){
-        payload = $('#device').val() + '/' + $('#command').val() + '/' + $('#command1').val() + '/' + $('#command2').val() + '/' + $('#command3').val() + '/' + $('#command4').val();
+    $('.combine').on('change', function(){
+        
+        var payload = $('#device').val() + '/' + $('#command').val() + '/' + $('#command1').val() + '/' + $('#command2').val() + '/' + $('#command3').val() + '/' + $('#command4').val();
         $('#result').val(payload); 
     });
 })
