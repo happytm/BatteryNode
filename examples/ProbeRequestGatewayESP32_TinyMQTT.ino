@@ -437,15 +437,9 @@ void getData() {
     }
 
     File schemFile = LITTLEFS.open(schemPath);
-  
-    tblPath = prefix + CONNECTED_DB + "/test_tbl";
     File tblFile = LITTLEFS.open(tblPath);
-    //while(tblFile.available()){
-    //Serial.print(tblFile.read(), HEX);
-    //Serial.print(" ");
-    //}
-  Serial.println();
-  listDir(LITTLEFS, "/", 2);
+    Serial.println();
+    listDir(LITTLEFS, "/", 2);
  }
  #endif
 
@@ -585,6 +579,11 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
                insert += ")";
                Serial.println(insert);
                res = execQuery(insert);
+
+               File schemFile = LITTLEFS.open(schemPath);
+               File tblFile = LITTLEFS.open(tblPath);
+               Serial.println();
+               listDir(LITTLEFS, "/", 2);
                
    }
   }
