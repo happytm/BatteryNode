@@ -23,7 +23,7 @@ const char* password = "";
 int device = 6;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
 int battery = 6;         // Battery voltage sensor Type.
 int apChannel = 7;       // WiFi Channel for this device.It must be same as gateway apChannel.
-char* gateway = "ESP";   // This name has to be same as main controller's ssid.
+char* apSSID = "ESP";   // This name has to be same as main controller's ssid.
 int sleepTime = 1;       // Sleep time in minutes.
 int upTime;              // Device uptime in milliseconds.
 int deviceMode = 0;      // 0 for regular, 1 for autupdate and 2 for AutoConnect.
@@ -182,7 +182,7 @@ void loop() {
 void probeRequest()  
 {
 
-  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
+  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) apSSID);
 
   yield();
 
