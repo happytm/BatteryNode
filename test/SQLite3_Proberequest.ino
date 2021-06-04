@@ -3,7 +3,7 @@
 #define WEBSOCKETS        true     // Communicate with Websockets clients
 #define ASYNCWEBSERVER    true     // Publishes web interface
 #define SQLITE3           true     // Store data
-#define FIRSTTIME         false    // Warning - This must be false.Make it true if creating new data and table files for first time.
+#define FIRSTTIME         true    // Warning - This must be false.Make it true if creating new data and table files for first time.
 
 #include <WiFi.h>
 
@@ -423,21 +423,52 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
      Serial.println();
      myClient.publish("device", str);
      
-               Timezone America; America.setLocation("America/New_York");
-               Timestamp = String((now())); // + buffer;     //for milliseconds precision
-               Date = " " + America.dateTime("mdy");
-               Time = " " + America.dateTime("Hi");
-               Day  = " " + America.dateTime("l");
-               Hour = " " + America.dateTime("H");
+               Timezone America;
+  America.setLocation("America/New_York");
+  //America.setPosix("EST--5EDT,M3.2.0,M11.1.0/2");
+  Serial.println("EST time: " + America.dateTime());
+  Serial.println("Time now is:" + America.dateTime("l ~t~h~e jS ~o~f F Y, g:i A") );
+                                          //Saturday the 25th of August 2018, 2:23 PM
+  
+  //Serial.println(String((now()))); // + buffer); //for milliseconds precision                                      
+  Timestamp = String((now())); // + buffer;     //for milliseconds precision
+  //Serial.println(" " + America.dateTime("mdy") );                                       
+  Date = " " + America.dateTime("mdy");
+  Day  = " " + America.dateTime("l");
+  //Serial.println(" " + America.dateTime("Hi") );                                       
+  Time = " " + America.dateTime("Hi");
+  Hour = " " + America.dateTime("H");
+   
+   if (!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
+       Serial.println("Failed to mount file system");
+       return;
+   }
 
-               String insert = "insert into test1 values (";
+   //Create the db file if it does not exist before trying to open it.
+   if (!LITTLEFS.exists("/test1.db")){
+      File file = LITTLEFS.open("/test1.db", FILE_WRITE);   //  /littlefs is automatically added to the front 
+      file.close();
+   }
+
+   // We also need to create the journal file if it does not exist.
+   if (!LITTLEFS.exists("/test1.db-journal")){
+      File file = LITTLEFS.open("/test1.db-journal", FILE_WRITE);   //  /littlefs is automatically added to the front 
+      file.close();
+   }
+
+   sqlite3_initialize();
+
+   if (db_open("/littlefs/test1.db", &db1))
+       return;
+
+   String insert = "insert into test1 values (";
   
                insert += Timestamp;
-               insert += ",";
+               insert += ", ";
                insert += Date;
-               insert += ",";
+               insert += ", ";
                insert += Time;
-               insert += ",";
+               insert += ", ";
                insert += Hour;
                insert += ", ";
                insert += device;
@@ -446,24 +477,66 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
                insert += ", ";
                insert += 30;
                insert += ", ";
-               insert += sensorValues[0];
+               insert += 55;
                insert += ", ";
-               insert += sensorValues[1];
+               insert += 65;
                insert += ", ";
-               insert += sensorValues[2];
+               insert += 230;
                insert += ", ";
-               insert += sensorValues[3];
+               insert += 82;
                insert += ")";
-               //Serial.println(insert);
-               rc = db_exec(db1, insert.c_str());
+               Serial.println(insert);
               
-               if (rc != SQLITE_OK) {
-                 sqlite3_close(db1);
-                 return;
-                }
-               sqlite3_close(db1);
-               
-               // list LITTLEFS contents
+   
+   rc = db_exec(db1, insert.c_str());
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   
+   
+   rc = db_exec(db1, "Select Temperature, Humidity FROM test1");
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   rc = db_exec(db1, "Select * from test1 where  Location = '26' and id = '0601211530'");
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   rc = db_exec(db1, "Select * from test1 where Location in ( '26', '27')");
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   rc = db_exec(db1, "Select * from test1 where not Location = '27'");
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   rc = db_exec(db1, "Select min(Temperature) from test1");
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   rc = db_exec(db1, "Select max(Temperature) from test1");
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   rc = db_exec(db1, "Select avg(Temperature) from test1");
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   rc = db_exec(db1, "Select * from test1 where Location between '20' and '30'");
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
+   sqlite3_close(db1);
+   // list LITTLEFS contents
    File root = LITTLEFS.open("/");
    if (!root) {
        Serial.println("- failed to open directory");
@@ -485,8 +558,9 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
            Serial.println(file.size());
        }
        file = root.openNextFile();
-      }
+   }
      }
     }
    }
 #endif 
+
