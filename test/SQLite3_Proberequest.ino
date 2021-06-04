@@ -19,7 +19,9 @@ String dateReceived, dayReceived, timeReceived, hourReceived, rooms, V, S, T, H,
 #define FORMAT_LITTLEFS_IF_FAILED true
 int rc;
 sqlite3 *db1;
-
+sqlite3_stmt *res;
+int rec_count = 0;
+const char *tail;
    
 const char* ssid = "";    // Your WiFi SSID
 const char* password = ""; // Your WiFi Password
@@ -74,7 +76,7 @@ int deviceStatus[4];
 #include <ArduinoWebsockets.h>  // Thanks to https://github.com/gilmaimon/ArduinoWebsockets
 using namespace websockets;
 WebsocketsServer WSserver;
-char sql[100];
+String sql;
 #endif
 
 #if ASYNCWEBSERVER
@@ -90,16 +92,9 @@ AsyncWebServer webserver(80);
 void handle_message(WebsocketsMessage msg) {
   Serial.print("Message Received from javascript websocket client: ");
   Serial.println(msg.data()); 
-  strcpy (sql, msg.data().c_str());
-  
+  sql = msg.data().c_str();
   Serial.println("======= Filtered data by SQL statement sent to client====================");
-    
-    rc = db_exec(db1, sql);
-    if (rc != SQLITE_OK) {
-       sqlite3_close(db1);
-       return;
-       }
-       
+  Serial.println(sql.c_str());
   sqlite3_close(db1);
   Serial.println("=========================================================================");
 } 
@@ -148,13 +143,10 @@ static int callback(void *data, int argc, char **argv, char **azColName) {
    Serial.println();
       
        for (i = 0; i<argc; i++){
-       Serial.printf("%s\n", argv[i] ? argv[i] : "NULL");
-       
-      
-      
-   }
-   Serial.printf("\n");
-   return 0;
+       Serial.printf("%s\n", argv[i] ? argv[i] : "NULL");   
+       }
+     Serial.printf("\n");
+     return 0;
 }
 
 int db_open(const char *filename, sqlite3 **db) {
@@ -204,7 +196,7 @@ void setup() {
   Serial << "Access point started with SSID " << apSSID << " and webserver started at IP address: " << WiFi.localIP() << endl;
   Serial.print("Websocket Server at Port: ");
   Serial.println(wsport);
-  //Serial << "Connected to " << ssid << " IP address: " << WiFi.localIP() << endl;
+  Serial << "Connected to " << ssid << " IP address: " << WiFi.localIP() << endl;
   
   #if ASYNCWEBSERVER
     webserver.on("/", HTTP_GET, [](AsyncWebServerRequest * request) 
@@ -276,7 +268,7 @@ void setup() {
    LITTLEFS.remove("/test1.db");
    LITTLEFS.remove("/test1.db-journal");
 
-//    Create the db file before trying to open it.
+   // Create the db file before trying to open it.
    if (!LITTLEFS.exists("/test1.db")){
       File file = LITTLEFS.open("/test1.db", FILE_WRITE);   //  /littlefs is automatically added to the front 
       file.close();
@@ -297,7 +289,8 @@ void setup() {
    if (rc != SQLITE_OK) {
        sqlite3_close(db1);
        return;
-   }
+       }
+       sqlite3_close(db1);       
 #endif  
    
 }
@@ -312,9 +305,9 @@ void loop() {
 #if WEBSOCKETS
   auto client = WSserver.accept();
   client.onMessage(handle_message);
-    
-  //static auto next=millis();               // The next line is an efficient delay() replacement
-  //if (millis() > next){next += 1000;}       //let's give time to SQLITE3 to prepare data requested from client.
+  processData();
+  static auto next=millis();               // The next line is an efficient delay() replacement
+  if (millis() > next){next += 10000;}       //let's give time to SQLITE3 to prepare data requested from client.
   
   while (client.available()) {
   client.poll();
@@ -358,11 +351,11 @@ void processData()
                insert += ", ";
                insert += 15;
                insert += ", ";
-               insert += device;
+               insert += 26;
                insert += ", ";
-               insert += voltage;
+               insert += 28;
                insert += ", ";
-               insert += rssi;
+               insert += 30;
                insert += ", ";
                insert += 55;
                insert += ", ";
@@ -382,11 +375,6 @@ void processData()
    }
    
    /*
-   rc = db_exec(db1, "Select Temperature, Humidity FROM test1");
-   if (rc != SQLITE_OK) {
-       sqlite3_close(db1);
-       return;
-   }
    rc = db_exec(db1, "Select * from test1 where  Location = '26' and id = '0601211530'");
    if (rc != SQLITE_OK) {
        sqlite3_close(db1);
@@ -402,6 +390,7 @@ void processData()
        sqlite3_close(db1);
        return;
    }
+   
    rc = db_exec(db1, "Select * from test1 where Location between '20' and '30'");
    if (rc != SQLITE_OK) {
        sqlite3_close(db1);
@@ -425,7 +414,11 @@ void processData()
        return;
    }
    
-   
+   rc = db_exec(db1, sql.c_str());
+   if (rc != SQLITE_OK) {
+       sqlite3_close(db1);
+       return;
+   }
    sqlite3_close(db1);
    
    // list LITTLEFS contents
