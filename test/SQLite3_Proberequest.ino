@@ -539,7 +539,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
      Serial.println(str);
      Serial.println();
      myClient.publish("device", str);
-     processData();
+     //processData();
     }
   }
     
