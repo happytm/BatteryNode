@@ -7,8 +7,8 @@
 
 #include <WiFi.h>
 
-const char* ssid = "";    // Your WiFi SSID
-const char* password = ""; // Your WiFi Password
+const char* ssid = "HAPPYHOME";    // Your WiFi SSID
+const char* password = "kb1henna"; // Your WiFi Password
 const char* apSSID = "ESP";        // SSID for access point. This must be same on all remote devices.
 const char* apPassword = "";       // Password for Access point if required otherwise leave blank.
 const int apChannel = 7;           // WiFi Channel number for access point. This must be same on all remote devices.
@@ -69,15 +69,30 @@ char sql[100];
 #include <sqlite3.h>
 #include <SPI.h>
 #include <FS.h>
-#include <ezTime.h>   // Arduino built in
-String Timestamp, Date, Day, Time, Hour;
-String epoch, dateReceived, dayReceived, timeReceived, hourReceived, rooms, Location,V, S, T, H, P, L;
+#include "time.h"   // Arduino built in
+int Timestamp, Date, Day, Time, Hour;
+String dateReceived, dayReceived, timeReceived, hourReceived, rooms, Location,V, S, T, H, P, L;
 int8_t res;
 String tblPath = "/test1.db/test1";
 String schemPath = "/test1.db/s.test1";
 #define FORMAT_LITTLEFS_IF_FAILED true
 int rc;
 sqlite3 *db1;
+
+
+const char* ntpServer = "pool.ntp.org";
+unsigned long epoch; 
+
+unsigned long getTime() {
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    //Serial.println("Failed to obtain time");
+    return(0);
+  }
+  time(&now);
+  return now;
+}
 
 const char* data = "Data requested below:";
 static int callback(void *data, int argc, char **argv, char **azColName) {
@@ -216,24 +231,10 @@ void setup()
 #endif
 
 #if SQLITE3
-  waitForSync();
-  Serial.println("UTC: " + UTC.dateTime());
-  
-  Timezone America;
-  America.setLocation("America/New_York");
-  //America.setPosix("EST--5EDT,M3.2.0,M11.1.0/2");
-  Serial.println("EST time: " + America.dateTime());
-  Serial.println("Time now is:" + America.dateTime("l ~t~h~e jS ~o~f F Y, g:i A") );
-                                          //Saturday the 25th of August 2018, 2:23 PM
-  
-  //Serial.println(String((now()))); // + buffer); //for milliseconds precision                                      
-  Timestamp = String((now())); // + buffer;     //for milliseconds precision
-  //Serial.println(" " + America.dateTime("mdy") );                                       
-  Date = " " + America.dateTime("mdy");
-  Day  = " " + America.dateTime("l");
-  //Serial.println(" " + America.dateTime("Hi") );                                       
-  Time = " " + America.dateTime("Hi");
-  Hour = " " + America.dateTime("H");
+  configTime(0, 0, ntpServer);
+  epoch = getTime();
+  Serial.print("Epoch Time: ");
+  Serial.println(epoch);
   
   delay(1000);
   if (!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
@@ -423,28 +424,14 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
      Serial.println();
      myClient.publish("device", str);
      
-               Timezone America;
-  America.setLocation("America/New_York");
-  //America.setPosix("EST--5EDT,M3.2.0,M11.1.0/2");
-  Serial.println("EST time: " + America.dateTime());
-  Serial.println("Time now is:" + America.dateTime("l ~t~h~e jS ~o~f F Y, g:i A") );
-                                          //Saturday the 25th of August 2018, 2:23 PM
-  
-  //Serial.println(String((now()))); // + buffer); //for milliseconds precision                                      
-  Timestamp = String((now())); // + buffer;     //for milliseconds precision
-  //Serial.println(" " + America.dateTime("mdy") );                                       
-  Date = " " + America.dateTime("mdy");
-  Day  = " " + America.dateTime("l");
-  //Serial.println(" " + America.dateTime("Hi") );                                       
-  Time = " " + America.dateTime("Hi");
-  Hour = " " + America.dateTime("H");
-   
+     epoch = getTime();
+     
    if (!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)) {
        Serial.println("Failed to mount file system");
        return;
    }
 
-   //Create the db file if it does not exist before trying to open it.
+   // Create the db file if it does not exist before trying to open it.
    if (!LITTLEFS.exists("/test1.db")){
       File file = LITTLEFS.open("/test1.db", FILE_WRITE);   //  /littlefs is automatically added to the front 
       file.close();
@@ -463,17 +450,17 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
 
    String insert = "insert into test1 values (";
   
-               insert += Timestamp;
+               insert += 2567555;
                insert += ", ";
-               insert += Date;
+               insert += 060321;
                insert += ", ";
-               insert += Time;
+               insert += 1735;
                insert += ", ";
-               insert += Hour;
+               insert += 17;
                insert += ", ";
-               insert += device;
+               insert += 26;
                insert += ", ";
-               insert += voltage;
+               insert += 28;
                insert += ", ";
                insert += 30;
                insert += ", ";
