@@ -110,13 +110,13 @@ Most suitable use cases around typical home - Weather Station, Door/Window senso
 
 ## Tested with following MQTT front end GUI client software:
 
-MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US (preffered).
+- MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US (preffered).
             basic javascript automation possible with this App. 
             See https://github.com/ByTE1974/byte1974.github.io/tree/master/mqttdash/js
 
-MQTT Explorer : https://github.com/thomasnordquist/MQTT-Explorer
+- MQTT Explorer : https://github.com/thomasnordquist/MQTT-Explorer
 
-Node-Red :
+- Node-Red :
 It is also possible to run Node-Red on android smartphones or tablets. 
 https://nodered.org/docs/getting-started/android
 
@@ -126,7 +126,7 @@ https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 http://www.of-things.de/battery-life-calculator.php
       
 ## To do:
- - Web interface for ESP32 Gateway. There is a data folder within example folder which is WIP for web interface.
+ - Web interface for ESP32 Gateway. 
 
 ## Special Thanks to creators of following libraries used for this project:
  - https://github.com/happytm/LittleDB
