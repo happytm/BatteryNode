@@ -15,11 +15,11 @@ Whole network can be accesed using any android or ios MQTT front end dashboard c
 
 ## Build it, position towards maximum sun exposure and forget about it. 
 
-No need to charge small 100 mAh LIR2450 coin cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell linked below in hardware section is used.
+No need to charge small 100 mAh LIR2450 coin cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell is used.
 
 ## Very low cost DIY sensors.
 
-Average sensor node could be below $5. All the low cost sensors are listed in hardware section below.
+Average sensor node could be below $5.
 
 ## OTA update using github. 
 
@@ -44,8 +44,7 @@ The device can auto update firmware via Github if specific .bin file is availabl
 - There can be as many as 100 battery powered devices which can send data to one gateway device. 
 ### Important: The apChannel and apSSID variables of all devices on the network needs to be same in order to have proper sensor network.
 - In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
-- Optional : There is a data folder inside example folder. If you need to test simple web interface (work-in-progress) youhave to upload it to SPIFFS area of you ESP32.
-- Web interface shows current and historical graphs of sensor data from whole network, allows to issue commands (via websockets) to any slave device on network and allows to   manage or edit files on gateway SPIFFS area.
+- Web interface shows current and historical graphs of sensor data from whole network, allows to issue commands (via websockets) to any slave device on network.
 
 ### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in remote code)
 
