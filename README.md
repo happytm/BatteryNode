@@ -6,7 +6,7 @@
 
 ## Very low power consumption.
 
-Proberequest protocol is used for data transfer to conserve power.
+This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
 ## No local linux server or cloud service required.
 
