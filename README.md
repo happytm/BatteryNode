@@ -135,5 +135,4 @@ http://www.of-things.de/battery-life-calculator.php
  - https://github.com/hsaturn/TinyMqtt
  - https://github.com/gilmaimon/ArduinoWebsockets
  - https://github.com/leeoniya/uPlot   
- - https://github.com/ropg/ezTime
  - https://github.com/me-no-dev/ESPAsyncWebServer
