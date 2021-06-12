@@ -8,7 +8,7 @@
 #include <Arduino.h>
 #include "LITTLEFS.h"
 #include "time.h"   // Arduino built in
-String Timestamp, Date, Day, Time, Hour;
+//String Timestamp, Date, Day, Time, Hour;
 //String dateReceived, dayReceived, timeReceived, hourReceived, rooms, V, S, T, H, P, L;
 #define FORMAT_LITTLEFS_IF_FAILED true
   
@@ -49,6 +49,7 @@ char s [70];
 String deviceData;
 String sensorData;
 String graphData;
+String graphDataToWS;
 int device;
 int voltage;
 int rssi;
@@ -125,7 +126,7 @@ unsigned long getTime() {
   time_t now;
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
-    //Serial.println("Failed to obtain time");
+    Serial.println("Failed to obtain time");
     return(0);
   }
   time(&now);
@@ -212,8 +213,7 @@ void loop() {
       Serial.println("Accepting a new client!");
       WebsocketsClient client = WSserver.accept(); // Accept the connection
       client.onMessage(onMessage);                 // Register callback
-      //String graphData = "[1623287518,56,-28,289,58,72,256,77],1623287668,26,-36,302,52,78,266,66],1623287788,16,-32,256,45,84,286,72],1623287899,6,-24,288,42,86,254,66]";
-      //client.send(graphData);
+      client.send(graphDataToWS);
       allClients.push_back(client); // Store it for later use
      }
       
@@ -323,10 +323,15 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
      #if MQTT
      myClient.publish("device", str);
      #endif
+     
+     
      epoch = getTime();
+     Serial.print("Epoch Time: ");
+     Serial.println(epoch);
+     
      graphData = epoch;
      graphData += ",";
-     graphData = device;
+     graphData += device;
      graphData += ",";
      graphData += voltage;
      graphData += ",";
@@ -353,6 +358,11 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
      Serial.write(f.read());
      }
      f.close();
+     
+     graphDataToWS = graphDataToWS + "[" + graphData + "],";
+     if ( graphDataToWS.length() > 1000) {
+      graphDataToWS.remove(0, 34);
+     }
    }
   }
  }
