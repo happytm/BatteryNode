@@ -1,4 +1,5 @@
-// 140ms uptime in duplex mode & 80ms in one way mode.
+// Average 140 milliseconds uptime in two way mode.
+
 ADC_MODE(ADC_VCC); //vcc read-mode
 
 #define DUPLEX            true    // true if two way communication required with controller (around 140 milliseconds of uptime as opposed to 80 milliseonds if false).
