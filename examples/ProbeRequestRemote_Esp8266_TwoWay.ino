@@ -1,4 +1,4 @@
-// Average 140 milliseconds uptime in two way mode.
+// Average 140 milliseconds uptime in two way mode & 77 milliseconds in one way mode.
 
 ADC_MODE(ADC_VCC); //vcc read-mode
 
