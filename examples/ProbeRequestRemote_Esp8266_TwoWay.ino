@@ -1,5 +1,4 @@
-// Average 140 milliseconds uptime in two way mode & 77 milliseconds in one way mode.
-
+// 140ms uptime in duplex mode & 80ms in one way mode.
 ADC_MODE(ADC_VCC); //vcc read-mode
 
 #define DUPLEX            true    // true if two way communication required with controller (around 140 milliseconds of uptime as opposed to 80 milliseonds if false).
@@ -10,7 +9,7 @@ ADC_MODE(ADC_VCC); //vcc read-mode
 
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
-#define binFile "https://raw.githubusercontent.com/happytm/BatteryNode/master/sender.ino.d1_mini.bin"
+#define binFile "https://raw.githubusercontent.com/happytm/BatteryNode/master/sender.bin"
 #define BOOT_AFTER_UPDATE    false
 HTTPClient http;
 
@@ -21,37 +20,16 @@ const char* password = "";
 // use any of following for devie ID ending with 6.
 // 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
 
-int device = 6;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+int device = 26;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
 int battery = 6;         // Battery voltage sensor Type.
-int apChannel = 7;       // WiFi Channel for this device.It must be same as gateway apChannel.
-char* apSSID = "ESP";   // This name has to be same as main controller's ssid.
+int apChannel = 7;       // WiFi Channel for this device.
+char* gateway = "ESP";   // This name has to be same as main controller's ssid.
 int sleepTime = 1;       // Sleep time in minutes.
 int upTime;              // Device uptime in milliseconds.
-int deviceMode = 0;      // 0 for regular, 1 for autupdate and 2 for AutoConnect.
-int deviceIP = device;   // last part of this device's fixed IP
-
-/*
-  int sensorType1 = 36;// Predefined sensor type table is below:
-  int sensorType2 = 06;// Predefined sensor type table is below:
-  int sensorType3 = 16;// volatage = 6, temperature = 16, humidity= 26,
-  int sensorType4 = 26;// pressure= 36, light= 46, OpenClose = 56, level = 66,
-  int sensorType5 = 36;// presence = 76, motion = 86, rain = 96 etc.
-  int sensorType6 = 46;// volatage = 6, temperature = 16, humidity= 26,
-*/
-
-// Sensor types to be sent to Gateway
-
-//uint8_t sensorType[6] = {device, battery, 46, 36, 26, 16}; // Change last 4 bytes according to sensor type used.
+int deviceMode;
 
 // Sensor values to be sent to Gateway
-
 uint8_t sensorData[6];  // = {device, voltage, temperature, humidity, pressure, light};
-
-
-// Status values to be sent to Gateway
-
-uint8_t deviceStatus[6];  // {device, deviceMode, deviceIP, wifiChannel, sleepTime, random(255)}
-
 
 int receivedDevice;
 int receivedCommand;  // digitalwrite, analogwrite, digitalRead, analogRead, neopixel, pin setup etc.
@@ -71,15 +49,10 @@ void setup() {
 
   WiFi.scanDelete();  //remove previous scan data from memory
   Serial.begin(115200);
-  /*
-  wifi_set_macaddr(STATION_IF, sensorType);
-  probeRequest();
-  Serial.print("Sensor Types sent to controller: ");
-  Serial.println(WiFi.macAddress());
-  */
+
   sensorValues();
   probeRequest();
-  Serial.print("Sensors values sent to controller: ");
+  Serial.print("Sensors values data sent to controller: ");
   Serial.println(WiFi.macAddress());
 
 
@@ -96,10 +69,6 @@ if (receivedDevice == device)
       Serial.print("Command received from Gateway: ");
       Serial.println(&WiFi.BSSIDstr(0)[0]);
       Serial.println();
-      //Serial.print("This Device MAC ID is: ");
-      //Serial.println(WiFi.macAddress());
-      //Serial.print("This Device Name is: ");
-      //Serial.println(WiFi.hostname());
       Serial.print("Gateway Name is: ");
       Serial.println(WiFi.SSID(0));
       Serial.print("Gateway Channel is: ");
@@ -127,7 +96,6 @@ if (receivedDevice == device)
          deviceMode = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for AutoConnect).
        }
 
-
  }  else       //if receivedCommand is between 0 & 31.
  {
     
@@ -140,72 +108,57 @@ if (receivedDevice == device)
  }
  
 #endif
-
- delay(1);
-
-  }
-}      // Setup ends here
+delay(1);
+ }
+}  // Setup ends here
 
 //========================Main Loop================================
 
 void loop() {
 
 #if DUPLEX
-
   gpioControl();
 
   if (receivedDevice == device && receivedCommand == 99)  
   {
     otaControl();
   }
-
 #endif
 
   upTime = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
-  
-  //sendStatus();
   
   Serial.print("Total time I spent before going to sleep: ");
   Serial.println(upTime);
   Serial.print("I will wakeup in: ");
   Serial.print(sleepTime);
   Serial.println(" Minutes");
-  delay(15000); ESP.restart();   // For testing only.
-  //ESP.deepSleepInstant(sleepTime * 60000000, WAKE_NO_RFCAL); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
-
-}     // end of main loop.
+  delay(sleepTime * 60000); 
+  ESP.restart();   // For testing only.
+  //ESP.deepSleepInstant(sleepTime * 60000000, WAKE_NO_RFCAL);
+}     
 //=========================Main Loop ends==========================
 
 
 //=========================Probe request function starts===========
 
-
 void probeRequest()  
 {
-
-  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) apSSID);
-
+  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
   yield();
-
   Serial.println();
   WiFi.scanDelete();
-
 }
-
 //=========================Probe request function ends===========
-
 
 void sensorValues() 
 {
-
   float voltage = ESP.getVcc() / (float)1023 * 50; // * (float)1.07;
-
   sensorData[0] = device;
   sensorData[1] = voltage;
-  sensorData[2] = random(100);         //temperature;
-  sensorData[3] = random(30,100);        //humidity;
-  sensorData[4] = random(1024) / 4;   //pressure;
-  sensorData[5] = random(100);        //light;
+  sensorData[2] = random(45,55);        //temperature;
+  sensorData[3] = random(40,100);     //humidity;
+  sensorData[4] = random(850,1024) / 4;   //pressure;
+  sensorData[5] = random(30,100);        //light;
   
   wifi_set_macaddr(STATION_IF, sensorData);
   
@@ -214,14 +167,12 @@ void sensorValues()
 }
 
 #if DUPLEX
-void gpioControl()   {
+  void gpioControl()   {
 
-  if (receivedDevice = device)   {
-
+   if (receivedDevice = device)   {
     if ((pinNumber >= 1 && pinNumber <= 5) || (pinNumber >= 12 && pinNumber <= 16))   {
       if (receivedCommand == 1)    {
-
-        if (value1 == 1)
+       if (value1 == 1)
         {
           digitalWrite(pinNumber, HIGH);
           Serial.print("digitalWrite");
@@ -331,32 +282,8 @@ void otaControl()
       default:
         Serial.printf("Undefined HTTP_UPDATE function: "); Serial.println(ret);
     }
-
-  } else if (deviceMode == 2)
-
-  {
-
-
+   } else if (deviceMode == 2){
   } else {
-
-
-  }
+ }
 }
-
 #endif
-
-void sendStatus() {
-
-  deviceStatus[0] = device;
-  deviceStatus[1] = deviceMode;     // 0 for regular, 1 for autupdate and 2 for AutoConnect.
-  deviceStatus[2] = deviceIP;       // Last part of this device's fixed IP (same as device ID).
-  deviceStatus[3] = apChannel;      // WiFi Channel for this device.
-  deviceStatus[4] = sleepTime;      // Sleep time in minutes for this device.
-  deviceStatus[5] = upTime;         // Device upTime in milliseconds.
-  
-  wifi_set_macaddr(STATION_IF, deviceStatus);
-  probeRequest();
-  
-  Serial.print("Device status values sent to Gateway: ");
-  Serial.println(WiFi.macAddress());
-}
