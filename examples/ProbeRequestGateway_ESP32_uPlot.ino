@@ -1,5 +1,5 @@
 // convert your HTML/CSS/JAVASCRIPT TO HEX here: https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
-#define PROBEREQUESTS       true  // Requires slave device(s) on ESP8266.
+#define PROBEREQUESTS       true  // Establish low power sensor network(more power efficient than ESPNow protocol). Requires slave device(s) on ESP8266.
 #define MQTT                true  // MQTT broker if needed.
 #define ASYNCWEBSERVER      true  // Publishes web interface
 #define WEBSOCKETS          true  // Communicate with Websockets clients
