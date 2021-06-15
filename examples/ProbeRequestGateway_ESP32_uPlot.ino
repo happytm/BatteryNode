@@ -1,5 +1,4 @@
 // convert your HTML/CSS/JAVASCRIPT TO HEX here: https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
-
 #define PROBEREQUESTS       true  // Requires slave device(s) on ESP8266.
 #define MQTT                true  // MQTT broker if needed.
 #define ASYNCWEBSERVER      true  // Publishes web interface
@@ -10,7 +9,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include "time.h"
-
 
 #define MYFS LITTLEFS
 #define FORMAT_LITTLEFS_IF_FAILED true
@@ -26,33 +24,6 @@ const char* http_username = "admin";  // Web interface Login.
 const char* http_password = "admin";  // Web interface password.
 
 String dataFile = "/data.json";  // File to store sensor data.
-
-char str [256];
-char s [70];
-String deviceData;
-String sensorData;
-String graphData;
-String graphDataToWS;
-int ProbeReceived = 0;
-int device;
-float voltage;
-int rssi;
-uint8_t mac[6];
-int sensorValues[4];
-int sensorTypes[4];
-int deviceStatus[4];
-
-const char* ntpServer = "pool.ntp.org";
-unsigned long epoch; 
-
-String Epoch = String(epoch);       
-String Loc = String(device); 
-String V = String(voltage, 2); 
-String S = String(rssi); 
-String T = String(sensorValues[0]); 
-String H = String(sensorValues[1]); 
-String P = String(sensorValues[2]); 
-String L = String(sensorValues[3]); 
 
 int Livingroom[4] = {16,26,36,46};
 int Kitchen[4] =    {46,36,26,16};
@@ -72,6 +43,27 @@ int Office[4] =     {16,26,36,36};
 int Tank[4] =       {16,26,36,36};
 int Solar[4] =      {16,26,36,36};
 
+
+//==================User configuration not required below this line ================================================
+
+char str [256], s [70];
+String deviceData, sensorData, graphData, graphDataToWS;
+
+int ProbeReceived, device, rssi, sensorValues[4], sensorTypes[4], deviceStatus[4];
+float voltage;
+uint8_t mac[6];
+
+const char* ntpServer = "pool.ntp.org";
+unsigned long epoch; 
+
+String Epoch = String(epoch);       
+String Loc = String(device); 
+String V = String(voltage, 2); 
+String S = String(rssi); 
+String T = String(sensorValues[0]); 
+String H = String(sensorValues[1]); 
+String P = String(sensorValues[2]); 
+String L = String(sensorValues[3]); 
 
 #if PROBEREQUESTS
 #include <esp_wifi.h>
@@ -99,17 +91,6 @@ const uint8_t index_html_gz[] = {
 };
 AsyncWebServer webserver(80);
 #endif
-
-unsigned long getTime() {
-  time_t now;
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)) {
-    //Serial.println("Failed to obtain time");
-    return(0);
-  }
-  time(&now);
-  return now;
-}
  
 #if PROBEREQUESTS
 #include <esp_wifi.h>
@@ -120,8 +101,6 @@ AsyncWebSocket ws("/ws");
 AsyncEventSource events("/events");
 
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
-  
-  //processData();
   
   if(type == WS_EVT_CONNECT){
     Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
@@ -200,19 +179,11 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 #if MQTT
 void receivedMessage(const MqttClient* source, const Topic& topic, const char* payload, size_t length)
 {
-  Serial.print("Received message on topic '"); 
-  Serial.print(receivedTopic.c_str());
-  Serial.print("' with payload = ");
-  Serial.println(payload);  
-  //processData();
+  Serial.print("Received message on topic '"); Serial.print(receivedTopic.c_str());Serial.print("' with payload = ");Serial.println(payload);  
+  
   if (receivedTopic == "command")
   {
-    mac[0] = atoi(&payload[0]);
-    mac[1] = atoi(&payload[3]);
-    mac[2] = atoi(&payload[6]);
-    mac[3] = atoi(&payload[9]);
-    mac[4] = atoi(&payload[12]);
-    mac[5] = atoi(&payload[15]);
+    mac[0] = atoi(&payload[0]);mac[1] = atoi(&payload[3]);mac[2] = atoi(&payload[6]);mac[3] = atoi(&payload[9]);mac[4] = atoi(&payload[12]);mac[5] = atoi(&payload[15]);
     
   }
 }
@@ -223,6 +194,17 @@ void sendCommand()  {
   Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");
  }
 #endif
+
+unsigned long getTime() {
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    //Serial.println("Failed to obtain time");
+    return(0);
+  }
+  time(&now);
+  return now;
+}
 
 void setup(){
   Serial.begin(115200);
@@ -239,13 +221,11 @@ void setup(){
     WiFi.begin(ssid, password);
   }
   
-  Serial.print(F("*CONNECTED* IP: "));
-  Serial.println(WiFi.localIP());
+  Serial.print(F("*CONNECTED* IP: "));Serial.println(WiFi.localIP());
  
   configTime(0, 0, ntpServer);
   epoch = getTime();
-  Serial.print("Epoch Time: ");
-  Serial.println(epoch);
+  Serial.print("Epoch Time: ");Serial.println(epoch);
   delay(500);
   Epoch = String(epoch);
   
@@ -266,14 +246,9 @@ void setup(){
   });
   ArduinoOTA.setHostname(apSSID);
   ArduinoOTA.begin();
-
   MDNS.addService("http","tcp",80);
-
-
   LITTLEFS.begin();
-
   ws.onEvent(onWsEvent);
-  
   
 #if ASYNCWEBSERVER
   webserver.addHandler(&ws);
@@ -281,25 +256,17 @@ void setup(){
     client->send("hello!",NULL,millis(),1000);
   });
   webserver.addHandler(&events);
-
-
   webserver.addHandler(new SPIFFSEditor(MYFS, http_username,http_password));
-
-  
   webserver.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", String(ESP.getFreeHeap()));
   });
-
-  
   webserver.on("/", HTTP_GET, [](AsyncWebServerRequest * request) 
     {
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, sizeof(index_html_gz));
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
     });
-    
   webserver.serveStatic("/", MYFS, "/").setDefaultFile("index.html");
-
   webserver.onNotFound([](AsyncWebServerRequest *request){
     Serial.printf("NOT_FOUND: ");
     if(request->method() == HTTP_GET)
@@ -346,7 +313,6 @@ void setup(){
 
     request->send(404);
   });
-  
   webserver.onFileUpload([](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final){
     if(!index)
       Serial.printf("UploadStart: %s\n", filename.c_str());
@@ -369,8 +335,7 @@ void setup(){
 
 #if MQTT
     broker.begin();
-
-  // ============= Client Subscribe ================
+    // ============= Client Subscribe ================
     myClient.setCallback(receivedMessage);
     myClient.subscribe(receivedTopic);
     myClient.subscribe(sentTopic);
@@ -378,39 +343,14 @@ void setup(){
 
 #if PROBEREQUESTS
     WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
-//    Serial << "Waiting for probe requests ... " << endl;
+    Serial.print("Waiting for probe requests ... ");
 #endif
 
 #if FIRSTTIME
   File f = LITTLEFS.open(dataFile, "w");
   f.print("[8,\"Epoch\",\"Location\",\"V\",\"S\",\"T\",\"H\",\"P\",\"L\"]"); // See http://davidgiard.com/2018/11/02/EmbeddingQuotesWithinACString.aspx
   f.close();
-  Serial.println("Wrote first line to file: [8,\"Epoch\",\"Location\",\"V\",\"S\",\"T\",\"H\",\"P\",\"L\"]");
-  Serial.println();
-  
-  // list LITTLEFS contents
-   File root = LITTLEFS.open("/");
-   if (!root) {
-       Serial.println("- failed to open directory");
-       return;
-   }
-   if (!root.isDirectory()) {
-       Serial.println(" - not a directory");
-       return;
-   }
-   File file = root.openNextFile();
-   while (file) {
-       if (file.isDirectory()) {
-           Serial.print("  DIR : ");
-           Serial.println(file.name());
-       } else {
-           Serial.print("  FILE: ");
-           Serial.print(file.name());
-           Serial.print("\tSIZE: ");
-           Serial.println(file.size());
-       }
-       file = root.openNextFile();
-   }
+  Serial.println("Wrote first line to file: [8,\"Epoch\",\"Location\",\"V\",\"S\",\"T\",\"H\",\"P\",\"L\"]");Serial.println();
 #endif
 
 } // End of setup
@@ -425,10 +365,8 @@ void loop(){
 }  // End of loop
 
 #if PROBEREQUESTS
-
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
 {
-  
     Serial.print("Probe Received :  ");
     for (int i = 0; i < 6; i++) {
     Serial.printf("%02X", info.ap_probereqrecved.mac[i]);
@@ -494,13 +432,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");
       Serial.println(str);
       Serial.println();
-      /*
-      sensorData = (",[" + Date + "," + Time + "," + String(info.ap_probereqrecved.mac[0], DEC) + "," + String(info.ap_probereqrecved.mac[1], DEC) + "," + String(info.ap_probereqrecved.mac[2], DEC) + "," + String(info.ap_probereqrecved.mac[3], DEC) + "," + String(info.ap_probereqrecved.mac[4], DEC) + "," + String(info.ap_probereqrecved.mac[5], DEC) + "]");
-      Serial.println();
-      Serial.print("Received Sensor data: "); 
-      Serial.println(sensorData);
-      Serial.println();
-      */
+      
 #if MQTT
       //myClient.publish("sensor", sensorData);
       myClient.publish("sensor", str);
@@ -508,33 +440,15 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
                    
 #if APPENDTOLITTLEFS
      epoch = getTime();
-     Serial.print("Epoch Time: ");
-     Serial.println(epoch); 
+     Serial.print("Epoch Time: ");Serial.println(epoch); 
      
-     graphData = ",";
-     graphData += epoch;
-     graphData += ",";
-     graphData += device;
-     graphData += ",";
-     graphData += voltage;
-     graphData += ",";
-     graphData += rssi;
-     graphData += ",";
-     graphData += sensorValues[0];
-     graphData += ",";
-     graphData += sensorValues[1];
-     graphData += ",";
-     graphData += sensorValues[2];
-     graphData += ",";
-     graphData += sensorValues[3];
-     graphData += "]";
+     graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorValues[3];graphData += "]";
      
      File f = LITTLEFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
      Serial.print("File size: "); Serial.println(f.size());
      f.seek((f.size()-1), SeekSet);
      Serial.print("Position: "); Serial.println(f.position());
-     f.print(graphData);
-     Serial.println();
+     f.print(graphData);Serial.println();
      Serial.print("Appended to file: "); Serial.println(graphData);
      Serial.print("File size: "); Serial.println(f.size());
      f.close(); 
@@ -570,14 +484,8 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
                            
      Serial.println();
      Serial.println("Following ## Device Status ## receiced from remote device & published via MQTT: ");
-     Serial.println(str);
-     Serial.println();
-     /*
-     deviceData = (",[" + Date + "," + Time + ","  + String(info.ap_probereqrecved.mac[0], DEC) + "," + String(info.ap_probereqrecved.mac[1], DEC) + "," + String(info.ap_probereqrecved.mac[2], DEC) + "," + String(info.ap_probereqrecved.mac[3], DEC) + "," + String(info.ap_probereqrecved.mac[4], DEC) + "," + String(info.ap_probereqrecved.mac[5], DEC) + "]");
-     Serial.print("Received Status data : "); 
-     Serial.println(deviceData);
-     Serial.println();
-     */
+     Serial.println(str);Serial.println();
+     
 #if MQTT                      
      //myClient.publish("Device", deviceData);
      myClient.publish("Device", str);
@@ -588,85 +496,18 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
 }
 #endif     
 
-
-void processData()
-{
-   device = random(25,28);
-   voltage = random (260, 330);
-   rssi = random (30, 40);
-   int temperature = random (1,110);
-   int humidity = random (1,100);
-   int pressure = random (1,300);
-   int light = random (1,100);
-             
-#if APPENDTOLITTLEFS
-     epoch = getTime();
-     Serial.print("Epoch Time: ");
-     Serial.println(epoch); 
-     graphData = ",";
-     graphData += epoch;
-     graphData += ",";
-     graphData += device;
-     graphData += ",";
-     graphData += voltage;
-     graphData += ",";
-     graphData += rssi;
-     graphData += ",";
-     graphData += temperature;
-     graphData += ",";
-     graphData += humidity;
-     graphData += ",";
-     graphData += pressure;
-     graphData += ",";
-     graphData += light;
-     graphData += "]";
-     
-     File f = LITTLEFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
-     Serial.print("File size: "); Serial.println(f.size());
-     f.seek((f.size()-1), SeekSet);
-     Serial.print("Position: "); Serial.println(f.position());
-     f.print(graphData);
-     Serial.println();
-     Serial.print("Appended to file: "); Serial.println(graphData);
-     Serial.print("File size: "); Serial.println(f.size());
-     f.close(); 
-
-     f = LITTLEFS.open(dataFile, "r");
-     Serial.print("Reading from '");
-     Serial.print(dataFile);
-     Serial.println("' file....");
-     while(f.available()){
-     Serial.write(f.read());
-     }
-     f.close();
-     Serial.println();
-#endif
-     
-     //sendGraphData();
- 
-     myClient.publish("sensor", sensorData);
-}
-
-void sendGraphData() 
-     {
+void sendGraphData() {
       
-      Epoch += "," + String(epoch);
-      Loc += "," + String(device);
-      V += "," + String(voltage, 2);
-      S += "," + String(rssi);
-      T += "," + String(sensorValues[0]);
-      H += "," + String(sensorValues[1]);
-      P += "," + String(sensorValues[2]);
-      L += "," + String(sensorValues[3]);
+     Epoch += "," + String(epoch);Loc += "," + String(device);V += "," + String(voltage, 2);S += "," + String(rssi);T += "," + String(sensorValues[0]);H += "," + String(sensorValues[1]);P += "," + String(sensorValues[2]);L += "," + String(sensorValues[3]);
       
      graphDataToWS = "[" + Epoch + "]," + "[" + Loc + "]," + "[" + V + "]," + "[" + S + "]," + "[" + T + "]," + "[" + H + "]," + "[" + P + "]," + "[" + L + "]";
      Serial.println();
-     Serial.print("Graph data size: "); Serial.println(graphDataToWS.length());
-     Serial.println("Graph Data: "); 
-     Serial.println(graphDataToWS);
-     
-     if (graphDataToWS.length() > 1000) {
-     graphDataToWS = "";
-     //graphDataToWS.remove(0, 34);
+     Serial.print("Graph data size: ");Serial.println(graphDataToWS.length());
+     Serial.println("Graph Data: ");Serial.println(graphDataToWS);
+      if (graphDataToWS.length() > 1000) {
+      Epoch = String(epoch);
+      Loc = "";V = "";S = "";T = "";H = "";P = "";L = "";
+     //graphDataToWS = "";
+     //graphDataToWS.remove(0, 34); // Each record is approximately 34 character long.
     }
  }
