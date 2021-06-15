@@ -129,11 +129,9 @@ http://www.of-things.de/battery-life-calculator.php
  - Web interface for ESP32 Gateway. 
 
 ## Special Thanks to creators of following libraries used for this project:
- - https://github.com/happytm/LittleDB
- - https://github.com/siara-cc/esp32_arduino_sqlite3_lib
+ 
  - https://github.com/lorol/LITTLEFS 
  - https://github.com/martin-ger/uMQTTBroker
  - https://github.com/hsaturn/TinyMqtt
- - https://github.com/gilmaimon/ArduinoWebsockets
  - https://github.com/leeoniya/uPlot   
  - https://github.com/me-no-dev/ESPAsyncWebServer
