@@ -47,23 +47,16 @@ int Solar[4] =      {16,26,36,36};
 //==================User configuration not required below this line ================================================
 
 char str [256], s [70];
-String deviceData, sensorData, graphData, graphDataToWS;
+String graphData, graphDataToWS;
 
-int ProbeReceived, device, rssi, sensorValues[4], sensorTypes[4], deviceStatus[4];
+int device, rssi, sensorValues[4], sensorTypes[4], deviceStatus[4];
 float voltage;
 uint8_t mac[6];
 
 const char* ntpServer = "pool.ntp.org";
 unsigned long epoch; 
 
-String Epoch = String(epoch);       
-String Loc = String(device); 
-String V = String(voltage, 2); 
-String S = String(rssi); 
-String T = String(sensorValues[0]); 
-String H = String(sensorValues[1]); 
-String P = String(sensorValues[2]); 
-String L = String(sensorValues[3]); 
+String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
 
 #if PROBEREQUESTS
 #include <esp_wifi.h>
@@ -358,9 +351,6 @@ void setup(){
 void loop(){
   ArduinoOTA.handle();
   ws.cleanupClients();
-  if (ProbeReceived == 1) {
-  sendGraphData();
-  ProbeReceived = 0;
   }
 }  // End of loop
 
@@ -434,7 +424,6 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       Serial.println();
       
 #if MQTT
-      //myClient.publish("sensor", sensorData);
       myClient.publish("sensor", str);
 #endif
                    
@@ -463,43 +452,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
      f.close();
      */
      Serial.println();
-#endif
-      
-      
-      if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
-         //myClient.publish("Warning/Battery Low", location);
-       }
-     }
-
-   if (info.ap_probereqrecved.mac[3] == apChannel) {
-     
-     sprintf (str, "{");
-     sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);
-     sprintf (s, ",\"%s\":\"%i\"", "RSSI", info.ap_probereqrecved.rssi); strcat (str, s);
-     sprintf (s, ",\"%s\":\"%i\"", "MODE", deviceStatus[0]); strcat (str, s);
-     sprintf (s, ",\"%s\":\"%i\"", "CHANNEL", deviceStatus[1]); strcat (str, s);
-     sprintf (s, ",\"%s\":\"%i\"", "IP", deviceStatus[2]); strcat (str, s);
-     sprintf (s, ",\"%s\":\"%i\"", "Sleeptime", deviceStatus[3]); strcat (str, s);
-     sprintf (s, "}"); strcat (str, s);
-                           
-     Serial.println();
-     Serial.println("Following ## Device Status ## receiced from remote device & published via MQTT: ");
-     Serial.println(str);Serial.println();
-     
-#if MQTT                      
-     //myClient.publish("Device", deviceData);
-     myClient.publish("Device", str);
-     ProbeReceived = 1;
-#endif      
-    }
-  }
-}
-#endif     
-
-void sendGraphData() {
-      
      Epoch += "," + String(epoch);Loc += "," + String(device);V += "," + String(voltage, 2);S += "," + String(rssi);T += "," + String(sensorValues[0]);H += "," + String(sensorValues[1]);P += "," + String(sensorValues[2]);L += "," + String(sensorValues[3]);
-      
      graphDataToWS = "[" + Epoch + "]," + "[" + Loc + "]," + "[" + V + "]," + "[" + S + "]," + "[" + T + "]," + "[" + H + "]," + "[" + P + "]," + "[" + L + "]";
      Serial.println();
      Serial.print("Graph data size: ");Serial.println(graphDataToWS.length());
@@ -510,4 +463,12 @@ void sendGraphData() {
      //graphDataToWS = "";
      //graphDataToWS.remove(0, 34); // Each record is approximately 34 character long.
     }
- }
+#endif
+      
+      if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
+         myClient.publish("Warning/Battery Low", location);
+       }
+     }
+  }
+}
+#endif
