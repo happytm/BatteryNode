@@ -1,4 +1,4 @@
-// Average 77 milliseconds uptime in one way mode.
+// Average 60 milliseconds uptime in one way mode (with 160 mhz cpu & core 2.51).
 
 ADC_MODE(ADC_VCC); //vcc read-mode
 
