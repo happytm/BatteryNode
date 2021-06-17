@@ -334,7 +334,10 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
                if (device == 146) { for (int i = 0; i < 4; i++) sensorTypes[i] = Office[i];}
                if (device == 156) { for (int i = 0; i < 4; i++) sensorTypes[i] = Tank[i];} 
                if (device == 166) { for (int i = 0; i < 4; i++) sensorTypes[i] = Solar[i];}
-               
+               deviceStatus[0] = info.ap_probereqrecved.mac[2];
+               deviceStatus[1] = info.ap_probereqrecved.mac[3];
+               deviceStatus[2] = info.ap_probereqrecved.mac[4];
+               deviceStatus[3] = info.ap_probereqrecved.mac[5];
       } else {
 
       device = info.ap_probereqrecved.mac[0];
