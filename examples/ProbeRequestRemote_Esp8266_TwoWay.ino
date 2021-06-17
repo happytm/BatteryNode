@@ -1,12 +1,7 @@
-// 140ms uptime in duplex mode & 80ms in one way mode.
+// 120ms uptime (cpu frequency 160 mhz and core 2.51).
 ADC_MODE(ADC_VCC); //vcc read-mode
 
-#define DUPLEX            true    // true if two way communication required with controller (around 140 milliseconds of uptime as opposed to 80 milliseonds if false).
-
 #include <ESP8266WiFi.h>
-
-#if DUPLEX
-
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 #define binFile "https://raw.githubusercontent.com/happytm/BatteryNode/master/sender.bin"
@@ -15,7 +10,6 @@ HTTPClient http;
 
 const char* ssid = "";
 const char* password = "";
-#endif
 
 // use any of following for devie ID ending with 6.
 // 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
@@ -46,18 +40,15 @@ int warnVolt = 130;   // Start warning when battery level goes below 2.60 volts 
 //============Do not need user configuration from here on============================
 
 void setup() {
-
-  WiFi.scanDelete();  //remove previous scan data from memory
-  Serial.begin(115200);
-
+  //WiFi.scanDelete();  //remove previous scan data from memory
   sensorValues();
-  probeRequest();
+  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
+
+  Serial.begin(115200);
   Serial.print("Sensors values data sent to controller: ");
   Serial.println(WiFi.macAddress());
 
-
-#if DUPLEX
-  delay(60);  // Minimum 60 milliseonds delay required to receive message from controller reliably.
+  delay(60);  // Minimum 60 milliseonds delay required to receive message from gateway reliably.
 
   receivedDevice = WiFi.BSSID(0)[0];
   receivedCommand = WiFi.BSSID(0)[1];
@@ -107,23 +98,20 @@ if (receivedDevice == device)
     Serial.print("Time received from Gateway is: "); Serial.print(Date[0]); Serial.print("/"); Serial.print(Date[1]); Serial.print("/"); Serial.print(Date[2]); Serial.print(" "); Serial.print(Time[0]); Serial.print(":"); Serial.print(Time[1]);
  }
  
-#endif
-delay(1);
- }
+    delay(1);
+  }
 }  // Setup ends here
 
 //========================Main Loop================================
 
 void loop() {
 
-#if DUPLEX
   gpioControl();
 
   if (receivedDevice == device && receivedCommand == 99)  
   {
     otaControl();
   }
-#endif
 
   upTime = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
   
@@ -132,23 +120,11 @@ void loop() {
   Serial.print("I will wakeup in: ");
   Serial.print(sleepTime);
   Serial.println(" Minutes");
-  delay(sleepTime * 60000); 
+  delay(sleepTime * 6000); // 60000 for 1 minute
   ESP.restart();   // For testing only.
   //ESP.deepSleepInstant(sleepTime * 60000000, WAKE_NO_RFCAL);
 }     
 //=========================Main Loop ends==========================
-
-
-//=========================Probe request function starts===========
-
-void probeRequest()  
-{
-  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
-  yield();
-  Serial.println();
-  WiFi.scanDelete();
-}
-//=========================Probe request function ends===========
 
 void sensorValues() 
 {
@@ -166,10 +142,8 @@ void sensorValues()
   //Values received from sensors replaces 4 random values of sensorData array.
 }
 
-#if DUPLEX
-  void gpioControl()   {
-
-   if (receivedDevice = device)   {
+void gpioControl()   {
+ if (receivedDevice = device)   {
     if ((pinNumber >= 1 && pinNumber <= 5) || (pinNumber >= 12 && pinNumber <= 16))   {
       if (receivedCommand == 1)    {
        if (value1 == 1)
@@ -286,4 +260,3 @@ void otaControl()
   } else {
  }
 }
-#endif
