@@ -18,12 +18,10 @@ uint8_t sensorData[6];  // Sensor values to be sent to Gateway = {device, voltag
 //============Do not need user configuration from here on============================
 
 void setup() {
-
   //WiFi.scanDelete();  //remove previous scan data from memory
-  Serial.begin(115200);
-
   sensorValues();
-  probeRequest();
+  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
+  Serial.begin(115200);
   Serial.print("Sensors values data sent to controller: ");
   Serial.println(WiFi.macAddress());
 
@@ -43,22 +41,6 @@ void loop() {
   //ESP.deepSleepInstant(sleepTime * 60000000, WAKE_NO_RFCAL); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
 }
 //=========================Main Loop ends==========================
-
-
-//=========================Probe request function starts===========
-
-void probeRequest()  
-{
-  int n = WiFi.scanNetworks(true, false, apChannel, (uint8*) gateway);
-
-  //yield();
-
-  Serial.println();
-  //WiFi.scanDelete();
-
-}
-
-//=========================Probe request function ends===========
 
 void sensorValues() 
 {
