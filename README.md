@@ -131,7 +131,6 @@ http://www.of-things.de/battery-life-calculator.php
 ## Special Thanks to creators of following libraries used for this project:
  
  - https://github.com/lorol/LITTLEFS 
- - https://github.com/martin-ger/uMQTTBroker
  - https://github.com/hsaturn/TinyMqtt
  - https://github.com/leeoniya/uPlot   
  - https://github.com/me-no-dev/ESPAsyncWebServer
