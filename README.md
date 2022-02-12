@@ -10,7 +10,7 @@ This is the main goal of this project. Proberequest protocol is used for data tr
 
 ## No local linux server or cloud service required.
 
-Whole network can be accesed using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement. 
+Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also dashbord to monitor sensor data from whole network using uPlot graphing library and built in webserver and websocket server. Sensor data of whole network is stored on gateway device using LittleFS file system.
 
 
 ## Build it, position towards maximum sun exposure and forget about it. 
@@ -23,7 +23,7 @@ Average sensor node could be below $5.
 
 ## OTA update using github. 
 
-Simply placing .bin file to github and publishing MQTT command from MQTT client app all sensor devices on the network can be updated with latest firmware. Simply publish "command/devicenumber/09/01" from any MQTT client. 
+Simply placing .bin file to github and publishing MQTT command from MQTT client app all sensor devices on the network can be updated with latest firmware (ESP8266 slave device in two way mode only for now). 
 
 # Concept in detail:
 
@@ -46,7 +46,7 @@ The device can auto update firmware via Github if specific .bin file is availabl
 - In gateway sketch ssid and password of your home access point required for access to whole sensor network via MQTT Dash app to read sensor data and to issue commands to remote devices.
 - Web interface shows current and historical graphs of sensor data from whole network, allows to issue commands (via websockets) to any slave device on network.
 
-### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in remote code)
+### Commands to control any remote devices on network by publishing MQTT messages via any MQTT client app (if #define DUPLEX is true in remote device code)
 
 ### Command structure:  
 
@@ -126,7 +126,7 @@ https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 http://www.of-things.de/battery-life-calculator.php
       
 ## To do:
- - Web interface for ESP32 Gateway. 
+ - Web interface for ESP32 Gateway. Basic dashbord to monitor sensor data is implemented using uPlot javascript library.
 
 ## Special Thanks to creators of following libraries used for this project:
  
