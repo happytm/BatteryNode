@@ -12,8 +12,8 @@
 #define MYFS LITTLEFS
 #define FORMAT_LITTLEFS_IF_FAILED true
 
-const char* ssid = "HAPPYHOME";
-const char* password = "kb1henna";
+const char* ssid = "";
+const char* password = "";
 const char* apSSID = "ESP";
 const char* apPassword = "";
 const int apChannel = 7;
