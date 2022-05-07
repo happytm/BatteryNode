@@ -224,7 +224,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       f.print(graphData);Serial.println();
       Serial.print("Appended to file: "); Serial.println(graphData);
       Serial.print("File size: "); Serial.println(f.size());
-      bf.close(); 
+      f.close(); 
     
     }
 
