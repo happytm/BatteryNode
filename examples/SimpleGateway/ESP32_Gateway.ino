@@ -12,8 +12,8 @@
 #define MYFS LITTLEFS
 #define FORMAT_LITTLEFS_IF_FAILED true
 
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "HAPPYHOME";
+const char* password = "kb1henna";
 const char* apSSID = "ESP";
 const char* apPassword = "";
 const int apChannel = 7;
@@ -23,33 +23,38 @@ const char* http_username = "admin";  // Web file editor interface Login.
 const char* http_password = "admin";  // Web file editor interface password.
 
 String dataFile = "/data.json";  // File to store sensor data.
+String configFile = "/config.json";  // File to store configuration data.
 
-int Livingroom[4] = {16,26,36,46};
-int Kitchen[4] =    {46,36,26,16};
-int Bedroom1[4] =   {46,36,26,16};
-int Bedroom2[4] =   {16,26,36,36};
-int Bedroom3[4] =   {16,26,36,36};
-int Bedroom4[4] =   {16,26,36,36};
-int Bathroom1[4] =  {16,26,36,36};
-int Bathroom2[4] =  {16,26,36,36};
-int Bathroom3[4] =  {16,26,36,36};
-int Bathroom4[4] =  {16,26,36,36};
-int Laundry[4] =    {16,26,36,36};
-int Boiler[4] =     {16,26,36,36};
-int Workshop[4] =   {16,26,36,36};
-int Garage[4] =     {16,26,36,36};
-int Office[4] =     {16,26,36,36};
-int Tank[4] =       {16,26,36,36};
-int Solar[4] =      {16,26,36,36};
+int device,commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4;
+int Livingroom[9] = {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Kitchen[9] =    {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Bedroom1[9] =   {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Bedroom2[9] =   {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Bedroom3[9] =   {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Bedroom4[9] =   {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Bathroom1[9] =  {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Bathroom2[9] =  {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Bathroom3[9] =  {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Bathroom4[9] =  {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Laundry[9] =    {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Boiler[9] =     {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Workshop[9] =   {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Garage[9] =     {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Office[9] =     {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Tank[9] =       {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
+int Solar[9] =      {commandtype,sensortype1,sensortype2,sensortype3,sensortype4,command1,command2,command3,command4};
 
+String com1;
 
 //==================User configuration not required below this line ================================================
 
 char str [256], s [70];
 String graphData;
-int device, rssi, sensorValues[4], sensorTypes[4];
+String configData;
+int rssi, sensorValues[4], configValues[9];
 float voltage;
 uint8_t mac[6];
+
 const char* ntpServer = "pool.ntp.org";
 unsigned long epoch; 
 String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
@@ -112,10 +117,59 @@ void setup(){
   LITTLEFS.begin();
   
   webserver.addHandler(new SPIFFSEditor(MYFS, http_username,http_password));
+  
+  webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest * request){
+  int params = request->params();
+  
+  for(int i=0;i<params;i++){
+  AsyncWebParameter* p = request->getParam(i);
+        
+        if (p->value() == "Livingroom"){device = 6;}
+        if (p->value() == "Kitchen"){device = 16;}
+        if (p->value() == "Bedroom1"){device = 26;}
+        if (p->value() == "Bedroom2"){device = 36;}
+        if (p->value() == "Bedroom3"){device = 46;}
+        if (p->value() == "Bedroom4"){device = 56;}
+        if (p->value() == "Bathroom1"){device = 66;}
+        if (p->value() == "Bathroom2"){device = 76;}
+        if (p->value() == "Bathroom3"){device = 86;}
+        if (p->value() == "Bathroom4"){device = 96;}
+        if (p->value() == "Laundry"){device = 106;}
+        if (p->value() == "Boiler"){device = 116;}
+        if (p->value() == "Workshop"){device = 126;}
+        if (p->value() == "Garage"){device = 136;}
+        if (p->value() == "Office"){device = 146;}
+        if (p->value() == "Tank"){device = 156;}
+        if (p->value() == "Solar"){device = 166;}
+
+        if (p->value() == "Digital Write"){commandtype = 6;}
+        if (p->value() == "Analog Write"){commandtype = 16;}
+        if (p->value() == "Digital Read"){commandtype = 26;}
+        if (p->value() == "Analog Read"){commandtype = 36;}
+        if (p->value() == "Neopixel"){commandtype = 46;}
+        if (p->value() == "Set Sensor Type"){commandtype = 56;}
+        if (p->value() == "Set AP Channel"){commandtype = 66;}
+        if (p->value() == "Set Sleep Time"){commandtype = 76;}
+        if (p->value() == "Set Mode"){commandtype = 86;}
+        
+       
+        if (p->name() == "send"){
+        com1 = p->value();
+        Serial.print("Command received:  ");Serial.println(com1);
+        }
+        
+  if(p->isPost()){
+    Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value().c_str());
+    
+  }
+ } 
+request -> send(200, "text/plain", "Command received by server successfully, please click browser's back button to get back to main page.");
+}); 
+ 
   webserver.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", String(ESP.getFreeHeap()));
   });
- 
+  
   webserver.serveStatic("/", MYFS, "/").setDefaultFile("index.html");
 
   webserver.onFileUpload([](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final){
@@ -168,23 +222,23 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
        {
               //sendCommand();
 
-               if (device == 06) { for (int i = 0; i < 4; i++) sensorTypes[i] = Livingroom[i];} 
-               if (device == 16) { for (int i = 0; i < 4; i++) sensorTypes[i] = Kitchen[i];}
-               if (device == 26) { for (int i = 0; i < 4; i++) sensorTypes[i] = Bedroom1[i];} 
-               if (device == 36) { for (int i = 0; i < 4; i++) sensorTypes[i] = Bedroom2[i];}
-               if (device == 46) { for (int i = 0; i < 4; i++) sensorTypes[i] = Bedroom3[i];} 
-               if (device == 56) { for (int i = 0; i < 4; i++) sensorTypes[i] = Bedroom4[i];}
-               if (device == 66) { for (int i = 0; i < 4; i++) sensorTypes[i] = Bathroom1[i];} 
-               if (device == 76) { for (int i = 0; i < 4; i++) sensorTypes[i] = Bathroom2[i];}
-               if (device == 86) { for (int i = 0; i < 4; i++) sensorTypes[i] = Bathroom3[i];} 
-               if (device == 96) { for (int i = 0; i < 4; i++) sensorTypes[i] = Bathroom4[i];}
-               if (device == 106) { for (int i = 0; i < 4; i++) sensorTypes[i] = Laundry[i];} 
-               if (device == 116) { for (int i = 0; i < 4; i++) sensorTypes[i] = Boiler[i];}
-               if (device == 126) { for (int i = 0; i < 4; i++) sensorTypes[i] = Workshop[i];} 
-               if (device == 136) { for (int i = 0; i < 4; i++) sensorTypes[i] = Garage[i];}
-               if (device == 146) { for (int i = 0; i < 4; i++) sensorTypes[i] = Office[i];}
-               if (device == 156) { for (int i = 0; i < 4; i++) sensorTypes[i] = Tank[i];} 
-               if (device == 166) { for (int i = 0; i < 4; i++) sensorTypes[i] = Solar[i];}
+               if (device == 06) { for (int i = 0; i < 4; i++) configValues[i] = Livingroom[i];} 
+               if (device == 16) { for (int i = 0; i < 4; i++) configValues[i] = Kitchen[i];}
+               if (device == 26) { for (int i = 0; i < 4; i++) configValues[i] = Bedroom1[i];} 
+               if (device == 36) { for (int i = 0; i < 4; i++) configValues[i] = Bedroom2[i];}
+               if (device == 46) { for (int i = 0; i < 4; i++) configValues[i] = Bedroom3[i];} 
+               if (device == 56) { for (int i = 0; i < 4; i++) configValues[i] = Bedroom4[i];}
+               if (device == 66) { for (int i = 0; i < 4; i++) configValues[i] = Bathroom1[i];} 
+               if (device == 76) { for (int i = 0; i < 4; i++) configValues[i] = Bathroom2[i];}
+               if (device == 86) { for (int i = 0; i < 4; i++) configValues[i] = Bathroom3[i];} 
+               if (device == 96) { for (int i = 0; i < 4; i++) configValues[i] = Bathroom4[i];}
+               if (device == 106) { for (int i = 0; i < 4; i++) configValues[i] = Laundry[i];} 
+               if (device == 116) { for (int i = 0; i < 4; i++) configValues[i] = Boiler[i];}
+               if (device == 126) { for (int i = 0; i < 4; i++) configValues[i] = Workshop[i];} 
+               if (device == 136) { for (int i = 0; i < 4; i++) configValues[i] = Garage[i];}
+               if (device == 146) { for (int i = 0; i < 4; i++) configValues[i] = Office[i];}
+               if (device == 156) { for (int i = 0; i < 4; i++) configValues[i] = Tank[i];} 
+               if (device == 166) { for (int i = 0; i < 4; i++) configValues[i] = Solar[i];}
                
       device = info.ap_probereqrecved.mac[0];
       rssi = info.ap_probereqrecved.rssi;         
@@ -199,10 +253,10 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       sprintf (str, "{");
       sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);
       sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (str, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);
+      sprintf (s, ",\"%i\":\"%i\"", configValues[0], sensorValues[0]); strcat (str, s);
+      sprintf (s, ",\"%i\":\"%i\"", configValues[1], sensorValues[1]); strcat (str, s);
+      sprintf (s, ",\"%i\":\"%i\"", configValues[2], sensorValues[2]); strcat (str, s);
+      sprintf (s, ",\"%i\":\"%i\"", configValues[3], sensorValues[3]); strcat (str, s);
       sprintf (s, "}"); strcat (str, s);
               
       Serial.println();
