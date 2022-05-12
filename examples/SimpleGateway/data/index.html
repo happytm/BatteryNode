@@ -3,7 +3,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"> 
 <title>Proberequest, TinyMQTT, Websockets, Asyncwebserver, LittleFS Editor & uPlot</title> 
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.7/dist/uPlot.min.css">
 
@@ -25,222 +24,49 @@ body {margin: 0;}
 <body>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/uplot@1.6.7/dist/uPlot.iife.min.js"></script>
 
-<h2>Proberequest, TinyMQTT, Websockets, Asyncwebserver, LittleFS Editor & uPlot</h2>
+<h2>Proberequest, TinyMQTT, Asyncwebserver, LittleFS Editor & uPlot</h2>
+<h3>Send Command to ESP32 Gateway Server</h3>
 
-<form action="">
-  
-<SELECT class="combine" id ="command" name = "a">
-    <option></option>
-    <option>SELECT</option>
-    <option>Digital Write</option>
-    <option>Analog Write</option>
-    <option>Digital Read</option>
-    <option>Analog Read</option>
-    <option>Neopixel</option>
-    <option>Set AP Channel</option>
-    <option>Set Sleep Time</option>
-    <option>Set Mode</option>
-</SELECT>
+<form id="formElem">
 
-<SELECT class="combine" id ="device" name = "b">
-    <option></option>
-    <option>Livingroom</option>
-    <option>Kitchen</option>
-    <option>Bedroom1</option>
-    <option>Bedroom2</option>
-    <option>Bathroom1</option>
-    <option>Bathroom2</option>
-    <option>Laundry</option>
-    <option>Office</option>
+<SELECT class="combine" id ="device" name = "Device">
+    <option value="">Select Device</option>
+    <option value="256">Gateway</option>
+    <option value="6">Livingroom</option>
+    <option value="16">Kitchen</option>
+    <option value="26">Bedroom1</option>
+    <option value="36">Bedroom2</option>
+    <option value="56">Bathroom2</option>
+    <option value="66">Laundry</option>
+    <option value="76">Office</option>
     
 </SELECT>
 
-<SELECT class="combine" id ="command1" name = "c" >
-    <option>00</option>
-    <option>01</option>
-    <option>02</option>
-    <option>03</option>
-    <option>04</option>
-    <option>05</option>
-    <option>06</option>
-    <option>12</option>
-    <option>13</option>
-    <option>14</option>
-    <option>15</option>
-    <option>16</option>
-    <option>26</option>
-    <option>36</option>
-    <option>46</option>
-    <option>56</option>
-    <option>66</option>
-    <option>76</option>
-    <option>86</option>
-    <option>96</option>
-    <option>106</option>
-    <option>116</option>
-    <option>126</option>
-    <option>136</option>
-    <option>146</option>
-    <option>156</option>
-    <option>166</option>
-    <option>176</option>
-    <option>186</option>
-    <option>196</option>
-    <option>206</option>
-    <option>216</option>
-    <option>226</option>
-    <option>236</option>
-    <option>246</option>
-    <option>256</option>
+<SELECT class="combine" id ="command" name = "Command">
     
+    <option value="100">Select Command</option>
+    <option value="101">Digital Write</option>
+    <option value="102">Analog Write</option>
+    <option value="103">Digital Read</option>
+    <option value="104">Analog Read</option>
+    <option value="105">Neopixel</option>
+    <option value="106">Set Sensor Types</option>
+    <option value="107">Set AP Channel</option>
+    <option value="108">Set Sleep Time</option>
+    <option value="109">Set Mode</option>
 </SELECT>
 
-<SELECT class="combine" id ="command2" name = "d">
-    <option>00</option>
-    <option>01</option>
-    <option>02</option>
-    <option>03</option>
-    <option>04</option>
-    <option>05</option>
-    <option>06</option>
-    <option>12</option>
-    <option>13</option>
-    <option>14</option>
-    <option>15</option>
-    <option>16</option>
-    <option>26</option>
-    <option>36</option>
-    <option>46</option>
-    <option>56</option>
-    <option>66</option>
-    <option>76</option>
-    <option>86</option>
-    <option>96</option>
-    <option>106</option>
-    <option>116</option>
-    <option>126</option>
-    <option>136</option>
-    <option>146</option>
-    <option>156</option>
-    <option>166</option>
-    <option>176</option>
-    <option>186</option>
-    <option>196</option>
-    <option>206</option>
-    <option>216</option>
-    <option>226</option>
-    <option>236</option>
-    <option>246</option>
-    <option>256</option>
-</SELECT>
+<input id="command1" name="command1" type="number" min="0" max="256">   
+<input id="command2" name="command2" type="number" min="0" max="256">   
+<input id="command3" name="command3" type="number" min="0" max="256">   
+<input id="command4" name="command4" type="number" min="0" max="256">   
 
-<SELECT class="combine" id ="command3" name = "e">
-    <option>00</option>
-    <option>01</option>
-    <option>02</option>
-    <option>03</option>
-    <option>04</option>
-    <option>05</option>
-    <option>06</option>
-    <option>12</option>
-    <option>13</option>
-    <option>14</option>
-    <option>15</option>
-    <option>16</option>
-    <option>26</option>
-    <option>36</option>
-    <option>46</option>
-    <option>56</option>
-    <option>66</option>
-    <option>76</option>
-    <option>86</option>
-    <option>96</option>
-    <option>106</option>
-    <option>116</option>
-    <option>126</option>
-    <option>136</option>
-    <option>146</option>
-    <option>156</option>
-    <option>166</option>
-    <option>176</option>
-    <option>186</option>
-    <option>196</option>
-    <option>206</option>
-    <option>216</option>
-    <option>226</option>
-    <option>236</option>
-    <option>246</option>
-    <option>256</option>
-</SELECT>
 
-<SELECT class="combine" id ="command4" name = "f" >
-    <option>00</option>
-    <option>01</option>
-    <option>02</option>
-    <option>03</option>
-    <option>04</option>
-    <option>05</option>
-    <option>06</option>
-    <option>12</option>
-    <option>13</option>
-    <option>14</option>
-    <option>15</option>
-    <option>16</option>
-    <option>26</option>
-    <option>36</option>
-    <option>46</option>
-    <option>56</option>
-    <option>66</option>
-    <option>76</option>
-    <option>86</option>
-    <option>96</option>
-    <option>106</option>
-    <option>116</option>
-    <option>126</option>
-    <option>136</option>
-    <option>146</option>
-    <option>156</option>
-    <option>166</option>
-    <option>176</option>
-    <option>186</option>
-    <option>196</option>
-    <option>206</option>
-    <option>216</option>
-    <option>226</option>
-    <option>236</option>
-    <option>246</option>
-    <option>256</option>
-</SELECT>
-
-<SELECT class="combine" id ="column" name = "g">
-    <option>*</option>
-	<option>Location</option>
-    <option>Date</option>
-    <option>Day</option>
-    <option>Time</option>
-    <option>Hour</option>
-</SELECT>
-
-<SELECT class="combine" id ="field" name = "h">
+      
+<input name="secret" type="hidden" value="your_password"/>
     
-    <option>Location</option>
-    <option>Date</option>
-    <option>Day</option>
-    <option>Time</option>
-    <option>Hour</option>
-</SELECT>
-
-<SELECT class="combine" id ="operator" name = "i">
-    <option>=</option>
-    <option>!=</option>
-    <option>></option>
-    <option><</option>
-    <option><=</option>
-    <option>>=</option>
-    <option><></option>
-</SELECT>
-<br>
-
+<button type="submit">Send Command</button>
+ 
 <script>
 var attachEvent = function(node, event, listener, useCapture) {
   // Method for FF, Opera, Chrome, Safari
@@ -263,54 +89,44 @@ var attachEvent = function(node, event, listener, useCapture) {
       option3 = document.getElementById("command2");
       option4 = document.getElementById("command3");
       option5 = document.getElementById("command4");
-      option6 = document.getElementById("column");
-      option7 = document.getElementById("field");
-      option8 = document.getElementById("operator");	 
+      
      
 // Show and hide the appropriate select's
-     if (this.value == "Neopixel") {
+     if (this.value == "105" || this.value == "106") {
      
        option1.style.display = "";
        option2.style.display = "";
        option3.style.display = "";
        option4.style.display = "";
        option5.style.display = "";
-       option6.style.display = "none";
-       option7.style.display = "none";
-       option8.style.display = "none"; 
+       
 	   
-     } else if (this.value == "Set AP Channel" || this.value == "Set Sleep Time" || this.value == "Set Mode" || this.value == "Digital Read" || this.value == "Analog Read") {
+     } else if (this.value == "103" || this.value == "104" || this.value == "107" || this.value == "108" || this.value == "109") {
        
        option1.style.display = "";
        option2.style.display = "";
        option3.style.display = "none";
        option4.style.display = "none";
        option5.style.display = "none";
-       option6.style.display = "none";
-       option7.style.display = "none";
-       option8.style.display = "none"; 
+       
 	   
-	 } else if (this.value == "Digital Write" || this.value == "Analog Write" || this.value == "SELECT") {
+	 } else if (this.value == "101" || this.value == "102") {
        
        option1.style.display = "";
        option2.style.display = "";
        option3.style.display = "";
        option4.style.display = "none";
        option5.style.display = "none";
-       option6.style.display = "none";
-       option7.style.display = "none";  
-       option8.style.display = "none";  
+       
 		  
-  if (this.value == "SELECT") {
+  if (this.value == "100") {
 	 
-	  option1.style.display = "none";
-          option2.style.display = "none";
-          option3.style.display = "none";
-          option4.style.display = "none";
-          option5.style.display = "none";
-          option6.style.display = "";
-          option7.style.display = "";
-		  option8.style.display = ""; 
+	     option1.style.display = "";
+       option2.style.display = "none";
+       option3.style.display = "none";
+       option4.style.display = "none";
+       option5.style.display = "none";
+          
 	   }
      } 
   };
@@ -320,205 +136,24 @@ var attachEvent = function(node, event, listener, useCapture) {
   attachEvent(select_command, "change", selectHandler);
   attachEvent(select_command, "keypress", selectHandler);
 });
-
-$(document).ready(function(){
-  $("form").submit(function(){
-    var sentCommand = document.getElementById('result').value;
-    ws.send(sentCommand);  
-   //alert("Submitted");
-   //log('Sending: ' + sentCommand);
-});
-});
-
-$(document).ready(function(){
-
-$('.combine').on('change', function(){
-
-if ($('#command').val() == "Set AP Channel" || "Set Sleep Time" || "Set Mode" || "Digital Read" || "Analog Read")
-  { 
-  var payload = $('#command').val() + '/' + $('#device').val() + '/' + $('#command1').val(); 
-  }  
-
-if ($('#command').val() == "Digital Write")
-    {
-    var payload = $('#command').val() + '/' + $('#device').val() + '/' + $('#command1').val() + "/" + $('#command2').val(); 
-    }
-if ($('#command').val() == "SELECT")
-    {
-    var payload = $('#command').val() + " " + $('#column').val() + " FROM test1 WHERE " + $('#field').val() +  " " + $('#operator').val() + " 'Enter your choice'"; 
-    }
-	
-$('#result').val(payload); 
-   });
-})
 </script>
-
-<br>
-<input type="text" id="result" size = "52" name="send" value="" />
-<input type="submit" value="Send Command">
-
 </form>
 
-<textarea rows="4" cols="35" id="display" value="" spellcheck="false"  readonly="true" style="font-size:16px;line-height: 1em;">
-</textarea>
+<script>
+  formElem.onsubmit = async (e) => {
+    e.preventDefault();
 
-<!--<p><input id="sentMessage" type="text" size="40" value="06/06/">
-<button onclick="sendText()">Send Command or SQL</button></p>
-<ul id="receivedMessage">Commands & Messages received from server appear below 
-</ul>  -->
+    let response = await fetch('/post', {
+      method: 'POST',
+      body: new FormData(formElem)
+    });
 
-<script type='text/javascript'>
+    let result = await response.json();
 
-if ("WebSocket" in window) {
-
-var ws = new WebSocket ("ws://192.168.0.8:80/ws"); 
-
-//var ws = new WebSocket ("ws://" + window.location.hostname + ":80/ws"); 
-
-// ----- send text data -----
-function sendText() {
-var sentMessage = document.getElementById('sentMessage').value;
-//log('Sending: ' + sentMessage);
-ws.send(sentMessage);
-}
-
-ws.onopen = function () {
-       /*
-          // ----- send text data -----
-
-          ws.send ("Hello webSocket server, after this text I'm sending 32 16 bit binary integers."); 
-
-          // ----- send binary data -----
-
-          const fibonacciSequence = new Uint16Array (32);
-          fibonacciSequence [0] = -21;
-          fibonacciSequence [1] = 13;
-          for (var i = 2; i < 32; i ++) fibonacciSequence [i] = fibonacciSequence [i - 1] + fibonacciSequence [i - 2]; 
-          ws.send (fibonacciSequence);
-       */
-	   };
-       
-ws.onmessage = function (evt) {
-  
-    if (typeof(evt.data) === 'string' || evt.data instanceof String) { // UTF-8 formatted string data
-        
-    // ----- receive text data -----
-        //log('Received from server ' + evt.data);
-        //alert ("Got text from server over webSocket: " + evt.data);
-        display.value += event.data + "\n";
-		
-        var textarea = document.getElementById('messages');
-        //data = '['+event.data.replace(/,/g, '],.')+']';
-        //data = data.replace(/./g, '[');		
-	//console.log(JSON.parse(data)); // See https://stackoverflow.com/questions/54511538/convert-string-into-an-array-of-arrays-in-javascript
-	//data = evt.data.replace(',',''); // Remove first comma.
-	data = Function('return [' +  evt.data + ']')(); 
-	console.log(data);
-		
-	var title = "Environment data from sensor network";
-	const opts = {
-         title: title,
-         width: 360,
-         height: 640,
-         hooks: {
-  	     ready: [
-    	 u => {
-      	 let legend = u.root.querySelector(".u-legend");
-        
-         legend.addEventListener("contextmenu", e => {
-            e.preventDefault();
-
-            let seriesEl = e.target.closest(".u-series");
-          
-            let seriesIdx = Array.prototype.slice.call(legend.childNodes).indexOf(seriesEl);
-          
-            let series = u.series[seriesIdx];
-          
-            console.log(series.label);
-        });
-      }
-    ],
-  },
-  scales: {
-    x: {
-      time: true,
-    }
-  },
-  series: [
-    {},
-    {
-      label: "Location",
-      stroke: "purple",
-      fill: "rgba(0,0,255,0.2)",
-    },
-    {
-      label: "V",
-      stroke: "olive",
-      fill: "rgba(0,0,255,0.2)",
-    },
-    {
-      label: "S",
-      stroke: "orange",
-      fill: "rgba(0,0,255,0.2)",
-    },
-    {
-      label: "T",
-      stroke: "blue",
-      fill: "rgba(0,0,255,0.2)",
-    },
-    {
-      label: "H",
-      stroke: "red",
-      fill: "rgba(255,0,0,0.2)",
-    },
-    {
-      label: "P",
-      stroke: "green",
-      fill: "rgba(0,0,255,0.2)",
-    },
-    {
-      label: "L",
-      stroke: "yellow",
-      fill: "rgba(255,0,0,0.2)",
-    },
-  ],
-};
-
-
-let u = new uPlot(opts, data, document.body);
-}		
- 
- if (evt.data instanceof Blob) { // binary data
-
-// ----- receive binary data as blob and then convert it into array buffer -----
-
-var myFloat32Array = null;
-var myArrayBuffer = null;
-var myFileReader = new FileReader ();
-
-myFileReader.onload = function (event) {
-              myArrayBuffer = event.target.result;
-              myFloat32Array = new Float32Array (myArrayBuffer); // <= our data is now here, in the array of 32 bit floating point numbers
-
-var myMessage = "Got " + myArrayBuffer.byteLength + " bytes of binary data from server over webSocket\n[example 10]";
-for (var i = 0; i < myFloat32Array.length; i++) myMessage += " " + myFloat32Array [i];
-//alert (myMessage);
-                
-ws.close (); // this is where webSocket connection ends - in our simple "protocol" browser closes the connection but it could be the server as well
- };
-myFileReader.readAsArrayBuffer (evt.data);
- }
- 
-};
-				
-ws.onclose = function () { 
-//alert ("WebSocket connection is closed."); 
+    alert(result.message);
   };
-} else {
-        alert ("WebSockets are not supported by your browser.");
-        }
-
 </script>
+
 <script>
 
 // converts the legend into a simple tooltip
@@ -743,5 +378,6 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 				setTimeout(() => makeChart(data), 0);
 			});
 </script>
+
 </body>
 </html>
