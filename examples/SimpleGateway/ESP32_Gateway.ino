@@ -151,7 +151,10 @@ void setup(){
     String input3 =request->getParam(3)->value();receivedCommand[3] =(atoi(input3.c_str())); 
     String input4 =request->getParam(4)->value();receivedCommand[4] =(atoi(input4.c_str()));
     String input5 =request->getParam(5)->value();receivedCommand[5] =(atoi(input5.c_str()));    
-/*                      
+    
+    ssid = request->getParam(6)->value().c_str();                  
+    password =request->getParam(7)->value().c_str();
+ /* 
   if(p->isPost()){
     Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value());
     }
@@ -160,6 +163,9 @@ void setup(){
 request -> send(200, "text/plain", "Command received by server successfully, please click browser's back button to get back to main page.");
 Serial.print("Command received from Browser: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
 saveCommand();
+//Serial.println(ssid);
+//Serial.println(password);
+
 }); 
   
   webserver.serveStatic("/", MYFS, "/").setDefaultFile("index.html");
