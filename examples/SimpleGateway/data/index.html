@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"> 
 <title>Proberequest, TinyMQTT, Websockets, Asyncwebserver, LittleFS Editor & uPlot</title> 
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.7/dist/uPlot.min.css">
+<link rel="stylesheet" href="uPlot.min.css">
 
 <style>
 body {margin: 0;}
@@ -22,7 +22,7 @@ body {margin: 0;}
 </head> 
 
 <body>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/uplot@1.6.7/dist/uPlot.iife.min.js"></script>
+<script type="text/javascript" src="uPlot.iife.min.js"></script>
 
 <h2>Proberequest, TinyMQTT, Asyncwebserver, LittleFS Editor & uPlot</h2>
 <h3>Send Command to ESP32 Gateway Server</h3>
@@ -43,8 +43,7 @@ body {margin: 0;}
 </SELECT>
 
 <SELECT class="combine" id ="command" name = "Command">
-    
-    <option value="100">Select Command</option>
+    <option value="">Select Command Type</option>
     <option value="101">Digital Write</option>
     <option value="102">Analog Write</option>
     <option value="103">Digital Read</option>
@@ -54,6 +53,7 @@ body {margin: 0;}
     <option value="107">Set AP Channel</option>
     <option value="108">Set Sleep Time</option>
     <option value="109">Set Mode</option>
+    <option value="110">Set Device ID</option>
 </SELECT>
 
 <input id="command1" name="command1" type="number" min="0" max="256">   
@@ -61,12 +61,12 @@ body {margin: 0;}
 <input id="command3" name="command3" type="number" min="0" max="256">   
 <input id="command4" name="command4" type="number" min="0" max="256">   
 
-
-      
-<input name="secret" type="hidden" value="your_password"/>
-    
 <button type="submit">Send Command</button>
- 
+<br>
+<input name="SSID" type="text" placeholder="SSID"/>
+<input name="SSID" type="password" placeholder="Password"/>
+<button type="submit">Enter WiFi Config</button>
+
 <script>
 var attachEvent = function(node, event, listener, useCapture) {
   // Method for FF, Opera, Chrome, Safari
@@ -101,7 +101,7 @@ var attachEvent = function(node, event, listener, useCapture) {
        option5.style.display = "";
        
 	   
-     } else if (this.value == "103" || this.value == "104" || this.value == "107" || this.value == "108" || this.value == "109") {
+     } else if (this.value == "103" || this.value == "104" || this.value == "107" || this.value == "108" || this.value == "109"|| this.value == "110" ) {
        
        option1.style.display = "";
        option2.style.display = "";
@@ -117,17 +117,6 @@ var attachEvent = function(node, event, listener, useCapture) {
        option3.style.display = "";
        option4.style.display = "none";
        option5.style.display = "none";
-       
-		  
-  if (this.value == "100") {
-	 
-	     option1.style.display = "";
-       option2.style.display = "none";
-       option3.style.display = "none";
-       option4.style.display = "none";
-       option5.style.display = "none";
-          
-	   }
      } 
   };
 
@@ -195,7 +184,7 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					overEl.addEventListener("mouseleave", () => {legendEl.style.display = "none";});
 
 					// let tooltip exit plot
-				//	overEl.style.overflow = "visible";
+			//	overEl.style.overflow = "visible";
 				}
 
 				function update(u) {
