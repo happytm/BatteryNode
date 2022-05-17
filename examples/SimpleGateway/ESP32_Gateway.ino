@@ -3,6 +3,7 @@
 #include <esp_wifi.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
+#include <EEPROM.h>
 #include <FS.h>
 #include "LITTLEFS.h"
 #include <SPIFFSEditor.h>
@@ -51,7 +52,8 @@ char str [256], s [70];
 String graphData, configData, Hour, Minute;
 int device, rssi, sensorValues[4], sensorTypes[4];
 float voltage;
-uint8_t mac[6],receivedCommand[6],livingroomCommand[6],kitchenCommand[6],bedroom1Command[6],bedroom2Command[6],bedroom3Command[6],bedroom4Command[6],bathroom1Command[6],bathroom2Command[6],bathroom3Command[6],bathroom4Command[6],laundryCommand[6],boilerCommand[6],workshopCommand[6],garageCommand[6],officeCommand[6],tankCommand[6],solarCommand[6];
+int arraySize = 10;   // Data integers for each device.
+uint8_t Config[266],savedConfig[266],mac[6],receivedCommand[10],livingroomCommand[10],kitchenCommand[10],bedroom1Command[10],bedroom2Command[10],bedroom3Command[10],bedroom4Command[10],bathroom1Command[10],bathroom2Command[10],bathroom3Command[10],bathroom4Command[10],laundryCommand[10],boilerCommand[10],workshopCommand[10],garageCommand[10],officeCommand[10],tankCommand[10],solarCommand[10];
 const char* ntpServer = "pool.ntp.org";
 unsigned long epoch; 
 String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
@@ -76,26 +78,28 @@ void receivedMessage(const MqttClient* source, const Topic& topic, const char* p
   
 void saveCommand() 
 {
-    if (receivedCommand[0] == 6 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) livingroom[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) livingroomCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 6 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) kitchen[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) kitchenCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 26 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) bedroom1[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom1Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 36 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) bedroom2[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom2Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 46 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) bedroom3[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom3Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 56 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) bedroom4[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom4Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 66 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) bathroom1[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom1Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 76 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) bathroom2[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom2Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 86 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) bathroom3[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom3Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 96 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) bathroom4[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom4Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 106 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) laundry[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) laundryCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 116 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) boiler[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) boilerCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 126 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) workshop[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) workshopCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 136 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) garage[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) garageCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 146 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) office[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) officeCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 156 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) tank[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) tankCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 166 && receivedCommand[1] == 106) { for (int i = 2; i < 4; i++) solar[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) solarCommand[i] = receivedCommand[i];}
-}                                               
+    if (receivedCommand[0] == 6 && receivedCommand[1] == 106) { for (int i = 3; i < 5; i++) livingroom[i] = receivedCommand[i];} else {for (int i = device; i < (device+6); i++) savedConfig[i] = receivedCommand[i];}    
+    if (receivedCommand[0] == 6 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) kitchen[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) kitchenCommand[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 26 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bedroom1[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom1Command[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 36 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bedroom2[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom2Command[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 46 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bedroom3[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom3Command[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 56 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bedroom4[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom4Command[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 66 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bathroom1[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom1Command[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 76 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bathroom2[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom2Command[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 86 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bathroom3[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom3Command[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 96 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bathroom4[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom4Command[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 106 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) laundry[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) laundryCommand[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 116 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) boiler[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) boilerCommand[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 126 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) workshop[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) workshopCommand[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 136 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) garage[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) garageCommand[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 146 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) office[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) officeCommand[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 156 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) tank[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) tankCommand[i] = receivedCommand[i];}
+    if (receivedCommand[0] == 166 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) solar[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) solarCommand[i] = receivedCommand[i];}
+    
+    EEPROM.readBytes(0, Config,266);for(int k=0;k<266;k++){Serial.printf("%d ", Config[k]);}
+ }                                               
  
-void timeSynch(){Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}
+void timeSynch(){ if (receivedCommand[1] != 105) {Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}}
 
 unsigned long getTime() {
 time_t now;
@@ -134,7 +138,8 @@ void setup(){
   Epoch = String(epoch);
 
   LITTLEFS.begin();
-    
+  EEPROM.begin(512);  
+  
   webserver.addHandler(new SPIFFSEditor(MYFS, http_username,http_password));
   
   webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest * request){
@@ -150,9 +155,13 @@ void setup(){
     String input3 =request->getParam(3)->value();receivedCommand[3] =(atoi(input3.c_str())); 
     String input4 =request->getParam(4)->value();receivedCommand[4] =(atoi(input4.c_str()));
     String input5 =request->getParam(5)->value();receivedCommand[5] =(atoi(input5.c_str()));    
-    
-    ssid = request->getParam(6)->value().c_str();                  
-    password =request->getParam(7)->value().c_str();
+    String input6 =request->getParam(6)->value();receivedCommand[6] =(atoi(input6.c_str()));
+    String input7 =request->getParam(7)->value();receivedCommand[7] =(atoi(input7.c_str()));  
+    String input8 =request->getParam(8)->value();receivedCommand[8] =(atoi(input8.c_str()));
+    String input9 =request->getParam(9)->value();receivedCommand[9] =(atoi(input9.c_str())); 
+
+    ssid = request->getParam(10)->value().c_str();                  
+    password =request->getParam(11)->value().c_str();
  /* 
   if(p->isPost()){
     Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value());
@@ -224,25 +233,28 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       epoch = getTime();
       Serial.print("Epoch Time: ");Serial.println(epoch); 
              
-      if (device == 6) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = livingroom[i]; for (int j = 0; j < 6; j++) mac[j] = livingroomCommand[j];timeSynch();}}
-      if (device == 16) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = kitchen[i]; for (int j = 0; j < 6; j++) mac[j] = kitchenCommand[j];timeSynch();}}
-      if (device == 26) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = bedroom1[i]; for (int j = 0; j < 6; j++) mac[j] = bedroom1Command[j];timeSynch();}} 
-      if (device == 36) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = bedroom2[i]; for (int j = 0; j < 6; j++) mac[j] = bedroom2Command[j];timeSynch();}}
-      if (device == 46) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = bedroom3[i]; for (int j = 0; j < 6; j++) mac[j] = bedroom3Command[j];timeSynch();}}
-      if (device == 56) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = bedroom4[i]; for (int j = 0; j < 6; j++) mac[j] = bedroom4Command[j];timeSynch();}}
-      if (device == 66) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = bathroom1[i]; for (int j = 0; j < 6; j++) mac[j] = bathroom1Command[j];timeSynch();}}
-      if (device == 76) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = bathroom2[i]; for (int j = 0; j < 6; j++) mac[j] = bathroom2Command[j];timeSynch();}}
-      if (device == 86) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = bathroom3[i]; for (int j = 0; j < 6; j++) mac[j] = bathroom3Command[j];timeSynch();}} 
-      if (device == 96) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = bathroom4[i]; for (int j = 0; j < 6; j++) mac[j] = bathroom4Command[j];timeSynch();}}
-      if (device == 106) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = laundry[i]; for (int j = 0; j < 6; j++) mac[j] = laundryCommand[j];timeSynch();}}
-      if (device == 116) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = boiler[i]; for (int j = 0; j < 6; j++) mac[j] = boilerCommand[j];timeSynch();}}
-      if (device == 126) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = workshop[i]; for (int j = 0; j < 6; j++) mac[j] = workshopCommand[j];timeSynch();}}
-      if (device == 136) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = garage[i]; for (int j = 0; j < 6; j++) mac[j] = garageCommand[j];timeSynch();}}
-      if (device == 146) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = office[i]; for (int j = 0; j < 6; j++) mac[j] = officeCommand[j];timeSynch();}}
-      if (device == 156) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = tank[i]; for (int j = 0; j < 6; j++) mac[j] = tankCommand[j];timeSynch();}} 
-      if (device == 166) { if (receivedCommand[1] != 105 || receivedCommand[1] != 106){for (int i = 0; i < 4; i++) sensorTypes[i] = solar[i]; for (int j = 0; j < 6; j++) mac[j] = solarCommand[j];timeSynch();}}
+      if (device == 6)  { EEPROM.writeBytes(device, savedConfig,arraySize); for (int j = 0; j < 6; j++) mac[j] = savedConfig[j]; for (int k = 0; k < arraySize; k++) sensorTypes[k] = livingroomCommand[k]; timeSynch();}
+      if (device == 16) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = kitchenCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = kitchenCommand[k]; timeSynch();}
+      if (device == 26) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bedroom1Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bedroom1Command[k]; timeSynch();}
+      if (device == 36) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bedroom2Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bedroom2Command[k]; timeSynch();}
+      if (device == 46) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bedroom3Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bedroom3Command[k]; timeSynch();}
+      if (device == 56) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bedroom4Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bedroom4Command[k]; timeSynch();}
+      if (device == 66) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bathroom1Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bathroom1Command[k]; timeSynch();}
+      if (device == 76) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bathroom2Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bathroom2Command[k]; timeSynch();}
+      if (device == 86) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bathroom3Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bathroom3Command[k]; timeSynch();}
+      if (device == 96) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bathroom4Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bathroom4Command[k]; timeSynch();}
+      if (device == 106) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = laundryCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = laundryCommand[k]; timeSynch();}
+      if (device == 116) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = boilerCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = boilerCommand[k]; timeSynch();}
+      if (device == 126) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = workshopCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = workshopCommand[k]; timeSynch();}
+      if (device == 136) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = garageCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = garageCommand[k]; timeSynch();}
+      if (device == 146) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = officeCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = officeCommand[k]; timeSynch();}
+      if (device == 156) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = tankCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = tankCommand[k]; timeSynch();}
+      if (device == 166) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = solarCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = solarCommand[k]; timeSynch();}
+      
       if (mac[1] == 0) {mac[0] = device; mac[1] = 101; timeSynch();}
-               
+        
+      
+             
       esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
       Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
                
@@ -281,6 +293,6 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
                       
       if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
          myClient.publish("Warning/Battery Low", String(device));
-         }         
-     }
+      }         
+    }
  }
