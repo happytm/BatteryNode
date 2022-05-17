@@ -55,11 +55,14 @@ body {margin: 0;}
     <option value="109">Set Mode</option>
     <option value="110">Set Device ID</option>
 </SELECT>
-
 <input id="command1" name="command1" type="number" min="0" max="256">   
 <input id="command2" name="command2" type="number" min="0" max="256">   
 <input id="command3" name="command3" type="number" min="0" max="256">   
-<input id="command4" name="command4" type="number" min="0" max="256">   
+<input id="command4" name="command4" type="number" min="0" max="256">  
+<input id="command5" name="command1" type="hidden" min="0" max="0">   
+<input id="command6" name="command2" type="hidden" min="0" max="0">   
+<input id="command7" name="command3" type="hidden" min="0" max="0">   
+<input id="command8" name="command4" type="hidden" min="0" max="0">   
 
 <button type="submit">Send Command</button>
 <br>
@@ -93,7 +96,7 @@ var attachEvent = function(node, event, listener, useCapture) {
      
 // Show and hide the appropriate select's
      if (this.value == "105" || this.value == "106") {
-     
+       
        option1.style.display = "";
        option2.style.display = "";
        option3.style.display = "";
