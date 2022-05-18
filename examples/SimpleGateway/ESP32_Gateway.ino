@@ -16,8 +16,8 @@ struct tm timeinfo;
 #define MYFS LITTLEFS
 #define FORMAT_LITTLEFS_IF_FAILED true
 
-const char* ssid = "";
-const char* password = "";
+String ssid;
+String password;
 const char* apSSID = "ESP";
 const char* apPassword = "";
 const int apChannel = 7;
@@ -96,9 +96,23 @@ void saveCommand()
     if (receivedCommand[0] == 156 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) tank[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) tankCommand[i] = receivedCommand[i];}
     if (receivedCommand[0] == 166 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) solar[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) solarCommand[i] = receivedCommand[i];}
     
-    EEPROM.readBytes(0, Config,266);for(int k=0;k<266;k++){Serial.printf("%d ", Config[k]);}
+    EEPROM.readBytes(0, Config,329);for(int k=0;k<329;k++){Serial.printf("%d ", Config[k]);}
  }                                               
- 
+
+void saveWificonfig()
+{ 
+  if (ssid.length() > 0 || password.length() > 0) 
+  {  
+    for (int i = 0; i < 30; ++i){EEPROM.write(270 + i, ssid[i]);Serial.println(ssid[i]);}          
+    for (int i = 0; i < 30; ++i){EEPROM.write(301 + i, password[i]);Serial.println(password[i]);}
+    EEPROM.commit();
+    Serial.println();
+    Serial.print("Wifi Configuration saved to EEPROM: SSID="); Serial.print(ssid);Serial.print(" & Password="); Serial.println(password);Serial.println("Restarting Gateway now...");
+    delay(1000);
+    ESP.restart();
+  }
+}
+    
 void timeSynch(){ if (receivedCommand[1] != 105) {Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}}
 
 unsigned long getTime() {
@@ -116,16 +130,22 @@ void setup(){
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   
+  LITTLEFS.begin();
+  EEPROM.begin(512);  
+  
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(apSSID, apPassword, apChannel, hidden);
   esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
- 
-  WiFi.begin(ssid, password);
+  
+  for (int i = 270; i < 300; ++i){ssid += char(EEPROM.read(i));if (EEPROM.read(i) == 0) {break;}}
+  for (int i = 301; i < 330; ++i){password += char(EEPROM.read(i));if (EEPROM.read(i) == 0) {break;}}
+  WiFi.begin(ssid.c_str(), password.c_str());
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.printf("STA: Failed!\n");
+    Serial.println("Wifi connection failed");
+    Serial.print("Connect to Access Point '");Serial.print(apSSID);Serial.println("' and point your browser to 192.168.4.1 to set SSID and password");
     WiFi.disconnect(false);
     delay(1000);
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssid.c_str(), password.c_str());
   }
   
   Serial.print("CONNECTED IP: ");Serial.println(WiFi.localIP());
@@ -137,9 +157,6 @@ void setup(){
   delay(500);
   Epoch = String(epoch);
 
-  LITTLEFS.begin();
-  EEPROM.begin(512);  
-  
   webserver.addHandler(new SPIFFSEditor(MYFS, http_username,http_password));
   
   webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest * request){
@@ -159,10 +176,9 @@ void setup(){
     String input7 =request->getParam(7)->value();receivedCommand[7] =(atoi(input7.c_str()));  
     String input8 =request->getParam(8)->value();receivedCommand[8] =(atoi(input8.c_str()));
     String input9 =request->getParam(9)->value();receivedCommand[9] =(atoi(input9.c_str())); 
-
     ssid = request->getParam(10)->value().c_str();                  
     password =request->getParam(11)->value().c_str();
- /* 
+  /*       
   if(p->isPost()){
     Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value());
     }
@@ -170,9 +186,9 @@ void setup(){
  } 
 request -> send(200, "text/plain", "Command received by server successfully, please click browser's back button to get back to main page.");
 Serial.print("Command received from Browser: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
+
+saveWificonfig();
 saveCommand();
-//Serial.println(ssid);
-//Serial.println(password);
 }); 
   
   webserver.serveStatic("/", MYFS, "/").setDefaultFile("index.html");
@@ -210,10 +226,11 @@ saveCommand();
 
 void loop(){
  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.printf("STA: Failed!\n");
+    Serial.println("Wifi connection failed");
+    Serial.print("Connect to Access Point ");Serial.print(apSSID);Serial.println(" and point your browser to 192.168.4.1 to set SSID and password" );
     WiFi.disconnect(false);
     delay(1000);
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssid.c_str(), password.c_str());
   }
  }  // End of loop
 
