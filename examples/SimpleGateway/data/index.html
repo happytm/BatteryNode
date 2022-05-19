@@ -65,7 +65,38 @@ body {margin: 0;}
 <input name="SSID" type="text" placeholder="SSID"/>
 <input name="SSID" type="password" placeholder="Password"/>
 <button type="submit">Enter WiFi Config</button>
+<br>
 
+<SELECT class="combine" id ="period" name = "period">
+    <option value="1">Graph by Period</option>
+    <option value="2">Last Hour</option>
+    <option value="3">Today</option>
+    <option value="4">This Week</option>
+    <option value="5">This Month</option>
+    <option value="6">This Year</option>
+</SELECT>
+
+<SELECT class="combine" id ="deviceid" name = "deviceid">
+    <option value="256">Graph by Device</option>
+    <option value="1">Gateway</option>
+    <option value="6">Livingroom</option>
+    <option value="16">Kitchen</option>
+    <option value="26">Bedroom1</option>
+    <option value="36">Bedroom2</option>
+    <option value="46">Bathroom</option>
+    <option value="56">Laundry</option>
+    <option value="66">Office</option>
+</SELECT>
+
+<SELECT class="combine" id ="sensortype" name = "sensortype">
+    <option value="1">Graph by Sensor Type</option>
+    <option value="2">Voltage</option>
+    <option value="3">RSSI</option>
+    <option value="4">Temperature</option>
+    <option value="5">Humidity</option>
+    <option value="6">Pressure</option>
+    <option value="7">Light</option>
+</SELECT>
 <script>
 var attachEvent = function(node, event, listener, useCapture) {
   // Method for FF, Opera, Chrome, Safari
