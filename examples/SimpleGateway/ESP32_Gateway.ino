@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <ESPAsyncWebServer.h>
@@ -27,33 +26,14 @@ const char* http_username = "admin";  // Web file editor interface Login.
 const char* http_password = "admin";  // Web file editor interface password.
 
 String dataFile = "/data.json";  // File to store sensor data.
-//String configFile = "/config.json";  // File to store configuration data.
 
-int livingroom[4] = {16,26,36,46};
-int kitchen[4] =    {46,36,26,16};
-int bedroom1[4] =   {46,36,26,16};
-int bedroom2[4] =   {16,26,36,36};
-int bedroom3[4] =   {16,26,36,36};
-int bedroom4[4] =   {16,26,36,36};
-int bathroom1[4] =  {16,26,36,36};
-int bathroom2[4] =  {16,26,36,36};
-int bathroom3[4] =  {16,26,36,36};
-int bathroom4[4] =  {16,26,36,36};
-int laundry[4] =    {16,26,36,36};
-int boiler[4] =     {16,26,36,36};
-int workshop[4] =   {16,26,36,36};
-int garage[4] =     {16,26,36,36};
-int office[4] =     {16,26,36,36};
-int tank[4] =       {16,26,36,36};
-int solar[4] =      {16,26,36,36};
 //==================User configuration not required below this line ================================================
 
 char str [256], s [70];
-String graphData, configData, Hour, Minute;
-int device, rssi, sensorValues[4], sensorTypes[4];
+String graphData, Hour, Minute;
+int device, rssi, sensorValues[4], sensorTypes[4]; int arraySize = 10;
 float voltage;
-int arraySize = 10;   // Data integers for each device.
-uint8_t Config[266],savedConfig[266],mac[6],receivedCommand[10],livingroomCommand[10],kitchenCommand[10],bedroom1Command[10],bedroom2Command[10],bedroom3Command[10],bedroom4Command[10],bathroom1Command[10],bathroom2Command[10],bathroom3Command[10],bathroom4Command[10],laundryCommand[10],boilerCommand[10],workshopCommand[10],garageCommand[10],officeCommand[10],tankCommand[10],solarCommand[10];
+uint8_t showConfig[266],savedConfig[266],mac[6],receivedCommand[10];
 const char* ntpServer = "pool.ntp.org";
 unsigned long epoch; 
 String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
@@ -64,6 +44,83 @@ MqttBroker broker(1883);
 MqttClient myClient(&broker);
 
 AsyncWebServer webserver(80);
+
+unsigned long getTime() {time_t now;if (!getLocalTime(&timeinfo)) {Serial.println("Failed to obtain time");return(0);}Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");time(&now);return now;}
+
+void setup(){
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  delay(500);
+  LITTLEFS.begin();
+  EEPROM.begin(512);  
+
+  startWiFi();
+  startAsyncwebserver();
+    
+  configTime(0, 0, ntpServer); setenv("TZ", MY_TZ, 1); tzset(); // Set environment variable with your time zone
+  epoch = getTime(); Serial.print("Epoch Time: "); Serial.println(epoch); delay(500); Epoch = String(epoch);
+
+  broker.begin();
+  myClient.setCallback(receivedMessage);
+  myClient.subscribe(receivedTopic);
+  myClient.subscribe(sentTopic);
+        
+  WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED); Serial.print("Waiting for probe requests ... ");
+
+} // End of setup
+
+void loop()
+{
+ if (WiFi.waitForConnectResult() != WL_CONNECTED) {ssid = EEPROM.readString(270); password = EEPROM.readString(301);Serial.println("Wifi connection failed");Serial.print("Connect to Access Point ");Serial.print(apSSID);Serial.println(" and point your browser to 192.168.4.1 to set SSID and password" );WiFi.disconnect(false);delay(1000);WiFi.begin(ssid.c_str(), password.c_str());}
+}  // End of loop
+
+void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
+{
+    Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
+
+    if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
+    {
+      device = info.ap_probereqrecved.mac[0];
+            
+      EEPROM.readBytes(0, showConfig,266);for(int k=0;k<20;k++){ 
+      //Serial.printf("%d ", showConfig[k]);
+      }
+                 
+      for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device-1]; 
+      for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+5]; 
+      timeSynch();
+      if (mac[1] == 0) {mac[0] = device; mac[1] = 101; timeSynch();}
+                     
+      esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
+      Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
+               
+      rssi = info.ap_probereqrecved.rssi;         
+      voltage = info.ap_probereqrecved.mac[1];
+      voltage = voltage * 2 / 100;
+      sensorValues[0] = info.ap_probereqrecved.mac[2];sensorValues[1] = info.ap_probereqrecved.mac[3];sensorValues[2] = info.ap_probereqrecved.mac[4];sensorValues[3] = info.ap_probereqrecved.mac[5];
+           
+      sprintf (str, "{");sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);sprintf (s, "}"); strcat (str, s);
+                    
+      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);
+      
+      myClient.publish("sensor", str);
+    
+      graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorValues[3];graphData += "]";
+     
+      File f = LITTLEFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
+      Serial.print("File size: "); Serial.println(f.size());
+      f.seek((f.size()-1), SeekSet);
+      Serial.print("Position: "); Serial.println(f.position());
+      f.print(graphData);Serial.println();
+      Serial.print("Appended to file: "); Serial.println(graphData);
+      Serial.print("File size: "); Serial.println(f.size());
+      f.close(); 
+                      
+      if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
+         myClient.publish("Warning/Battery Low", String(device));
+      }         
+    }
+ }
 
 void receivedMessage(const MqttClient* source, const Topic& topic, const char* payload, size_t length)
 {
@@ -76,69 +133,46 @@ void receivedMessage(const MqttClient* source, const Topic& topic, const char* p
     saveCommand();
   }
   
-void saveCommand() 
-{
-    if (receivedCommand[0] == 6 && receivedCommand[1] == 106) { for (int i = 3; i < 5; i++) livingroom[i] = receivedCommand[i];} else {for (int i = device; i < (device+6); i++) savedConfig[i] = receivedCommand[i];}    
-    if (receivedCommand[0] == 6 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) kitchen[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) kitchenCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 26 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bedroom1[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom1Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 36 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bedroom2[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom2Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 46 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bedroom3[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom3Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 56 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bedroom4[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bedroom4Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 66 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bathroom1[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom1Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 76 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bathroom2[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom2Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 86 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bathroom3[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom3Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 96 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) bathroom4[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) bathroom4Command[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 106 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) laundry[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) laundryCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 116 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) boiler[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) boilerCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 126 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) workshop[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) workshopCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 136 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) garage[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) garageCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 146 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) office[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) officeCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 156 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) tank[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) tankCommand[i] = receivedCommand[i];}
-    if (receivedCommand[0] == 166 && receivedCommand[1] == 106) { for (int i = 2; i < 5; i++) solar[i] = receivedCommand[i];} else {for (int i = 0; i < 6; i++) solarCommand[i] = receivedCommand[i];}
+void saveCommand()                                                                           
+{    
+  if (receivedCommand[1] == 106) 
+  {
+    for (int i = 0; i < 4; i++) 
+    {
+     savedConfig[i+receivedCommand[0]+5] = receivedCommand[i+2];
+     uint8_t tempSensortype[4];
+     tempSensortype[i] = savedConfig[i+receivedCommand[0]+5];
+     EEPROM.writeBytes(receivedCommand[0]+5, tempSensortype,4);
+     }
+   } else  {
+     for (int i = 0; i < 6; i++)
+     { 
+      savedConfig[i+receivedCommand[0]-1] = receivedCommand[i];
+      uint8_t tempCommand[6];
+      tempCommand[i] = savedConfig[i+receivedCommand[0]-1];
+      EEPROM.writeBytes(receivedCommand[0]-1, tempCommand,6);
+      }
+   }
+}
     
-    EEPROM.readBytes(0, Config,329);for(int k=0;k<329;k++){Serial.printf("%d ", Config[k]);}
- }                                               
-
 void saveWificonfig()
 { 
   if (ssid.length() > 0 || password.length() > 0) 
   {  
-    for (int i = 0; i < 30; ++i){EEPROM.write(270 + i, ssid[i]);Serial.println(ssid[i]);}          
-    for (int i = 0; i < 30; ++i){EEPROM.write(301 + i, password[i]);Serial.println(password[i]);}
-    EEPROM.commit();
-    Serial.println();
-    Serial.print("Wifi Configuration saved to EEPROM: SSID="); Serial.print(ssid);Serial.print(" & Password="); Serial.println(password);Serial.println("Restarting Gateway now...");
-    delay(1000);
+    EEPROM.writeString(270,ssid);EEPROM.writeString(301, password);Serial.println();Serial.print("Wifi Configuration saved to EEPROM: SSID="); Serial.print(ssid);Serial.print(" & Password="); Serial.println(password);Serial.println("Restarting Gateway now...");delay(1000);
     ESP.restart();
   }
 }
     
-void timeSynch(){ if (receivedCommand[1] != 105) {Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}}
+void timeSynch(){ if (receivedCommand[1] != 105) {epoch = getTime();Serial.print("Epoch Time: ");Serial.println(epoch); Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}}
 
-unsigned long getTime() {
-time_t now;
-if (!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
-    return(0);
-  }
-  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-  time(&now);
-  return now;
-}
-
-void setup(){
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
-  
-  LITTLEFS.begin();
-  EEPROM.begin(512);  
-  
+void startWiFi()
+{
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(apSSID, apPassword, apChannel, hidden);
   esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
   
-  for (int i = 270; i < 300; ++i){ssid += char(EEPROM.read(i));if (EEPROM.read(i) == 0) {break;}}
-  for (int i = 301; i < 330; ++i){password += char(EEPROM.read(i));if (EEPROM.read(i) == 0) {break;}}
+  ssid = EEPROM.readString(270); password = EEPROM.readString(301);
   WiFi.begin(ssid.c_str(), password.c_str());
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("Wifi connection failed");
@@ -146,17 +180,14 @@ void setup(){
     WiFi.disconnect(false);
     delay(1000);
     WiFi.begin(ssid.c_str(), password.c_str());
-  }
+ }
   
-  Serial.print("CONNECTED IP: ");Serial.println(WiFi.localIP());
-  
-  configTime(0, 0, ntpServer); setenv("TZ", MY_TZ, 1); tzset(); // Set environment variable with your time zone
- 
-  epoch = getTime();
-  Serial.print("Epoch Time: ");Serial.println(epoch);
-  delay(500);
-  Epoch = String(epoch);
+    Serial.print("Connect to IP: ");Serial.print(WiFi.localIP());Serial.println(" to monitor and control whole network");
+}
 
+
+void startAsyncwebserver()
+{
   webserver.addHandler(new SPIFFSEditor(MYFS, http_username,http_password));
   
   webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest * request){
@@ -183,12 +214,12 @@ void setup(){
     Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value());
     }
  */
- } 
-request -> send(200, "text/plain", "Command received by server successfully, please click browser's back button to get back to main page.");
-Serial.print("Command received from Browser: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
+} 
+  request -> send(200, "text/plain", "Command received by server successfully, please click browser's back button to get back to main page.");
+  Serial.print("Command received from Browser: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
 
-saveWificonfig();
-saveCommand();
+  saveWificonfig();
+  saveCommand();
 }); 
   
   webserver.serveStatic("/", MYFS, "/").setDefaultFile("index.html");
@@ -212,104 +243,4 @@ saveCommand();
   //Followin line must be added before server.begin() to allow local lan request see : https://github.com/me-no-dev/ESPAsyncWebServer/issues/726
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     webserver.begin();
-
-    broker.begin();
-
-    myClient.setCallback(receivedMessage);
-    myClient.subscribe(receivedTopic);
-    myClient.subscribe(sentTopic);
-        
-    WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
-    Serial.print("Waiting for probe requests ... ");
-
-} // End of setup
-
-void loop(){
- if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Wifi connection failed");
-    Serial.print("Connect to Access Point ");Serial.print(apSSID);Serial.println(" and point your browser to 192.168.4.1 to set SSID and password" );
-    WiFi.disconnect(false);
-    delay(1000);
-    WiFi.begin(ssid.c_str(), password.c_str());
-  }
- }  // End of loop
-
-
-void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
-{
-    Serial.print("Probe Received :  ");
-    for (int i = 0; i < 6; i++) {
-    Serial.printf("%02X", info.ap_probereqrecved.mac[i]);
-    if (i < 5)Serial.print(":");
-    }
-    Serial.println();
-
-    if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
-    {
-      device = info.ap_probereqrecved.mac[0];
-      epoch = getTime();
-      Serial.print("Epoch Time: ");Serial.println(epoch); 
-             
-      if (device == 6)  { EEPROM.writeBytes(device, savedConfig,arraySize); for (int j = 0; j < 6; j++) mac[j] = savedConfig[j]; for (int k = 0; k < arraySize; k++) sensorTypes[k] = livingroomCommand[k]; timeSynch();}
-      if (device == 16) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = kitchenCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = kitchenCommand[k]; timeSynch();}
-      if (device == 26) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bedroom1Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bedroom1Command[k]; timeSynch();}
-      if (device == 36) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bedroom2Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bedroom2Command[k]; timeSynch();}
-      if (device == 46) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bedroom3Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bedroom3Command[k]; timeSynch();}
-      if (device == 56) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bedroom4Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bedroom4Command[k]; timeSynch();}
-      if (device == 66) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bathroom1Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bathroom1Command[k]; timeSynch();}
-      if (device == 76) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bathroom2Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bathroom2Command[k]; timeSynch();}
-      if (device == 86) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bathroom3Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bathroom3Command[k]; timeSynch();}
-      if (device == 96) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = bathroom4Command[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = bathroom4Command[k]; timeSynch();}
-      if (device == 106) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = laundryCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = laundryCommand[k]; timeSynch();}
-      if (device == 116) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = boilerCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = boilerCommand[k]; timeSynch();}
-      if (device == 126) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = workshopCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = workshopCommand[k]; timeSynch();}
-      if (device == 136) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = garageCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = garageCommand[k]; timeSynch();}
-      if (device == 146) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = officeCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = officeCommand[k]; timeSynch();}
-      if (device == 156) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = tankCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = tankCommand[k]; timeSynch();}
-      if (device == 166) { EEPROM.writeBytes(device, Config,arraySize); for (int j = 0; j < 6; j++) mac[j] = solarCommand[j]; for (int k = 7; k < arraySize; k++) sensorTypes[k] = solarCommand[k]; timeSynch();}
-      
-      if (mac[1] == 0) {mac[0] = device; mac[1] = 101; timeSynch();}
-        
-      
-             
-      esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
-      Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
-               
-      rssi = info.ap_probereqrecved.rssi;         
-      voltage = info.ap_probereqrecved.mac[1];
-      voltage = voltage * 2 / 100;
-      sensorValues[0] = info.ap_probereqrecved.mac[2];
-      sensorValues[1] = info.ap_probereqrecved.mac[3];
-      sensorValues[2] = info.ap_probereqrecved.mac[4];
-      sensorValues[3] = info.ap_probereqrecved.mac[5];
-           
-      sprintf (str, "{");
-      sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);
-      sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (str, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);
-      sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);
-      sprintf (s, "}"); strcat (str, s);
-                    
-      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");
-      Serial.println(str);
-      
-      myClient.publish("sensor", str);
-    
-      graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorValues[3];graphData += "]";
-     
-      File f = LITTLEFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
-      Serial.print("File size: "); Serial.println(f.size());
-      f.seek((f.size()-1), SeekSet);
-      Serial.print("Position: "); Serial.println(f.position());
-      f.print(graphData);Serial.println();
-      Serial.print("Appended to file: "); Serial.println(graphData);
-      Serial.print("File size: "); Serial.println(f.size());
-      f.close(); 
-                      
-      if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
-         myClient.publish("Warning/Battery Low", String(device));
-      }         
-    }
- }
+}
