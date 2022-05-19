@@ -203,12 +203,8 @@ void startAsyncwebserver()
     String input3 =request->getParam(3)->value();receivedCommand[3] =(atoi(input3.c_str())); 
     String input4 =request->getParam(4)->value();receivedCommand[4] =(atoi(input4.c_str()));
     String input5 =request->getParam(5)->value();receivedCommand[5] =(atoi(input5.c_str()));    
-    String input6 =request->getParam(6)->value();receivedCommand[6] =(atoi(input6.c_str()));
-    String input7 =request->getParam(7)->value();receivedCommand[7] =(atoi(input7.c_str()));  
-    String input8 =request->getParam(8)->value();receivedCommand[8] =(atoi(input8.c_str()));
-    String input9 =request->getParam(9)->value();receivedCommand[9] =(atoi(input9.c_str())); 
-    ssid = request->getParam(10)->value().c_str();                  
-    password =request->getParam(11)->value().c_str();
+    ssid = request->getParam(6)->value().c_str();                  
+    password =request->getParam(7)->value().c_str();
   /*       
   if(p->isPost()){
     Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value());
