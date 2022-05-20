@@ -20,12 +20,12 @@ String password;
 const char* apSSID = "ESP";
 const char* apPassword = "";
 const int apChannel = 7;
-const int hidden = 0; // If hidden is 1 probe request event handling does not work ?
+const int hidden = 0;                 // If hidden is 1 probe request event handling does not work ?
 
 const char* http_username = "admin";  // Web file editor interface Login.
 const char* http_password = "admin";  // Web file editor interface password.
 
-String dataFile = "/data.json";  // File to store sensor data.
+String dataFile = "/data.json";       // File to store sensor data.
 
 //==================User configuration not required below this line ================================================
 
@@ -33,7 +33,7 @@ char str [256], s [70];
 String graphData, Hour, Minute;
 int device, rssi, sensorValues[4], sensorTypes[4]; int arraySize = 10;
 float voltage;
-uint8_t showConfig[266],savedConfig[266],mac[6],receivedCommand[10];
+uint8_t mac[6],receivedCommand[6],showConfig[256];
 const char* ntpServer = "pool.ntp.org";
 unsigned long epoch; 
 String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
@@ -76,22 +76,25 @@ void loop()
 
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
 {
+    Serial.println();
     Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
 
     if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
     {
       device = info.ap_probereqrecved.mac[0];
-            
-      EEPROM.readBytes(0, showConfig,266);for(int k=0;k<20;k++){ 
-      //Serial.printf("%d ", showConfig[k]);
+      Serial.print("Contents of command data saved in EEPROM for device: ");
+      EEPROM.readBytes(0, showConfig,256);for(int i=0;i<20;i++){ 
+      Serial.printf("%d ", showConfig[i+device-1]);
       }
-                 
+      
+      Serial.println();
       for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device-1]; 
       for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+5]; 
       timeSynch();
-      if (mac[1] == 0) {mac[0] = device; mac[1] = 101; timeSynch();}
+      //if (mac[1] == 0) {mac[0] = device; mac[1] = 101; timeSynch();}
                      
       esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
+      Serial.println();
       Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
                
       rssi = info.ap_probereqrecved.rssi;         
@@ -105,7 +108,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       
       myClient.publish("sensor", str);
     
-      graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorValues[3];graphData += "]";
+      graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorTypes[0];graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorTypes[1];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorTypes[2];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorTypes[3];graphData += ",";graphData += sensorValues[3];graphData += "]";
      
       File f = LITTLEFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
       Serial.print("File size: "); Serial.println(f.size());
@@ -135,36 +138,38 @@ void receivedMessage(const MqttClient* source, const Topic& topic, const char* p
   
 void saveCommand()                                                                           
 {    
-  if (receivedCommand[1] == 106) 
+    if (receivedCommand[1] == 121) // Set sensor types command received.
   {
     for (int i = 0; i < 4; i++) 
     {
-     savedConfig[i+receivedCommand[0]+5] = receivedCommand[i+2];
-     uint8_t tempSensortype[4];
-     tempSensortype[i] = savedConfig[i+receivedCommand[0]+5];
-     EEPROM.writeBytes(receivedCommand[0]+5, tempSensortype,4);
+     uint8_t tempSensortypes[4];
+     tempSensortypes[i] = receivedCommand[i+2];
+     EEPROM.writeBytes(receivedCommand[0]+5, tempSensortypes,4);
      }
-   } else  {
+   } else if (receivedCommand[1] >= 101 && receivedCommand[1] <= 120) 
+   
+     {
      for (int i = 0; i < 6; i++)
      { 
-      savedConfig[i+receivedCommand[0]-1] = receivedCommand[i];
       uint8_t tempCommand[6];
-      tempCommand[i] = savedConfig[i+receivedCommand[0]-1];
+      tempCommand[i] = receivedCommand[i];
       EEPROM.writeBytes(receivedCommand[0]-1, tempCommand,6);
       }
    }
+      EEPROM.commit();Serial.println();Serial.println("Command and sensor types saved to EEPROM");
 }
     
 void saveWificonfig()
 { 
   if (ssid.length() > 0 || password.length() > 0) 
   {  
-    EEPROM.writeString(270,ssid);EEPROM.writeString(301, password);Serial.println();Serial.print("Wifi Configuration saved to EEPROM: SSID="); Serial.print(ssid);Serial.print(" & Password="); Serial.println(password);Serial.println("Restarting Gateway now...");delay(1000);
+    EEPROM.writeString(270,ssid);EEPROM.writeString(301, password);
+    EEPROM.commit();Serial.println();Serial.print("Wifi Configuration saved to EEPROM: SSID="); Serial.print(ssid);Serial.print(" & Password="); Serial.println(password);Serial.println("Restarting Gateway now...");delay(1000);
     ESP.restart();
   }
 }
     
-void timeSynch(){ if (receivedCommand[1] != 105) {epoch = getTime();Serial.print("Epoch Time: ");Serial.println(epoch); Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}}
+void timeSynch(){ if (mac[1] == 105 || mac[1] == 107) {return;}else{epoch = getTime();Serial.print("Epoch Time: ");Serial.println(epoch); Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}}
 
 void startWiFi()
 {
@@ -203,13 +208,16 @@ void startAsyncwebserver()
     String input3 =request->getParam(3)->value();receivedCommand[3] =(atoi(input3.c_str())); 
     String input4 =request->getParam(4)->value();receivedCommand[4] =(atoi(input4.c_str()));
     String input5 =request->getParam(5)->value();receivedCommand[5] =(atoi(input5.c_str()));    
-    ssid = request->getParam(6)->value().c_str();                  
-    password =request->getParam(7)->value().c_str();
-  /*       
+   // String input6 =request->getParam(6)->value();receivedCommand[6] =(atoi(input6.c_str()));
+   // String input7 =request->getParam(7)->value();receivedCommand[7] =(atoi(input7.c_str()));    
+
+    ssid = request->getParam(8)->value().c_str();                  
+    password =request->getParam(9)->value().c_str();
+         
   if(p->isPost()){
     Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value());
     }
- */
+ 
 } 
   request -> send(200, "text/plain", "Command received by server successfully, please click browser's back button to get back to main page.");
   Serial.print("Command received from Browser: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
