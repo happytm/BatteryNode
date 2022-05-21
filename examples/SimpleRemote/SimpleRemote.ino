@@ -4,6 +4,7 @@
 #include <esp_wifi.h>
 #include <HTTPClient.h>
 #include <ESP32httpUpdate.h>  // Install from arduino library manager
+#include <EEPROM.h>
 
 const char* ssid = "ESP";
 const char* password = "";
@@ -12,20 +13,21 @@ const char* password = "";
 
 String binFile = "http://192.168.4.1/device_246.bin";
 
-RTC_DATA_ATTR int Hour;          // Hour received from Gateway. More reliable source than internal RTC of local device. 
-RTC_DATA_ATTR int Minute;        // Minute received from Gateway. More reliable source than internal RTC of local device.
-RTC_DATA_ATTR int device;        // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
-RTC_DATA_ATTR int apChannel;     // WiFi Channel for this device.
-RTC_DATA_ATTR int sleepTime;     // Sleep time in minutes.
-RTC_DATA_ATTR int upTime;        // Device uptime in milliseconds.
-RTC_DATA_ATTR int deviceMode;    // Device Mode. Default is 0.
-RTC_DATA_ATTR int target1, target2, target3, target4; // Targets set via web interface which can be used for automations locally.
-RTC_DATA_ATTR int neopixelValue1,neopixelValue2,neopixelValue3,neopixelValue4;
-RTC_DATA_ATTR int digitalWriteValue1,digitalWriteValue2;
-RTC_DATA_ATTR int analogWriteValue1, analogWriteValue2;
+int device;        // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+int apChannel;     // WiFi Channel for this device.
+int sleepTime;     // Sleep time in minutes.
+int upTime;        // Device uptime in milliseconds.
+int deviceMode;    // Device Mode. Default is 0.
+int target1, target2, target3, target4; // Targets set via web interface which can be used for automations locally.
+int neopixelValue1,neopixelValue2,neopixelValue3,neopixelValue4;
+int digitalWriteValue1,digitalWriteValue2;
+int analogWriteValue1, analogWriteValue2;
+int Hour;          // Hour received from Gateway. More reliable source than internal RTC of local device
+int Minute;        // Minute received from Gateway. More reliable source than internal RTC of local device.
 
 // Sensor values to be sent to Gateway
 uint8_t sensorData[6];  // = {device, voltage, Sensorvalue4, Sensorvalue4, Sensorvalue4, Sensorvalue4};
+uint8_t showConfig[20]; // Content of EEPROM is saved here.
 
 //int receivedDevice;   // Device ID.
 int commandType;      // digitalwrite, analogwrite, digitalRead, analogRead, neopixel, pin setup etc.
@@ -40,10 +42,11 @@ int warnVolt = 130;   // Start warning when battery level goes below 2.60 volts 
 //============Do not need user configuration from here on============================
 
 void setup() {
+  EEPROM.begin(30);
   
-  if (device == 0) {device = 246;}
-  if (apChannel == 0) {apChannel = 7;}
-  if (sleepTime == 0) {sleepTime = 1;}
+  if (EEPROM.readByte(0) == 255)  {device = 246;}  else {device = EEPROM.readByte(18);}
+  if (EEPROM.readByte(15) == 255) {apChannel = 7;} else {apChannel = EEPROM.readByte(15);}
+  if (EEPROM.readByte(16) == 255) {sleepTime = 1;} else {sleepTime = EEPROM.readByte(16);}
   
   //WiFi.scanDelete();  //remove previous scan data from memory
   sensorValues();
@@ -53,14 +56,23 @@ void setup() {
   Serial.print("Sensors values data sent to controller: ");Serial.println(WiFi.macAddress());
   
   delay(10);  // Minimum 10 milliseonds delay required to reliably receive message from Gateway.
-    
-  device = WiFi.BSSID(0)[0];
-  commandType = WiFi.BSSID(0)[1];
   
+  EEPROM.writeByte(0,WiFi.BSSID(0)[0]);   // Device ID at address 1.
+  EEPROM.writeByte(1, WiFi.BSSID(0)[1]);  // Command type  
+  EEPROM.commit();
+  //device = EEPROM.readByte(0);
+  commandType = EEPROM.readByte(1);
+
+  Serial.print("Contents of EEPROM for this device: ");
+  EEPROM.readBytes(0, showConfig,20);for(int i=0;i<20;i++){ 
+  Serial.printf("%d ", showConfig[i]);
+  }
+      
   if ( commandType > 100 && commandType < 121)  {   // If commandType is 101 to 120.
     
-      Serial.print("Gateway Name is: ");Serial.print(WiFi.SSID(0)); Serial.print(" & Gateway Channel is: ");Serial.println(WiFi.channel(0));
-         
+      Serial.print("Gateway Name is: ");Serial.print(WiFi.SSID(0));Serial.print(" & Gateway's Wifi Channel is: ");Serial.println(WiFi.channel(0));
+      Serial.print("This device's Wifi Channel is: ");Serial.println(apChannel);  
+      
       value1 = WiFi.BSSID(0)[2];
       value2 = WiFi.BSSID(0)[3];
       value3 = WiFi.BSSID(0)[4];
@@ -71,50 +83,75 @@ void setup() {
        
        if (commandType == 101)        // Digital Write
        {
+         EEPROM.writeByte(3,value1);
+         EEPROM.writeByte(4,value2);
+         Serial.print("Received Digital Write Command  ");Serial.print(EEPROM.readByte(3));  Serial.println(EEPROM.readByte(4));
+
          gpioControl();
          
        } else if (commandType == 102) // Analog Write
        {
+         EEPROM.writeByte(5,value1);
+         EEPROM.writeByte(6,value2);
+         Serial.print("Received Analog Write Command  ");Serial.print(EEPROM.readByte(5));  Serial.println(EEPROM.readByte(6));
+
          gpioControl();
        } else if (commandType == 103)  // Digital Read
        {
-         
+          Serial.println("Received Digital Read pin:  ");
        } else if (commandType == 104)  // Analog Read
        { 
-          
+           Serial.println("Received Digital Read pin: ");
        } else if (commandType == 105)  // Neopixel
        {
-         
+         EEPROM.writeByte(7,value1);
+         EEPROM.writeByte(8,value2);
+         EEPROM.writeByte(9,value3);
+         EEPROM.writeByte(10,value4);
+         Serial.print("Received Neopixel Command  ");Serial.print(EEPROM.readByte(7));  Serial.println(EEPROM.readByte(8));Serial.print(EEPROM.readByte(9));  Serial.println(EEPROM.readByte(10));
+
          gpioControl();
        } else if (commandType == 107)  // Set Targets
        {
-          target1 = value1;
-          target2 = value2;
-          target3 = value3;
-          target4 = value4;
+         EEPROM.writeByte(11,value1);
+         EEPROM.writeByte(12,value2);
+         EEPROM.writeByte(13,value3);
+         EEPROM.writeByte(14,value4);
+         Serial.print("Received Set Target Values Command  ");Serial.println(EEPROM.readByte(11));  Serial.println(EEPROM.readByte(12));Serial.print(EEPROM.readByte(13));  Serial.println(EEPROM.readByte(14));        
+
        } else if (commandType == 108)  // Set AP Channel
        {
-         apChannel = value1;  
+         EEPROM.writeByte(15,value1);
+         Serial.print("Received Set AP Channel Command  ");Serial.println(EEPROM.readByte(15));
+         apChannel = EEPROM.readByte(15);  
        } else if (commandType == 109)  // Set Sleep Time
        {
-         sleepTime = value1;
+         EEPROM.writeByte(16,value1);
+         Serial.print("Received Set Sleep Time Command  ");Serial.println(EEPROM.readByte(16));
+         sleepTime = EEPROM.readByte(16);
        } else if (commandType == 110)  // Set Mode
        {
-         
-         deviceMode = value1;          // Save device mode (0 for regular, 1 for autupdate and 2 for any other option).
+         EEPROM.writeByte(17,value1);
+         Serial.print("Received Set Device Mode Command  ");Serial.println(EEPROM.readByte(17));
+
+         deviceMode = EEPROM.readByte(17);         // Save device mode (0 for regular, 1 for autupdate and 2 for any other option).
          if (deviceMode == 1) {OTAupdate();}
         
        } else if (commandType == 111)  // Set Device ID
        {
          
-         device = value1;              // Save device ID.
+         EEPROM.writeByte(18,value1);
+         Serial.print("Received Set Device ID Command  ");Serial.println(EEPROM.readByte(0));
+         device = EEPROM.readByte(18);
         }
+         EEPROM.commit();Serial.println();Serial.println("Command from Gateway saved to EEPROM");
     delay(1);
   } else {
+    
     Serial.println("Resending sensor values..."); 
     esp_sleep_enable_timer_wakeup(sleepTime * 100);
     esp_deep_sleep_start();
-    //ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
+    ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
     }
       
   }  // Setup ends here
@@ -158,11 +195,13 @@ void sensorValues()
 void synchTime(){
   if (commandType == 105 || commandType == 107)
   {
-    Hour = Hour;              // Hour value from local RTC memory.
-    Minute = Minute + sleepTime;  // Minute from local RTC memory + Sleep Time.
+    Hour = EEPROM.readByte(19);                           // Hour value from local RTC memory.
+    Minute = EEPROM.readByte(20) + EEPROM.readByte(16);   // Minute from local RTC memory + Sleep Time.
   } else {
+    EEPROM.writeByte(19,value3);
+    EEPROM.writeByte(20,value3);
     Hour = value3;     // New hour value received from Gateway.
-    Minute = value4;  //  New minute value received from Gateway.
+    Minute = value4;   //  New minute value received from Gateway.
   }
   Serial.print("Time received from Gateway: ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
 }
@@ -170,11 +209,11 @@ void synchTime(){
 
 void gpioControl()   {
  
-    if ((value1 >= 1 && value1 <= 5) || (value1 >= 12 && value1 <= 39))   
-    {if (value2 == 1){digitalWrite(value1, HIGH);} else if (value1 == 0){digitalWrite(value1, LOW);}
+    if ((EEPROM.readByte(3) >= 1 && EEPROM.readByte(3) <= 5) || (EEPROM.readByte(3) >= 12 && EEPROM.readByte(3) <= 39))   
+    {if (EEPROM.readByte(4) == 1){digitalWrite(EEPROM.readByte(3), HIGH);} else if (EEPROM.readByte(3) == 0){digitalWrite(EEPROM.readByte(3), LOW);}
       /*    
         } else if (commandType == 102){
-           analogWrite(value1, value2);
+           analogWrite(EEPROM.readByte(5), EEPROM.readByte(6));
          
         }
       }
