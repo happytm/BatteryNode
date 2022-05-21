@@ -125,7 +125,9 @@ https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 
 http://www.of-things.de/battery-life-calculator.php
       
-## Tool used to convert HTML/CSS/JAVASCRIPT TO HEXb: https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
+## Tool used to convert HTML/CSS/JAVASCRIPT TO HEX: 
+      
+https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
 
 ## To do:
  - Web interface for ESP32 Gateway. Basic dashbord to monitor sensor data is implemented using uPlot javascript library.
