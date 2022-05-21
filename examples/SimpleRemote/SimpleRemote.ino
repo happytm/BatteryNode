@@ -8,32 +8,43 @@
 const char* ssid = "ESP";
 const char* password = "";
 
-// use any of following for devie ID ending with 6.
-// 6,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246 etc.
+//==================User configuration generally not required below this line ================================================
 
-int device = 6;         // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
-//int battery = 6;         // Battery voltage sensor Type.
-int apChannel = 7;       // WiFi Channel for this device.
-int sleepTime = 1;       // Sleep time in minutes.
-int upTime;              // Device uptime in milliseconds.
-int deviceMode = 0;
+String binFile = "http://192.168.4.1/device_246.bin";
+
+RTC_DATA_ATTR int Hour;          // Hour received from Gateway. More reliable source than internal RTC of local device. 
+RTC_DATA_ATTR int Minute;        // Minute received from Gateway. More reliable source than internal RTC of local device.
+RTC_DATA_ATTR int device;        // Unique device ID must end with 2,6,A or E. See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
+RTC_DATA_ATTR int apChannel;     // WiFi Channel for this device.
+RTC_DATA_ATTR int sleepTime;     // Sleep time in minutes.
+RTC_DATA_ATTR int upTime;        // Device uptime in milliseconds.
+RTC_DATA_ATTR int deviceMode;    // Device Mode. Default is 0.
+RTC_DATA_ATTR int target1, target2, target3, target4; // Targets set via web interface which can be used for automations locally.
+RTC_DATA_ATTR int neopixelValue1,neopixelValue2,neopixelValue3,neopixelValue4;
+RTC_DATA_ATTR int digitalWriteValue1,digitalWriteValue2;
+RTC_DATA_ATTR int analogWriteValue1, analogWriteValue2;
 
 // Sensor values to be sent to Gateway
-uint8_t sensorData[6];  // = {device, voltage, Sensorvalue1, Sensorvalue2, Sensorvalue3, Sensorvalue4};
+uint8_t sensorData[6];  // = {device, voltage, Sensorvalue4, Sensorvalue4, Sensorvalue4, Sensorvalue4};
 
-int receivedDevice;   // Device ID.
+//int receivedDevice;   // Device ID.
 int commandType;      // digitalwrite, analogwrite, digitalRead, analogRead, neopixel, pin setup etc.
-int pinNumber;        // gpio pin number.
-int value1;           // 0 or 1 in case of digitalwrte, 0 to 255 in case of analogwrite or value for RED neopixel or value for sensorType 4.
-int value2;           // 0 to 255 - value for GREEN neopixel or value for sensorType 5.
-int value3;           // 0 to 255 - value for BLUE neopixel or value for sensorType 6.
-int Hour, Minute;      
+int value1;           // gpio pin number or other values like device ID, sleeptime, Ap Channel, Device mode etc.
+int value2;           // 0 or 1 in case of digitalwrte, 0 to 255 in case of analogwrite or value for RED neopixel or value for sensorType 4.
+int value3;           // 0 to 255 - value for GREEN neopixel or value for sensorType 5.
+int value4;           // 0 to 255 - value for BLUE neopixel or value for sensorType 6.
+     
 int warnVolt = 130;   // Start warning when battery level goes below 2.60 volts (260/2 = 130).
 
 
 //============Do not need user configuration from here on============================
 
 void setup() {
+  
+  if (device == 0) {device = 246;}
+  if (apChannel == 0) {apChannel = 7;}
+  if (sleepTime == 0) {sleepTime = 1;}
+  
   //WiFi.scanDelete();  //remove previous scan data from memory
   sensorValues();
   int n = WiFi.scanNetworks(true, false, false, 5, apChannel);
@@ -41,70 +52,78 @@ void setup() {
   Serial.begin(115200);
   Serial.print("Sensors values data sent to controller: ");Serial.println(WiFi.macAddress());
   
-  delay(10);  // Minimum 10 milliseonds delay required to receive message from gateway reliably.
+  delay(10);  // Minimum 10 milliseonds delay required to reliably receive message from Gateway.
     
-  receivedDevice = WiFi.BSSID(0)[0];
+  device = WiFi.BSSID(0)[0];
   commandType = WiFi.BSSID(0)[1];
   
-  if ( commandType > 99 && commandType < 120)  {   
+  if ( commandType > 100 && commandType < 121)  {   // If commandType is 101 to 120.
     
       Serial.print("Gateway Name is: ");Serial.print(WiFi.SSID(0)); Serial.print(" & Gateway Channel is: ");Serial.println(WiFi.channel(0));
          
-      pinNumber = WiFi.BSSID(0)[2];
-      value1 = WiFi.BSSID(0)[3];
-      value2 = WiFi.BSSID(0)[4];
-      value3 = WiFi.BSSID(0)[5];
-      //Serial.print(commandType);
-      Serial.print("Command received from Gateway: ");Serial.println(&WiFi.BSSIDstr(0)[0]);
+      value1 = WiFi.BSSID(0)[2];
+      value2 = WiFi.BSSID(0)[3];
+      value3 = WiFi.BSSID(0)[4];
+      value4 = WiFi.BSSID(0)[5];
       
-       if (commandType == 101) // Digital Write
+      Serial.print("Command received from Gateway: ");Serial.println(&WiFi.BSSIDstr(0)[0]);
+      synchTime();
+       
+       if (commandType == 101)        // Digital Write
        {
-         timeSynch();
+         gpioControl();
+         
        } else if (commandType == 102) // Analog Write
        {
-         timeSynch();
+         gpioControl();
        } else if (commandType == 103)  // Digital Read
        {
-         timeSynch();
+         
        } else if (commandType == 104)  // Analog Read
        { 
-         timeSynch(); 
-       } else if (commandType == 105 && pinNumber != 0)  // Neopixel
+          
+       } else if (commandType == 105)  // Neopixel
        {
-       } else if (commandType == 106 && pinNumber != 0)  // Set Sensor Types
+         
+         gpioControl();
+       } else if (commandType == 107)  // Set Targets
        {
-       } else if (commandType == 107)  // Set AP Channel
+          target1 = value1;
+          target2 = value2;
+          target3 = value3;
+          target4 = value4;
+       } else if (commandType == 108)  // Set AP Channel
        {
-        timeSynch();   
-       } else if (commandType == 108)  // Set Sleep Time
+         apChannel = value1;  
+       } else if (commandType == 109)  // Set Sleep Time
        {
-        timeSynch();
-       } else if (commandType == 109)  // Set Mode
+         sleepTime = value1;
+       } else if (commandType == 110)  // Set Mode
        {
-         timeSynch();
-         deviceMode = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for any other option).
+         
+         deviceMode = value1;          // Save device mode (0 for regular, 1 for autupdate and 2 for any other option).
          if (deviceMode == 1) {OTAupdate();}
-       }
-       else if (commandType == 110)   // Set Device ID
+        
+       } else if (commandType == 111)  // Set Device ID
        {
-         timeSynch();
-         deviceMode = pinNumber;      // Save device mode (0 for regular, 1 for autupdate and 2 for any other option).
-         if (deviceMode == 1) {OTAupdate();}
-       }
+         
+         device = value1;              // Save device ID.
+        }
     delay(1);
   } else {
     Serial.println("Resending sensor values..."); 
     esp_sleep_enable_timer_wakeup(sleepTime * 100);
     esp_deep_sleep_start();
     //ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
-    }  
+    }
+      
   }  // Setup ends here
 
 //========================Main Loop================================
 
 void loop() {
 
-  gpioControl();
+  
 
   upTime = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
   
@@ -136,68 +155,35 @@ void sensorValues()
   //Values received from sensors replaces 4 random values of sensorData array.
 }
 
-void timeSynch(){
-  Hour = value2;    // Hour
-  Minute = value3;  // Minute
+void synchTime(){
+  if (commandType == 105 || commandType == 107)
+  {
+    Hour = Hour;              // Hour value from local RTC memory.
+    Minute = Minute + sleepTime;  // Minute from local RTC memory + Sleep Time.
+  } else {
+    Hour = value3;     // New hour value received from Gateway.
+    Minute = value4;  //  New minute value received from Gateway.
+  }
   Serial.print("Time received from Gateway: ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
 }
 
+
 void gpioControl()   {
- if ( receivedDevice == device )   {
-    if ((pinNumber >= 1 && pinNumber <= 5) || (pinNumber >= 12 && pinNumber <= 39))   {
-      if (commandType == 1)    {
-       if (value1 == 1)
-        {
-          digitalWrite(pinNumber, HIGH);
-          Serial.print("digitalWrite");
-          Serial.print("(");
-          Serial.print(pinNumber);
-          Serial.print(",");
-          Serial.print(value1);
-          Serial.println(");");
-          Serial.println();
-          Serial.println();
-        } else if (value1 == 0)
-        {
-          digitalWrite(pinNumber, LOW);
-          Serial.print("digitalWrite");
-          Serial.print("(");
-          Serial.print(pinNumber);
-          Serial.print(",");
-          Serial.print(value1);
-          Serial.println(");");
-          Serial.println();
-          Serial.println();
-        } else
-        {
-        /*  AnalogWrite(pinNumber, value1);
-          Serial.print("AnalogWrite");
-          Serial.print("(");
-          Serial.print(pinNumber);
-          Serial.print(",");
-          Serial.print(value1);
-          Serial.println(");");
-          Serial.println();
-          Serial.println(); */
+ 
+    if ((value1 >= 1 && value1 <= 5) || (value1 >= 12 && value1 <= 39))   
+    {if (value2 == 1){digitalWrite(value1, HIGH);} else if (value1 == 0){digitalWrite(value1, LOW);}
+      /*    
+        } else if (commandType == 102){
+           analogWrite(value1, value2);
+         
         }
       }
       /*
-        } else if (receivedCommand == 5)    {
+        } else if (receivedCommand == 105)    {
           // TO DO - write function for neopixel
-          analogWrite(pinNumber, value1);
-          Serial.print("analogWrite");
-          Serial.print("(");
-          Serial.print(pinNumber);
-          Serial.print(",");
-          Serial.print(value1);
-          Serial.println(");");
-          Serial.println();
-          Serial.println();
-          }
-      */
+         */ 
+      }      
     }
-  }
-}
 
 void OTAupdate(){  // Receive  OTA update from bin file on Gateway's LittleFS data folder.
 WiFi.begin(ssid, password);
@@ -210,7 +196,7 @@ WiFi.begin(ssid, password);
   delay(500);
 
 
-        t_httpUpdate_return ret = ESPhttpUpdate.update("http://192.168.4.1/remote.bin");
+        t_httpUpdate_return ret = ESPhttpUpdate.update(binFile);
 
         switch(ret) {
             case HTTP_UPDATE_FAILED:
