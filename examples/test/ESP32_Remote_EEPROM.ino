@@ -63,13 +63,14 @@ void setup() {
   //device = EEPROM.readByte(0);
   commandType = EEPROM.readByte(1);
 
-  Serial.print("Contents of EEPROM for this device: ");
-  EEPROM.readBytes(0, showConfig,20);for(int i=0;i<20;i++){ 
+  Serial.println("Contents of EEPROM for this device below: ");
+  EEPROM.readBytes(0, showConfig,21);for(int i=0;i<21;i++){ 
   Serial.printf("%d ", showConfig[i]);
   }
       
   if ( commandType > 100 && commandType < 121)  {   // If commandType is 101 to 120.
-    
+      
+      Serial.println();
       Serial.print("Gateway Name is: ");Serial.print(WiFi.SSID(0));Serial.print(" & Gateway's Wifi Channel is: ");Serial.println(WiFi.channel(0));
       Serial.print("This device's Wifi Channel is: ");Serial.println(apChannel);  
       
@@ -199,7 +200,7 @@ void synchTime(){
     Minute = EEPROM.readByte(20) + EEPROM.readByte(16);   // Minute from local RTC memory + Sleep Time.
   } else {
     EEPROM.writeByte(19,value3);
-    EEPROM.writeByte(20,value3);
+    EEPROM.writeByte(20,value4);
     Hour = value3;     // New hour value received from Gateway.
     Minute = value4;   //  New minute value received from Gateway.
   }
