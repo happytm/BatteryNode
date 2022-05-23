@@ -60,25 +60,12 @@ body {margin: 0;}
     <option value="111">Set Device ID</option>
 </SELECT>
 
-<input id="command1" name="command1" type="number" min="0" max="256">   
-<input id="command2" name="command2" type="number" min="0" max="256">   
-<input id="command3" name="command3" type="number" min="0" max="256">   
-<input id="command4" name="command4" type="number" min="0" max="256">  
+<input id="command1" name="command1" type="number"  min="0" max="256">   
+<input id="command2" name="command2" type="number"  min="0" max="256">
+<input id="command3" name="command3" type="number"  min="0" max="256">
+<input id="command4" name="command4" type="number"  min="0" max="256">  
 
 <button type="submit">Send Command</button>
-<br><br>
-<SELECT class="combine" id ="devicenumber" name = "devicenumber">
-    <option value="256">Device ID</option>
-    <option value="6">6</option>
-    <option value="16">16</option>
-    <option value="26">26</option>
-    <option value="36">36</option>
-    <option value="46">46</option>
-    <option value="56">56</option>
-    <option value="66">66</option>
-</SELECT>
-<input name="devicename" type="text" placeholder="Device Name"/>
-<button type="submit">Set Device Name</button>
 <br><br>
 
 <input name="SSID" type="text" placeholder="SSID"/>
@@ -270,30 +257,30 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 				// epoch,location,voltage,rssi,temperature,humidity,pressure,light
 
 				const numFields = packed[0];
-                console.log(numFields); //12
+                                console.log(numFields); //12
 				packed = packed.slice(numFields + 1);
-                console.log(packed);   //single array of all sensor data.
+                                console.log(packed);   //single array of all sensor data.
                 
         
 				let data = [
-					Array(packed.length/numFields), // epoch
-					Array(packed.length/numFields), // location
-          Array(packed.length/numFields), // voltage
-					Array(packed.length/numFields), // rssi
-					Array(packed.length/numFields), // sensor type1
-					Array(packed.length/numFields), // sensor value1
-          Array(packed.length/numFields), // sensor type2
-					Array(packed.length/numFields), // sensor value2
-					Array(packed.length/numFields), // sensor type3
-					Array(packed.length/numFields), // sensor value3
-					Array(packed.length/numFields), // sensor type4
-					Array(packed.length/numFields), // sensor value4
-					Array(packed.length/numFields), //
-					Array(packed.length/numFields), // 
-					Array(packed.length/numFields), // sensor type3
-					Array(packed.length/numFields), // sensor value3
-					Array(packed.length/numFields), // sensor type4
-					Array(packed.length/numFields), // sensor value4
+					Array(packed.length/numFields), // Time
+					Array(packed.length/numFields), // Location
+                                        Array(packed.length/numFields), // Voltage
+					Array(packed.length/numFields), // RSSI
+					Array(packed.length/numFields), // Temperature
+					Array(packed.length/numFields), // Humidity
+                                        Array(packed.length/numFields), // Pressure
+					Array(packed.length/numFields), // Light
+					Array(packed.length/numFields), // Level
+					Array(packed.length/numFields), // Switch Status
+					Array(packed.length/numFields), // Motion
+					Array(packed.length/numFields), // Azimuth
+					Array(packed.length/numFields), // Elevation
+					Array(packed.length/numFields), // Soil Moisture
+					Array(packed.length/numFields), // Wind Speed
+					Array(packed.length/numFields), // Wind Direction
+					Array(packed.length/numFields), // Rainfall
+					Array(packed.length/numFields), // Air Quality
 				];
 				
 			  console.log(data); // (12)arrays of values by field
@@ -309,13 +296,13 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					} else if (packed[i+4] == 2) {data[5][j] = packed[i+5]; sensor2   = "Humidity";
 					} else if (packed[i+4] == 3) {data[6][j] = packed[i+5] * 4; sensor3   = "Pressure";
 					} else if (packed[i+4] == 4) {data[7][j] = packed[i+5]; sensor4   = "Light";
-				  } else if (packed[i+4] == 5) {data[8][j] = packed[i+5]; sensor5   = "Level";
+				        } else if (packed[i+4] == 5) {data[8][j] = packed[i+5]; sensor5   = "Level";
 					} else if (packed[i+4] == 6) {data[9][j] = packed[i+5]; sensor6   = "Switch Status";
 					} else if (packed[i+4] == 7) {data[10][j] = packed[i+5]; sensor7  = "Motion";
-				  } else if (packed[i+4] == 8) {data[11][j] = packed[i+5]; sensor8  = "Azimuth";
-				  } else if (packed[i+4] == 9) {data[12][j] = packed[i+5]; sensor9  = "Elevation";
+				        } else if (packed[i+4] == 8) {data[11][j] = packed[i+5]; sensor8  = "Azimuth";
+				        } else if (packed[i+4] == 9) {data[12][j] = packed[i+5]; sensor9  = "Elevation";
 					} else if (packed[i+4] == 10) {data[13][j] = packed[i+5];sensor10 = "Soil Moisture";
-				  } else if (packed[i+4] == 11) {data[14][j] = packed[i+5];sensor11 = "Wind Speed";
+				        } else if (packed[i+4] == 11) {data[14][j] = packed[i+5];sensor11 = "Wind Speed";
 					} else if (packed[i+4] == 12) {data[15][j] = packed[i+5];sensor12 = "Wind Direction";
 					} else if (packed[i+4] == 13) {data[16][j] = packed[i+5];sensor13 = "Rainfall";
 					} else if (packed[i+4] == 14) {data[17][j] = packed[i+5];sensor14 = "Air Quality";}
@@ -325,13 +312,13 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					} else if (packed[i+6] == 2) {data[5][j] = packed[i+7]; sensor2   = "Humidity";
 					} else if (packed[i+6] == 3) {data[6][j] = packed[i+7] * 4; sensor3   = "Pressure";
 					} else if (packed[i+6] == 4) {data[7][j] = packed[i+7]; sensor4   = "Light";
-				  } else if (packed[i+6] == 5) {data[8][j] = packed[i+7]; sensor5   = "Level";
+				        } else if (packed[i+6] == 5) {data[8][j] = packed[i+7]; sensor5   = "Level";
 					} else if (packed[i+6] == 6) {data[9][j] = packed[i+7]; sensor6   = "Switch Status";
 					} else if (packed[i+6] == 7) {data[10][j] = packed[i+7]; sensor7  = "Motion";
-				  } else if (packed[i+6] == 8) {data[11][j] = packed[i+7]; sensor8  = "Azimuth";
-				  } else if (packed[i+6] == 9) {data[12][j] = packed[i+7]; sensor9  = "Elevation";
+				        } else if (packed[i+6] == 8) {data[11][j] = packed[i+7]; sensor8  = "Azimuth";
+				        } else if (packed[i+6] == 9) {data[12][j] = packed[i+7]; sensor9  = "Elevation";
 					} else if (packed[i+6] == 10) {data[13][j] = packed[i+7];sensor10 = "Soil Moisture";
-				  } else if (packed[i+6] == 11) {data[14][j] = packed[i+7];sensor11 = "Wind Speed";
+				        } else if (packed[i+6] == 11) {data[14][j] = packed[i+7];sensor11 = "Wind Speed";
 					} else if (packed[i+6] == 12) {data[15][j] = packed[i+7];sensor12 = "Wind Direction";
 					} else if (packed[i+6] == 13) {data[16][j] = packed[i+7];sensor13 = "Rainfall";
 					} else if (packed[i+6] == 14) {data[17][j] = packed[i+7];sensor14 = "Air Quality";}
@@ -340,13 +327,13 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					} else if (packed[i+8] == 2) {data[5][j] = packed[i+9]; sensor2   = "Humidity";
 					} else if (packed[i+8] == 3) {data[6][j] = packed[i+9] * 4; sensor3   = "Pressure";
 					} else if (packed[i+8] == 4) {data[7][j] = packed[i+9]; sensor4   = "Light";
-				  } else if (packed[i+8] == 5) {data[8][j] = packed[i+9]; sensor5   = "Level";
+				        } else if (packed[i+8] == 5) {data[8][j] = packed[i+9]; sensor5   = "Level";
 					} else if (packed[i+8] == 6) {data[9][j] = packed[i+9]; sensor6   = "Switch Status";
 					} else if (packed[i+8] == 7) {data[10][j] = packed[i+9]; sensor7  = "Motion";
-				  } else if (packed[i+8] == 8) {data[11][j] = packed[i+9]; sensor8  = "Azimuth";
-				  } else if (packed[i+8] == 9) {data[12][j] = packed[i+9]; sensor9  = "Elevation";
+				        } else if (packed[i+8] == 8) {data[11][j] = packed[i+9]; sensor8  = "Azimuth";
+				        } else if (packed[i+8] == 9) {data[12][j] = packed[i+9]; sensor9  = "Elevation";
 					} else if (packed[i+8] == 10) {data[13][j] = packed[i+9];sensor10 = "Soil Moisture";
-				  } else if (packed[i+8] == 11) {data[14][j] = packed[i+9];sensor11 = "Wind Speed";
+				        } else if (packed[i+8] == 11) {data[14][j] = packed[i+9];sensor11 = "Wind Speed";
 					} else if (packed[i+8] == 12) {data[15][j] = packed[i+9];sensor12 = "Wind Direction";
 					} else if (packed[i+8] == 13) {data[16][j] = packed[i+9];sensor13 = "Rainfall";
 					} else if (packed[i+8] == 14) {data[17][j] = packed[i+9];sensor14 = "Air Quality";}
@@ -355,13 +342,13 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					} else if (packed[i+10] == 2) {data[5][j] = packed[i+11]; sensor2   = "Humidity";
 					} else if (packed[i+10] == 3) {data[6][j] = packed[i+11] * 4; sensor3   = "Pressure";
 					} else if (packed[i+10] == 4) {data[7][j] = packed[i+11]; sensor4   = "Light";
-				  } else if (packed[i+10] == 5) {data[8][j] = packed[i+11]; sensor5   = "Level";
+				        } else if (packed[i+10] == 5) {data[8][j] = packed[i+11]; sensor5   = "Level";
 					} else if (packed[i+10] == 6) {data[9][j] = packed[i+11]; sensor6   = "Switch Status";
 					} else if (packed[i+10] == 7) {data[10][j] = packed[i+11]; sensor7  = "Motion";
-				  } else if (packed[i+10] == 8) {data[11][j] = packed[i+11]; sensor8  = "Azimuth";
-				  } else if (packed[i+10] == 9) {data[12][j] = packed[i+11]; sensor9  = "Elevation";
+				        } else if (packed[i+10] == 8) {data[11][j] = packed[i+11]; sensor8  = "Azimuth";
+				        } else if (packed[i+10] == 9) {data[12][j] = packed[i+11]; sensor9  = "Elevation";
 					} else if (packed[i+10] == 10) {data[13][j] = packed[i+11];sensor10 = "Soil Moisture";
-				  } else if (packed[i+10] == 11) {data[14][j] = packed[i+11];sensor11 = "Wind Speed";
+				        } else if (packed[i+10] == 11) {data[14][j] = packed[i+11];sensor11 = "Wind Speed";
 					} else if (packed[i+10] == 12) {data[15][j] = packed[i+11];sensor12 = "Wind Direction";
 					} else if (packed[i+10] == 13) {data[16][j] = packed[i+11];sensor13 = "Rainfall";
 					} else if (packed[i+10] == 14) {data[17][j] = packed[i+11];sensor14 = "Air Quality";}					
@@ -563,4 +550,4 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 </script>
 
 </body>
-</html>
+</html>   
