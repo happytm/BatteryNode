@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html> 
 <head> 
 <meta charset="utf-8">
@@ -29,9 +28,12 @@ body {margin: 0;}
 <h3>Send Command to ESP32 Gateway Server</h3>
 
 <form id="formElem">
+  
+
 
 <SELECT class="combine" id ="device" name = "Device">
     <option value="">Select Device</option>
+    <option value="246">New Device</option>
     <option value="256">Gateway</option>
     <option value="6">Livingroom</option>
     <option value="16">Kitchen</option>
@@ -50,20 +52,22 @@ body {margin: 0;}
     <option value="103">Digital Read</option>
     <option value="104">Analog Read</option>
     <option value="105">Neopixel</option>
-    <option value="106">Set Sensor Types</option>
-    <option value="107">Set AP Channel</option>
-    <option value="108">Set Sleep Time</option>
-    <option value="109">Set Mode</option>
-    <option value="110">Set Device ID</option>
+    <option value="121">Set Sensor Types</option>
+    <option value="107">Set Target Values</option>
+    <option value="108">Set AP Channel</option>
+    <option value="109">Set Sleep Time</option>
+    <option value="110">Set Mode</option>
+    <option value="111">Set Device ID</option>
 </SELECT>
+
 <input id="command1" name="command1" type="number" min="0" max="256">   
 <input id="command2" name="command2" type="number" min="0" max="256">   
 <input id="command3" name="command3" type="number" min="0" max="256">   
 <input id="command4" name="command4" type="number" min="0" max="256">  
 
 <button type="submit">Send Command</button>
-<br>
-<SELECT class="combine" id ="devicename" name = "devicename">
+<br><br>
+<SELECT class="combine" id ="devicenumber" name = "devicenumber">
     <option value="256">Device ID</option>
     <option value="6">6</option>
     <option value="16">16</option>
@@ -75,43 +79,13 @@ body {margin: 0;}
 </SELECT>
 <input name="devicename" type="text" placeholder="Device Name"/>
 <button type="submit">Set Device Name</button>
-<br>
+<br><br>
 
 <input name="SSID" type="text" placeholder="SSID"/>
-<input name="SSID" type="password" placeholder="Password"/>
+<input name="Password" type="password" placeholder="Password"/>
 <button type="submit">Enter WiFi Config</button>
-<br>
+<br><br>
 
-<SELECT class="combine" id ="period" name = "period">
-    <option value="1">Graph by Period</option>
-    <option value="2">Last Hour</option>
-    <option value="3">Today</option>
-    <option value="4">This Week</option>
-    <option value="5">This Month</option>
-    <option value="6">This Year</option>
-</SELECT>
-
-<SELECT class="combine" id ="deviceid" name = "deviceid">
-    <option value="256">Graph by Device</option>
-    <option value="1">Gateway</option>
-    <option value="6">Livingroom</option>
-    <option value="16">Kitchen</option>
-    <option value="26">Bedroom1</option>
-    <option value="36">Bedroom2</option>
-    <option value="46">Bathroom</option>
-    <option value="56">Laundry</option>
-    <option value="66">Office</option>
-</SELECT>
-
-<SELECT class="combine" id ="sensortype" name = "sensortype">
-    <option value="1">Graph by Sensor Type</option>
-    <option value="2">Voltage</option>
-    <option value="3">RSSI</option>
-    <option value="4">Temperature</option>
-    <option value="5">Humidity</option>
-    <option value="6">Pressure</option>
-    <option value="7">Light</option>
-</SELECT>
 <script>
 var attachEvent = function(node, event, listener, useCapture) {
   // Method for FF, Opera, Chrome, Safari
@@ -137,7 +111,7 @@ var attachEvent = function(node, event, listener, useCapture) {
       
      
 // Show and hide the appropriate select's
-     if (this.value == "105" || this.value == "106") {
+     if (this.value == "105" || this.value == "106" || this.value == "107" ) {
        
        option1.style.display = "";
        option2.style.display = "";
@@ -146,7 +120,7 @@ var attachEvent = function(node, event, listener, useCapture) {
        option5.style.display = "";
        
 	   
-     } else if (this.value == "103" || this.value == "104" || this.value == "107" || this.value == "108" || this.value == "109"|| this.value == "110" ) {
+     } else if (this.value == "103" || this.value == "104" || this.value == "108" || this.value == "109"|| this.value == "110" ) {
        
        option1.style.display = "";
        option2.style.display = "";
@@ -181,14 +155,59 @@ var attachEvent = function(node, event, listener, useCapture) {
       method: 'POST',
       body: new FormData(formElem)
     });
-
+    console.log(formElem);
     let result = await response.json();
 
     alert(result.message);
   };
 </script>
+<SELECT class="combine" id ="period" name = "period">
+    <option value="all">Graph by Period</option>
+    <option value="1">Last Hour</option>
+    <option value="2">Today</option>
+    <option value="3">This Week</option>
+    <option value="4">This Month</option>
+    <option value="5">This Year</option>
+</SELECT>
 
+<SELECT class="combine" id ="deviceid" name = "deviceid">
+    <option value="all">Graph by Device</option>
+    <option value="1">Gateway</option>
+    <option value="6">Livingroom</option>
+    <option value="16">Kitchen</option>
+    <option value="26">Bedroom1</option>
+    <option value="36">Bedroom2</option>
+    <option value="46">Bathroom1</option>
+    <option value="56">Bathroom2</option>
+    <option value="66">Laundry</option>
+    <option value="76">Solar Tracker</option>
+    <option value="86">Water Tank</option>
+    <option value="96">Weather Station</option>
+    <option value="106">Greenhouse</option>
+</SELECT>
+
+<SELECT class="combine" id ="sensortype" name = "sensortype">
+    <option value="all">Graph by Sensor Type</option>
+    <option value="100">Voltage</option>
+    <option value="200">RSSI</option>
+    <option value="1">Temperature</option>
+    <option value="2">Humidity</option>
+    <option value="3">Pressure</option>
+    <option value="4">Light</option>
+    <option value="5">Level</option>
+    <option value="6">Switch Status</option>
+    <option value="7">Motion</option>
+    <option value="8">Azimuth</option>
+    <option value="9">Elevation</option>
+    <option value="10">Soil Moisture</option>
+    <option value="11">Wind Speed</option>
+    <option value="12">Wind Direction</option>
+    <option value="13">Rainfall</option>
+    <option value="14">Air Quality</option>
+</SELECT>
 <script>
+
+var sensor1,sensor2,sensor3,sensor4,sensor5,sensor6,sensor7,sensor8,sensor9,sensor10,sensor11,sensor12,sensor13,sensor14;
 
 // converts the legend into a simple tooltip
 function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255, 249, 196, 0.92)", color: "black" } } = {}) {
@@ -244,61 +263,131 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					}
 				};
 			}
-
+   
 			function prepData(packed) {
 				console.time("prep");
 
 				// epoch,location,voltage,rssi,temperature,humidity,pressure,light
 
 				const numFields = packed[0];
-                console.log(numFields); //8
+                console.log(numFields); //12
 				packed = packed.slice(numFields + 1);
-                console.log(packed); //single array array of all sensor data(344)
-				
+                console.log(packed);   //single array of all sensor data.
+                
+        
 				let data = [
 					Array(packed.length/numFields), // epoch
 					Array(packed.length/numFields), // location
           Array(packed.length/numFields), // voltage
 					Array(packed.length/numFields), // rssi
-					Array(packed.length/numFields), // temp
-					Array(packed.length/numFields), // humidity
-					Array(packed.length/numFields), // pressure
-					Array(packed.length/numFields), // light
-					//Array(packed.length/numFields), // location
+					Array(packed.length/numFields), // sensor type1
+					Array(packed.length/numFields), // sensor value1
+          Array(packed.length/numFields), // sensor type2
+					Array(packed.length/numFields), // sensor value2
+					Array(packed.length/numFields), // sensor type3
+					Array(packed.length/numFields), // sensor value3
+					Array(packed.length/numFields), // sensor type4
+					Array(packed.length/numFields), // sensor value4
+					Array(packed.length/numFields), //
+					Array(packed.length/numFields), // 
+					Array(packed.length/numFields), // sensor type3
+					Array(packed.length/numFields), // sensor value3
+					Array(packed.length/numFields), // sensor type4
+					Array(packed.length/numFields), // sensor value4
 				];
 				
-			    console.log(data); // (8)arrays of values by sensor type
+			  console.log(data); // (12)arrays of values by field
 
 				for (let i = 0, j = 0; i < packed.length; i += numFields, j++) {
-					//data[2][j] = round2(100 * packed[i+5] / (packed[i+5] + packed[i+6]));
+				
 					data[0][j] = packed[i+0];
-					data[1][j] = packed[i+1];
+				  data[1][j] = packed[i+1];
 					data[2][j] = packed[i+2];
 					data[3][j] = packed[i+3];
-					data[4][j] = packed[i+4];
-					data[5][j] = packed[i+5];
-					data[6][j] = packed[i+6] * 4;
-					data[7][j] = packed[i+7];
-				}
+					
+					       if (packed[i+4] == 1) {data[4][j] = packed[i+5]; sensor1   = "Temperature";
+					} else if (packed[i+4] == 2) {data[5][j] = packed[i+5]; sensor2   = "Humidity";
+					} else if (packed[i+4] == 3) {data[6][j] = packed[i+5] * 4; sensor3   = "Pressure";
+					} else if (packed[i+4] == 4) {data[7][j] = packed[i+5]; sensor4   = "Light";
+				  } else if (packed[i+4] == 5) {data[8][j] = packed[i+5]; sensor5   = "Level";
+					} else if (packed[i+4] == 6) {data[9][j] = packed[i+5]; sensor6   = "Switch Status";
+					} else if (packed[i+4] == 7) {data[10][j] = packed[i+5]; sensor7  = "Motion";
+				  } else if (packed[i+4] == 8) {data[11][j] = packed[i+5]; sensor8  = "Azimuth";
+				  } else if (packed[i+4] == 9) {data[12][j] = packed[i+5]; sensor9  = "Elevation";
+					} else if (packed[i+4] == 10) {data[13][j] = packed[i+5];sensor10 = "Soil Moisture";
+				  } else if (packed[i+4] == 11) {data[14][j] = packed[i+5];sensor11 = "Wind Speed";
+					} else if (packed[i+4] == 12) {data[15][j] = packed[i+5];sensor12 = "Wind Direction";
+					} else if (packed[i+4] == 13) {data[16][j] = packed[i+5];sensor13 = "Rainfall";
+					} else if (packed[i+4] == 14) {data[17][j] = packed[i+5];sensor14 = "Air Quality";}
+				  
+					
+					       if (packed[i+6] == 1) {data[4][j] = packed[i+7]; sensor1   = "Temperature";
+					} else if (packed[i+6] == 2) {data[5][j] = packed[i+7]; sensor2   = "Humidity";
+					} else if (packed[i+6] == 3) {data[6][j] = packed[i+7] * 4; sensor3   = "Pressure";
+					} else if (packed[i+6] == 4) {data[7][j] = packed[i+7]; sensor4   = "Light";
+				  } else if (packed[i+6] == 5) {data[8][j] = packed[i+7]; sensor5   = "Level";
+					} else if (packed[i+6] == 6) {data[9][j] = packed[i+7]; sensor6   = "Switch Status";
+					} else if (packed[i+6] == 7) {data[10][j] = packed[i+7]; sensor7  = "Motion";
+				  } else if (packed[i+6] == 8) {data[11][j] = packed[i+7]; sensor8  = "Azimuth";
+				  } else if (packed[i+6] == 9) {data[12][j] = packed[i+7]; sensor9  = "Elevation";
+					} else if (packed[i+6] == 10) {data[13][j] = packed[i+7];sensor10 = "Soil Moisture";
+				  } else if (packed[i+6] == 11) {data[14][j] = packed[i+7];sensor11 = "Wind Speed";
+					} else if (packed[i+6] == 12) {data[15][j] = packed[i+7];sensor12 = "Wind Direction";
+					} else if (packed[i+6] == 13) {data[16][j] = packed[i+7];sensor13 = "Rainfall";
+					} else if (packed[i+6] == 14) {data[17][j] = packed[i+7];sensor14 = "Air Quality";}
+					
+					       if (packed[i+8] == 1) {data[4][j] = packed[i+9]; sensor1   = "Temperature";
+					} else if (packed[i+8] == 2) {data[5][j] = packed[i+9]; sensor2   = "Humidity";
+					} else if (packed[i+8] == 3) {data[6][j] = packed[i+9] * 4; sensor3   = "Pressure";
+					} else if (packed[i+8] == 4) {data[7][j] = packed[i+9]; sensor4   = "Light";
+				  } else if (packed[i+8] == 5) {data[8][j] = packed[i+9]; sensor5   = "Level";
+					} else if (packed[i+8] == 6) {data[9][j] = packed[i+9]; sensor6   = "Switch Status";
+					} else if (packed[i+8] == 7) {data[10][j] = packed[i+9]; sensor7  = "Motion";
+				  } else if (packed[i+8] == 8) {data[11][j] = packed[i+9]; sensor8  = "Azimuth";
+				  } else if (packed[i+8] == 9) {data[12][j] = packed[i+9]; sensor9  = "Elevation";
+					} else if (packed[i+8] == 10) {data[13][j] = packed[i+9];sensor10 = "Soil Moisture";
+				  } else if (packed[i+8] == 11) {data[14][j] = packed[i+9];sensor11 = "Wind Speed";
+					} else if (packed[i+8] == 12) {data[15][j] = packed[i+9];sensor12 = "Wind Direction";
+					} else if (packed[i+8] == 13) {data[16][j] = packed[i+9];sensor13 = "Rainfall";
+					} else if (packed[i+8] == 14) {data[17][j] = packed[i+9];sensor14 = "Air Quality";}
+					
+					       if (packed[i+10] == 1) {data[4][j] = packed[i+11]; sensor1   = "Temperature";
+					} else if (packed[i+10] == 2) {data[5][j] = packed[i+11]; sensor2   = "Humidity";
+					} else if (packed[i+10] == 3) {data[6][j] = packed[i+11] * 4; sensor3   = "Pressure";
+					} else if (packed[i+10] == 4) {data[7][j] = packed[i+11]; sensor4   = "Light";
+				  } else if (packed[i+10] == 5) {data[8][j] = packed[i+11]; sensor5   = "Level";
+					} else if (packed[i+10] == 6) {data[9][j] = packed[i+11]; sensor6   = "Switch Status";
+					} else if (packed[i+10] == 7) {data[10][j] = packed[i+11]; sensor7  = "Motion";
+				  } else if (packed[i+10] == 8) {data[11][j] = packed[i+11]; sensor8  = "Azimuth";
+				  } else if (packed[i+10] == 9) {data[12][j] = packed[i+11]; sensor9  = "Elevation";
+					} else if (packed[i+10] == 10) {data[13][j] = packed[i+11];sensor10 = "Soil Moisture";
+				  } else if (packed[i+10] == 11) {data[14][j] = packed[i+11];sensor11 = "Wind Speed";
+					} else if (packed[i+10] == 12) {data[15][j] = packed[i+11];sensor12 = "Wind Direction";
+					} else if (packed[i+10] == 13) {data[16][j] = packed[i+11];sensor13 = "Rainfall";
+					} else if (packed[i+10] == 14) {data[17][j] = packed[i+11];sensor14 = "Air Quality";}					
+					
+			}
 
-		
+		    
 				console.timeEnd("prep");
 
 				return data;
-				console.log(data);
+				
 			}
 
 
 			function makeChart(data) {
 				console.time("chart");
-
-		
+				console.log(data[4][1]); // SensorType1
+   
+  
+    
 		var title = "Environment data from sensor network";
 		const opts = {
 					title: title,
 					
 					width: 480,
-					height:480,
+					height:600,
 				//	ms:     1,
 				//	cursor: {
 				//		x: false,
@@ -306,56 +395,134 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 				//	},
 					series: [
 						{},
+					
 						{
-							label: "Location",
-							scale: "",
-							value: (u, v) => v == null ? "-" : v.toFixed(2) + " ",
+							label: "Device",
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " ",
 							stroke: "teal",
 							width: 1/devicePixelRatio,
 						},
 						{
 							label: "Voltage",
-							scale: "F",
-							value: (u, v) => v == null ? "-" : v.toFixed(2) + " V",
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " V",
 							stroke: "green",
 							width: 1/devicePixelRatio,
 						},
 						{
 							label: "RSSI",
-							scale: "F",
-							value: (u, v) => v == null ? "-" : v.toFixed(2) + "",
+							scale: "Right",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + " %",
 							stroke: "maroon",
 							width: 1/devicePixelRatio,
 						},
+						
 						{
-							label: "Temperature",
-							scale: "F",
-							value: (u, v) => v == null ? "-" : v.toFixed(2) + " F�",
+							label: sensor1,
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " F",
 							stroke: "lime",
 							width: 1/devicePixelRatio,
 						},
+						
 						{
-							label: "Humidity",
-							scale: "%",
+							label: sensor2,
+							scale: "Left",
 							value: (u, v) => v == null ? "-" : v.toFixed(1) + " %",
 							stroke: "olive",
 							width: 1/devicePixelRatio,
 						},
+						
 						{
-							label: "Pressure",
-							scale: "mb",
+							label: sensor3,
+							scale: "Right",
 							value: (u, v) => v == null ? "-" : v.toFixed(2) + " mb",
 							stroke: "blue",
 							width: 1/devicePixelRatio,
 						},
+						
 						{
-							label: "Light",
-							scale: "%",
-							value: (u, v) => v == null ? "-" : v.toFixed(2) + " %",
+							label: sensor4,
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " %",
 							stroke: "orange",
 							width: 1/devicePixelRatio,
+						},
+						
+            {
+							label: "Level",
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " ",
+							stroke: "crimson",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Switch Status",
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " V",
+							stroke: "deeppink",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Motion",
+							scale: "Right",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + " %",
+							stroke: "tomato",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Azimuth",
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " V",
+							stroke: "yellow",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Elevation",
+							scale: "Right",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + " %",
+							stroke: "magenta",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Soil Moisture",
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " V",
+							stroke: "indigo",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Wind Speed",
+							scale: "Right",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + " %",
+							stroke: "springgreen",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Wind Direction",
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " V",
+							stroke: "cyan",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Rainfall",
+							scale: "Right",
+							value: (u, v) => v == null ? "-" : v.toFixed(2) + " %",
+							stroke: "navy",
+							width: 1/devicePixelRatio,
+						},
+						{
+							label: "Air Quality",
+							scale: "Left",
+							value: (u, v) => v == null ? "-" : v.toFixed(1) + " V",
+							stroke: "brown",
+							width: 1/devicePixelRatio,
 						}
-					],
+						
+						
+	  		],
 					
 					plugins: [
 					
@@ -365,13 +532,14 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					
 					axes: [
 						{},
+						
 						{
-							scale: "",
+							scale: "Left",
 							values: (u, vals, space) => vals.map(v => +v.toFixed(1) + " "),
 						},
 						{
 							side: 1,
-							scale: "F",
+							scale: "Right",
 							size: 60,
 							values: (u, vals, space) => vals.map(v => +v.toFixed(2) + ""),
 							grid: {show: false},
