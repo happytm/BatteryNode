@@ -12,15 +12,13 @@
 struct tm timeinfo;
 #define MY_TZ "EST5EDT,M3.2.0,M11.1.0" //(New York) https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
 
-#define MYFS LITTLEFS
-#define FORMAT_LITTLEFS_IF_FAILED true
-
-String ssid;
-String password;
 const char* apSSID = "ESP";
 const char* apPassword = "";
 const int apChannel = 7;
 const int hidden = 0;                 // If hidden is 1 probe request event handling does not work ?
+
+std::string sentTopic = "data";
+std::string receivedTopic = "command";
 
 const char* http_username = "admin";  // Web file editor interface Login.
 const char* http_password = "admin";  // Web file editor interface password.
@@ -30,16 +28,18 @@ String dataFile = "/data.json";       // File to store sensor data.
 //==================User configuration not required below this line ================================================
 
 char str [256], s [70];
-String graphData, Hour, Minute;
-int device, rssi, sensorValues[4], sensorTypes[4]; int arraySize = 10;
+String ssid,password,graphData, Hour, Minute;
+int device, rssi, sleepTime, sensorValues[4], sensorTypes[4]; int arraySize = 10;
 float voltage;
 uint8_t mac[6],receivedCommand[6],showConfig[256];
 const char* ntpServer = "pool.ntp.org";
+unsigned long currentMillis, lastMillis;
 unsigned long epoch; 
 String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
 
-std::string sentTopic = "data";
-std::string receivedTopic = "command";
+#define MYFS LITTLEFS
+#define FORMAT_LITTLEFS_IF_FAILED true
+
 MqttBroker broker(1883);
 MqttClient myClient(&broker);
 
@@ -52,8 +52,7 @@ void setup(){
   Serial.setDebugOutput(true);
   delay(500);
   LITTLEFS.begin();
-  EEPROM.begin(512);  
-
+  EEPROM.begin(512);
   startWiFi();
   startAsyncwebserver();
     
@@ -74,10 +73,12 @@ void loop()
  if (WiFi.waitForConnectResult() != WL_CONNECTED) {ssid = EEPROM.readString(270); password = EEPROM.readString(301);Serial.println("Wifi connection failed");Serial.print("Connect to Access Point ");Serial.print(apSSID);Serial.println(" and point your browser to 192.168.4.1 to set SSID and password" );WiFi.disconnect(false);delay(1000);WiFi.begin(ssid.c_str(), password.c_str());}
 }  // End of loop
 
+
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
 {
     Serial.println();
     Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
+    Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1 with connection to ESP AP");Serial.println(" to monitor and control whole network");
 
     if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
     {
@@ -90,13 +91,14 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       Serial.println();
       for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device-1]; 
       for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+5]; 
+      
       timeSynch();
       //if (mac[1] == 0) {mac[0] = device; mac[1] = 101; timeSynch();}
                      
       esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
       Serial.println();
       Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
-               
+      
       rssi = info.ap_probereqrecved.rssi;         
       voltage = info.ap_probereqrecved.mac[1];
       voltage = voltage * 2 / 100;
@@ -107,7 +109,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);
       
       myClient.publish("sensor", str);
-    
+       
       graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorTypes[0];graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorTypes[1];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorTypes[2];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorTypes[3];graphData += ",";graphData += sensorValues[3];graphData += "]";
      
       File f = LITTLEFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
@@ -118,7 +120,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       Serial.print("Appended to file: "); Serial.println(graphData);
       Serial.print("File size: "); Serial.println(f.size());
       f.close(); 
-                      
+                    
       if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
          myClient.publish("Warning/Battery Low", String(device));
       }         
@@ -141,22 +143,24 @@ void saveCommand()
     if (receivedCommand[1] == 121) // Set sensor types command received.
   {
     for (int i = 0; i < 4; i++) 
-    {
-     uint8_t tempSensortypes[4];
-     tempSensortypes[i] = receivedCommand[i+2];
-     EEPROM.writeBytes(receivedCommand[0]+5, tempSensortypes,4);
-     }
-   } else if (receivedCommand[1] >= 101 && receivedCommand[1] <= 120) 
-   
      {
-     for (int i = 0; i < 6; i++)
-     { 
-      uint8_t tempCommand[6];
-      tempCommand[i] = receivedCommand[i];
-      EEPROM.writeBytes(receivedCommand[0]-1, tempCommand,6);
-      }
-   }
+      uint8_t tempSensortypes[4];
+      tempSensortypes[i] = receivedCommand[i+2];
+      EEPROM.writeBytes(receivedCommand[0]+5, tempSensortypes,4);
+     }
+
+    } else if (receivedCommand[1] >= 101 && receivedCommand[1] <= 120) 
+      {
+        
+        for (int i = 0; i < 6; i++)
+        { 
+          uint8_t tempCommand[6];
+          tempCommand[i] = receivedCommand[i];
+          EEPROM.writeBytes(receivedCommand[0]-1, tempCommand,6);
+        }
+
       EEPROM.commit();Serial.println();Serial.println("Command and sensor types saved to EEPROM");
+    }
 }
     
 void saveWificonfig()
@@ -169,13 +173,14 @@ void saveWificonfig()
   }
 }
     
-void timeSynch(){ if (mac[1] == 105 || mac[1] == 107) {return;}else{epoch = getTime();Serial.print("Epoch Time: ");Serial.println(epoch); Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}}
+void timeSynch(){ if (mac[1] == 105 || mac[1] == 106) {return;}else{epoch = getTime();Serial.print("Epoch Time: ");Serial.println(epoch); Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();Serial.print("Time Sent to remote device ");Serial.print(device);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);}}
 
 void startWiFi()
 {
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(apSSID, apPassword, apChannel, hidden);
   esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
+  Serial.print("AP started with name: ");Serial.println(apSSID);
   
   ssid = EEPROM.readString(270); password = EEPROM.readString(301);
   WiFi.begin(ssid.c_str(), password.c_str());
@@ -186,8 +191,8 @@ void startWiFi()
     delay(1000);
     WiFi.begin(ssid.c_str(), password.c_str());
  }
-  
-    Serial.print("Connect to IP: ");Serial.print(WiFi.localIP());Serial.println(" to monitor and control whole network");
+   
+    Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");
 }
 
 
@@ -208,6 +213,7 @@ void startAsyncwebserver()
     String input3 =request->getParam(3)->value();receivedCommand[3] =(atoi(input3.c_str())); 
     String input4 =request->getParam(4)->value();receivedCommand[4] =(atoi(input4.c_str()));
     String input5 =request->getParam(5)->value();receivedCommand[5] =(atoi(input5.c_str()));    
+   
     ssid = request->getParam(6)->value().c_str();                  
     password =request->getParam(7)->value().c_str();
          
