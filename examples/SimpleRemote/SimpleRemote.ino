@@ -1,10 +1,10 @@
 // 80 ms uptime in two way mode.Confirm and try to reduce this time.
-
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <HTTPClient.h>
 #include <ESP32httpUpdate.h>  // Install from arduino library manager
 #include <EEPROM.h>
+#include "driver/adc.h"
 
 const char* ssid = "ESP";
 const char* password = "";
@@ -48,7 +48,6 @@ void setup() {
   if (EEPROM.readByte(15) == 255) {apChannel = 7;} else {apChannel = EEPROM.readByte(15);}
   if (EEPROM.readByte(16) == 255) {sleepTime = 1;} else {sleepTime = EEPROM.readByte(16);}
   
-  //WiFi.scanDelete();  //remove previous scan data from memory
   sensorValues();
   int n = WiFi.scanNetworks(true, false, false, 5, apChannel);
      
@@ -81,7 +80,7 @@ void setup() {
       
       Serial.print("Command received from Gateway: ");Serial.println(&WiFi.BSSIDstr(0)[0]);
       synchTime();
-       
+
        if (commandType == 101)        // Digital Write
        {
          EEPROM.writeByte(3,value1);
@@ -112,7 +111,7 @@ void setup() {
          Serial.print("Received Neopixel Command  ");Serial.print(EEPROM.readByte(7));  Serial.println(EEPROM.readByte(8));Serial.print(EEPROM.readByte(9));  Serial.println(EEPROM.readByte(10));
 
          gpioControl();
-       } else if (commandType == 107)  // Set Targets
+       } else if (commandType == 106)  // Set Targets
        {
          EEPROM.writeByte(11,value1);
          EEPROM.writeByte(12,value2);
@@ -120,34 +119,38 @@ void setup() {
          EEPROM.writeByte(14,value4);
          Serial.print("Received Set Target Values Command  ");Serial.println(EEPROM.readByte(11));  Serial.println(EEPROM.readByte(12));Serial.print(EEPROM.readByte(13));  Serial.println(EEPROM.readByte(14));        
 
-       } else if (commandType == 108)  // Set AP Channel
+       } else if (commandType == 107)  // Set AP Channel
        {
          EEPROM.writeByte(15,value1);
          Serial.print("Received Set AP Channel Command  ");Serial.println(EEPROM.readByte(15));
          apChannel = EEPROM.readByte(15);  
-       } else if (commandType == 109)  // Set Sleep Time
-       {
-         EEPROM.writeByte(16,value1);
-         Serial.print("Received Set Sleep Time Command  ");Serial.println(EEPROM.readByte(16));
-         sleepTime = EEPROM.readByte(16);
-       } else if (commandType == 110)  // Set Mode
+       
+       } else if (commandType == 108)  // Set Mode
        {
          EEPROM.writeByte(17,value1);
          Serial.print("Received Set Device Mode Command  ");Serial.println(EEPROM.readByte(17));
 
          deviceMode = EEPROM.readByte(17);         // Save device mode (0 for regular, 1 for autupdate and 2 for any other option).
          if (deviceMode == 1) {OTAupdate();}
-        
-       } else if (commandType == 111)  // Set Device ID
+       
+       } else if (commandType == 109)  // Set Sleep Time
+       {
+         EEPROM.writeByte(16,value1);
+         Serial.print("Received Set Sleep Time Command  ");Serial.println(EEPROM.readByte(16));
+         sleepTime = EEPROM.readByte(16); 
+       
+       } else if (commandType == 110)  // Set Device ID
        {
          
          EEPROM.writeByte(18,value1);
          Serial.print("Received Set Device ID Command  ");Serial.println(EEPROM.readByte(0));
          device = EEPROM.readByte(18);
         }
-         EEPROM.commit();Serial.println();Serial.println("Command from Gateway saved to EEPROM");
-    delay(1);
-  } else {
+
+         EEPROM.commit();
+         Serial.println("Command from Gateway saved to EEPROM");
+         delay(1);
+    } else {
     
     Serial.println("Resending sensor values..."); 
     esp_sleep_enable_timer_wakeup(sleepTime * 100);
@@ -160,20 +163,23 @@ void setup() {
 //========================Main Loop================================
 
 void loop() {
-
-  
-
   upTime = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
-  
   Serial.print("Total time I spent before going to sleep: ");
   Serial.println(upTime);
   Serial.print("I will wakeup in: ");
   Serial.print(sleepTime);
   Serial.println(" Minutes");
-  esp_sleep_enable_timer_wakeup(sleepTime * 6000000); // 60000000 for 1 minute.
+   //esp_bluedroid_disable();
+   //esp_bt_controller_disable(); 
+   //adc_power_off();
+   //WiFi.mode(WIFI_OFF);
+   //esp_wifi_stop();
+   //esp_sleep_pd_config(ESP_PD_DOMAIN_XTAL, ESP_PD_OPTION_OFF); 
+   //esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);             // see https://esp32.com/viewtopic.php?t=9681
+   //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);    // see https://esp32.com/viewtopic.php?t=9681
+   //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);       // see https://esp32.com/viewtopic.php?t=9681
+  esp_sleep_enable_timer_wakeup(sleepTime * 60000000); // 60000000 for 1 minute.
   esp_deep_sleep_start();
-  //delay(sleepTime * 60000); // 60000 for 1 minute
-  //ESP.restart();   // For testing only replace with proper sleep mode command.  
 }     
 //=========================Main Loop ends==========================
 
@@ -181,11 +187,11 @@ void sensorValues()
 {
   
   sensorData[0] = device;
-  sensorData[1] = 2.93;
-  sensorData[2] = random(45,55);        //temperature;
-  sensorData[3] = random(40,100);       //humidity;
-  sensorData[4] = random(850,1024) / 4; //pressure;
-  sensorData[5] = random(30,100);       //light;
+  sensorData[1] = 115;                  //voltage must be between 130 and 180 here in whole integer.
+  sensorData[2] = random(70,74);        //temperature F;
+  sensorData[3] = random(40,100);       //humidity %;
+  sensorData[4] = random(850,1024) / 4;  //pressure mb;
+  sensorData[5] = random(0,100);        //light %;
   
   esp_base_mac_addr_set(sensorData);
   
@@ -194,7 +200,7 @@ void sensorValues()
 }
 
 void synchTime(){
-  if (commandType == 105 || commandType == 107)
+  if (commandType == 105 || commandType == 106)
   {
     Hour = EEPROM.readByte(19);                           // Hour value from local RTC memory.
     Minute = EEPROM.readByte(20) + EEPROM.readByte(16);   // Minute from local RTC memory + Sleep Time.
