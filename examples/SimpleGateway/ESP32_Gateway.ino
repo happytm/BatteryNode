@@ -49,10 +49,17 @@ unsigned long getTime() {time_t now;if (!getLocalTime(&timeinfo)) {Serial.printl
 
 void setup(){
   Serial.begin(115200);
-  Serial.setDebugOutput(true);
+  //Serial.setDebugOutput(true);
   delay(500);
   LITTLEFS.begin();
   EEPROM.begin(512);
+  
+  // Save device numbers in EEPROM. (Uncomment First time only)
+  
+  //for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i, i);EEPROM.writeByte(i+1, 101);}
+  //EEPROM.writeByte(0, apChannel);EEPROM.commit();
+  //EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
+  
   startWiFi();
   startAsyncwebserver();
     
@@ -83,22 +90,24 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
     if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
     {
       device = info.ap_probereqrecved.mac[0];
-      Serial.print("Contents of command data saved in EEPROM for device: ");
-      EEPROM.readBytes(0, showConfig,256);for(int i=0;i<20;i++){ 
-      Serial.printf("%d ", showConfig[i+device-1]);
+      Serial.println("Contents of command data saved in EEPROM for device: ");
+      EEPROM.readBytes(0, showConfig,256);for(int i=0;i<10;i++){ 
+      Serial.printf("%d ", showConfig[i+device]);
       }
       
       Serial.println();
-      for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device-1]; 
-      for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+5]; 
+      for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device]; // Prepare command to sent to remote device.
+      for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+6]; // Assign sensor types to the particular device.
+      for (int i = 0; i < 6; i++) showConfig[i+device+1] = 0;    // Clear the content of command.
+      
       
       timeSynch();
-      //if (mac[1] == 0) {mac[0] = device; mac[1] = 101; timeSynch();}
+      if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 101; timeSynch();}
                      
       esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
       Serial.println();
       Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
-      
+           
       rssi = info.ap_probereqrecved.rssi;         
       voltage = info.ap_probereqrecved.mac[1];
       voltage = voltage * 2 / 100;
@@ -146,7 +155,7 @@ void saveCommand()
      {
       uint8_t tempSensortypes[4];
       tempSensortypes[i] = receivedCommand[i+2];
-      EEPROM.writeBytes(receivedCommand[0]+5, tempSensortypes,4);
+      EEPROM.writeBytes(receivedCommand[0]+6, tempSensortypes,4);
      }
 
     } else if (receivedCommand[1] >= 101 && receivedCommand[1] <= 120) 
@@ -156,11 +165,14 @@ void saveCommand()
         { 
           uint8_t tempCommand[6];
           tempCommand[i] = receivedCommand[i];
-          EEPROM.writeBytes(receivedCommand[0]-1, tempCommand,6);
+          EEPROM.writeBytes(receivedCommand[0], tempCommand,6);
+          
         }
 
       EEPROM.commit();Serial.println();Serial.println("Command and sensor types saved to EEPROM");
-    }
+      EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
+      
+      }
 }
     
 void saveWificonfig()
