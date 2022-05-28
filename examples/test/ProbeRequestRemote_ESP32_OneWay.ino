@@ -1,4 +1,4 @@
-// Average 152 milliseconds uptime in one way mode.
+// Average 34 milliseconds transmit time and 66 milliseconds uptime in one way mode.
 
 #include <WiFi.h>
 #include <esp_wifi.h>
@@ -16,28 +16,32 @@ uint8_t sensorData[6];  // Sensor values to be sent to Gateway = {device, voltag
 //============Do not need user configuration from here on============================
 
 void setup() {
+  int lastmillis = millis();
   //WiFi.scanDelete();  //remove previous scan data from memory
   sensorValues();
   //int16_t scanNetworks(bool async = false, bool show_hidden = false, bool passive = false, uint32_t max_ms_per_chan = 300, uint8_t channel = 0);
-  int n = WiFi.scanNetworks(true, false, false, 200, apChannel);
+  int n = WiFi.scanNetworks(true, false, false, 5, apChannel);
   Serial.begin(115200);
   Serial.print("Sensors values data sent to controller: ");
   Serial.println(WiFi.macAddress());
+  Serial.print("Milliseconds at start of setup function: ");Serial.println(lastmillis);
+  lastmillis = millis()-lastmillis;
+  Serial.println();Serial.print("Transmit time(Milliseconds):     ");Serial.println(lastmillis);    
 
 }
 //========================Main Loop================================
 
 void loop() {
 
-  upTime = (millis() + 8);  // Estimated 8 milliseconds added to account for next process in loop.
   
-  Serial.print("Total time I spent before going to sleep: ");
-  Serial.println(upTime);
   Serial.print("I will wakeup in: ");
   Serial.print(sleepTime);
   Serial.println(" Minutes");
-  delay(5000); ESP.restart();   // For testing only.
-  //ESP.deepSleepInstant(sleepTime * 60000000, WAKE_NO_RFCAL); //If last digit of MAC ID matches to device ID go to deep sleep else loop through again.
+  upTime = (millis());  
+  Serial.print("Total time I spent before going to sleep: ");
+  Serial.println(upTime);
+  esp_sleep_enable_timer_wakeup(sleepTime * 60000000); // 60000000 for 1 minute.
+  esp_deep_sleep_start();
 }
 //=========================Main Loop ends==========================
 
