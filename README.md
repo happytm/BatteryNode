@@ -1,6 +1,4 @@
-## Very simple DIY Low Power, low cost, Local standalone (no cloud service required) or web connected IOT Network.
-
-
+## Simplest DIY Low Power, low cost, Local standalone or web connected IOT Network (no third party software or cloud service or programming knowledge required) 
 
 # Features:
 
@@ -25,13 +23,15 @@ Average sensor node could be below $5 each.
 
 Simply storing single standard .bin file for all remote devices to Gateway LittleFS file system and publishing MQTT command from MQTT client app or by issuing command from web interface each sensor device on the network can be updated with latest firmware. Again there is no need to physically access hard to reach remote devices.
 
+## Current time sent to all remote devices from Gateway for further time based automation in remote devices. 
+
 # Concept in detail:
 
-This code create small standalone network (maximum of 100) of battery powered esp8266 devices connecting to one ESP32 gateway device in star network topology.
+This code create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
 Each device can be controlled simply by MQTT app like MQTT Dash or built in web interface over local network or over internet if used with DynDNS service like DuckDNS.
 There is no need for other home automation software locally or on cloud.
 
-My testing shows data communication is achieved within 80 milliseconds total uptime for remote device out of which only 45 milliseconds of more power hungry WiFi receive & transmit on average thereby saving significant battery power.
+My testing shows data communication is achieved within 80 milliseconds total uptime for remote device out of which only 45 milliseconds of time used for more power hungry WiFi receive & transmit on average thereby saving significant battery power. I think this is better than ESPNow protocol.
 
 ### Installation:
 
@@ -55,22 +55,22 @@ commands are issued via MQTT payload with topic name "command/". At least first 
 ```c
 - value 101 to 121 is reserved for following commands:
 
- - 101 = digitalWright.
+ - 101 =     Digital Write.
            - Example command payload 36/101/<01 to 05 or 12 to 39>/<00 0r 01>/ for digitalWrite.
            
- - 102 = analogWright.
+ - 102 =     Analog Write.
            - Example command payload 36/102/<01 to 05 or 12 to 39>/<1 to 256>/ for analogWrite(pwm).
  
- - 103 = digitalRead.
+ - 103 =     Digital Read.
            - Example command payload 36/103/<01 to 05 or 12 to 39>/
  
- - 104 = analogRead.
+ - 104 =     Analog Read.
            - Example command payload 36/104/<01 to 05 or 12 to 39>/
  
- - 105 = Neopixel.
+ - 105 =     Neopixel.
            - Example command payload 36/105/<00 to 256>/<00 to 256>/<00 to 256>/<00 to 256>/
            
- - 106 = Set target values - It is posiible to send and store 4 target values to remote device for further automation locally in remote device.
+ - 106 =     Set target values - It is posiible to send and store 4 target values to remote device for further automation locally in remote device.
            - Example command payload 36/106/<00 to 256>/<00 to 256>/<00 to 256>/<00 to 256>/
  
  - 107 =     Set WiFi Channel.
