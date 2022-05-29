@@ -56,8 +56,8 @@ void setup(){
   LITTLEFS.begin();
   EEPROM.begin(512);
 #if FIRSTTIME  
-  // Setup device numbers in EEPROM permanantly.
-  for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i, i);EEPROM.writeByte(i+1, 101);}
+  // Setup device numbers and wifi Channel for remote devices in EEPROM permanantly.
+  for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i, i);EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}}
   EEPROM.writeByte(0, apChannel);EEPROM.commit();
 #endif  
   EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
