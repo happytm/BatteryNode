@@ -1,4 +1,4 @@
-// 45 ms transmit & receive time and 82ms total uptime required in two way mode.Confirm and try to reduce this time.
+// 45 ms transmit & receive time and 82 ms total uptime required in two way mode.Confirm and try to reduce this time.
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <HTTPClient.h>
@@ -54,7 +54,6 @@ void setup() {
   // If WiFi channels of Gateway and thid device do not match. 
   // if (WiFi.BSSID(0)[0] < 6) {sensorValues();Serial.println("Scanning multiple channels...");int n = WiFi.scanNetworks(true, false, false, 5, 0);delay(10);}
 
-  EEPROM.writeByte(0,WiFi.BSSID(0)[0]);   // Device ID at address 0.
   EEPROM.writeByte(1, WiFi.BSSID(0)[1]);  // Command type at address 1. 
   EEPROM.commit();
   
@@ -86,7 +85,7 @@ void setup() {
        {
          EEPROM.writeByte(2,value1);
          EEPROM.writeByte(3,value2);EEPROM.commit();
-         Serial.print("Received Command Digital Write: ");Serial.print(EEPROM.readByte(2));  Serial.println(EEPROM.readByte(3));
+         Serial.print("Received Command Digital Write: ");Serial.print(value1);  Serial.println(value2);
        
          gpioControl();
          
@@ -94,23 +93,23 @@ void setup() {
        {
          EEPROM.writeByte(4,value1);
          EEPROM.writeByte(5,value2);EEPROM.commit();
-         Serial.print("Received Command Analog Write:  ");Serial.print(EEPROM.readByte(4));  Serial.println(EEPROM.readByte(5));
+         Serial.print("Received Command Analog Write:  ");Serial.print(value1);  Serial.println(value2);
 
          gpioControl();
          
        } else if (commandType == 103)  // Digital Read
        {
-          Serial.println("Received Command Digital Read pin:  ");
+          Serial.println("Received Command Digital Read pin:  ");Serial.println(value1);
        } else if (commandType == 104)  // Analog Read
        { 
-           Serial.println("Received Command Digital Read pin: ");
+           Serial.println("Received Command Digital Read pin: ");Serial.println(value1);
        } else if (commandType == 105)  // Neopixel
        {
          EEPROM.writeByte(6,value1);
          EEPROM.writeByte(7,value2);
          EEPROM.writeByte(8,value3);
          EEPROM.writeByte(9,value4);EEPROM.commit();
-         Serial.print("Received Command Neopixel: ");Serial.print(EEPROM.readByte(6));  Serial.println(EEPROM.readByte(7));Serial.print(EEPROM.readByte(8));  Serial.println(EEPROM.readByte(9));
+         Serial.print("Received Command Neopixel: ");Serial.print(value1);  Serial.println(value2);Serial.print(value3);  Serial.println(value4);
 
          gpioControl();
          
@@ -120,14 +119,13 @@ void setup() {
          EEPROM.writeByte(11,value2);
          EEPROM.writeByte(12,value3);
          EEPROM.writeByte(13,value4);EEPROM.commit();
-         Serial.print("Received Command Set Target Values to: ");Serial.println(EEPROM.readByte(10));  Serial.println(EEPROM.readByte(11));Serial.print(EEPROM.readByte(12));  Serial.println(EEPROM.readByte(13));        
-
+         Serial.print("Received Command Set Target Values to: ");Serial.println(value1);  Serial.println(value2);Serial.print(value3);  Serial.println(value4);        
+         
        } else if (commandType == 107)  // Set AP Channel
        {
          EEPROM.writeByte(14,value1);EEPROM.commit();
-         Serial.print("Received Command Set AP Channel to: ");Serial.println(EEPROM.readByte(14));
-         
-       
+         Serial.print("Received Command Set AP Channel to: ");Serial.println(value1);
+               
        } else if (commandType == 108 && value1 == 1)  // Set Mode
        {
          Serial.print("Received Command Set Device Mode to: ");Serial.println(value1);
@@ -138,14 +136,13 @@ void setup() {
        } else if (commandType == 109)  // Set Sleep Time
        {
          EEPROM.writeByte(16,value1);EEPROM.commit();
-         Serial.print("Received Command Set Sleep Time to:   ");Serial.print(EEPROM.readByte(16));Serial.println(" minutes.");
+         Serial.print("Received Command Set Sleep Time to:   ");Serial.print(value1);Serial.println(" minutes.");
           
-       
        } else if (commandType == 110)  // Set Device ID
        {
          
          EEPROM.writeByte(0,value1);EEPROM.commit();
-         Serial.print("Received Command Set Device ID to: ");Serial.println(EEPROM.readByte(0));
+         Serial.print("Received Command Set Device ID to: ");Serial.println(value1);
          
         }
          
@@ -180,16 +177,15 @@ void loop() {
    //esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);             // see https://esp32.com/viewtopic.php?t=9681
    //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);    // see https://esp32.com/viewtopic.php?t=9681
    //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);       // see https://esp32.com/viewtopic.php?t=9681
-  esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 60000000); // 60000000 for 1 minute.
+  esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 6000000);            // 60000000 for 1 minute.
   esp_deep_sleep_start();
 }     
 //=========================Main Loop ends==========================
 
 void sensorValues() 
 {
-  
-  sensorData[0] = 6;//EEPROM.readByte(0);
-  sensorData[1] = 115;                  //voltage must be between 130 and 180 here in whole integer.
+  sensorData[0] = EEPROM.readByte(0);
+  sensorData[1] = 165;                  //voltage must be between 130 and 180 here in whole integer.
   sensorData[2] = random(70,74);        //temperature F;
   sensorData[3] = random(40,100);       //humidity %;
   sensorData[4] = random(850,1024) / 4;  //pressure mb;
