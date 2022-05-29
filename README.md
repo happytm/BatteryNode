@@ -48,9 +48,9 @@ commands are issued via MQTT payload with topic name "command/". At least first 
       
 #### Command1 = Device ID Number (required for all commands) -               
 ```c
-- Device ID must be 2 digits and ending with 2,6,A or E to avoid conflict with other devices.
+- Device ID must be 2 or 3 digits and ending with 2,6,A or E to avoid conflict with other devices.
 - See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
-- For example use any of following for devie ID ending with 6.
+- Any of following for device ID is valid.
 - 06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246.
 ```                                            
 #### Command2 = Command type  (required for all commands)   -         
