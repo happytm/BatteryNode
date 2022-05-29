@@ -19,7 +19,7 @@ No need to charge small 100 mAh LIR2450 coin cell battery manually for life of b
 
 Average sensor node could be below $5 each.
 
-## OTA update of all remote devices using Gateway to store single standard .bin file for all remote device. 
+## OTA update of all remote devices using Gateway to store single standard .bin file for all remote devices. 
 
 Simply storing single standard .bin file for all remote devices to Gateway LittleFS file system and publishing MQTT command from MQTT client app or by issuing command from web interface each sensor device on the network can be updated with latest firmware. Again there is no need to physically access hard to reach remote devices.
 
@@ -37,8 +37,10 @@ My testing shows data communication is achieved within 80 milliseconds total upt
 
 - To test the code at minimum 1 remote ESP32 and 1 ESP32 Gateway device are required.
 - One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.
+- Please format flash as LittleFS file system and upload data folder within Simple Gateway folder.
+- New remote device will show up with device ID 246 but the device ID can be changed to any other unused ID on network from web interface or MQTT client.
 - There can be as many as 100 battery powered devices which can send data to one gateway device. 
-- Web interface is started at IP 192.168.4.1 and shows graphs of sensor data from whole network, It also allows to issue commands to any remote device on network.
+- Web interface is started at IP 192.168.4.1 if connected to AP named "ESP" and shows graphs of sensor data from whole network, It also allows to issue commands to   any remote device on network.
 
 ### Command structure:  
 
