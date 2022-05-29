@@ -101,7 +101,7 @@ commands are issued via MQTT payload with topic name "command/". At least first 
 
 #### Command5 = value3.           
 
-#### Command6 = value3.          
+#### Command6 = value4.          
 
 Most suitable use cases around typical home - Light control, fan/AC control, Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection/motion sensor, Soil moisture sensor for garden/greenhouse, solar tracker etc. 
 
