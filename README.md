@@ -37,6 +37,7 @@ My testing shows data communication is achieved within 80 milliseconds total upt
 
 - To test the code at minimum 1 remote ESP32 and 1 ESP32 Gateway device are required.
 - One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.
+- There are .bin files for gateway and remote sketches in their respective folders if do not want to compile the code. They should work out of box.
 - Please format flash as LittleFS file system and upload data folder within Simple Gateway folder.
 - New remote device will show up with device ID 246 but the device ID can be changed to any other unused ID on network from web interface or MQTT client.
 - There can be as many as 100 battery powered devices which can send data to one gateway device. 
