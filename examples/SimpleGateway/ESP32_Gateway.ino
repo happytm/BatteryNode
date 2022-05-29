@@ -12,6 +12,8 @@
 struct tm timeinfo;
 #define MY_TZ "EST5EDT,M3.2.0,M11.1.0" //(New York) https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
 
+#define FIRSTTIME  false  // Define true if setting up Gateway for first time.
+
 const char* apSSID = "ESP";
 const char* apPassword = "";
 const int apChannel = 7;
@@ -53,12 +55,12 @@ void setup(){
   delay(500);
   LITTLEFS.begin();
   EEPROM.begin(512);
-  
-  // Save device numbers in EEPROM. (Uncomment First time only)
-  
-  //for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i, i);EEPROM.writeByte(i+1, 101);}
-  //EEPROM.writeByte(0, apChannel);EEPROM.commit();
-  //EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
+#if FIRSTTIME  
+  // Setup device numbers in EEPROM permanantly.
+  for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i, i);EEPROM.writeByte(i+1, 101);}
+  EEPROM.writeByte(0, apChannel);EEPROM.commit();
+#endif  
+  EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
   
   startWiFi();
   startAsyncwebserver();
@@ -82,32 +84,31 @@ void loop()
 
 
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
-{
+{ 
     Serial.println();
     Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
     Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1 with connection to ESP AP");Serial.println(" to monitor and control whole network");
 
     if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
     {
+     
       device = info.ap_probereqrecved.mac[0];
-      Serial.println("Contents of command data saved in EEPROM for device: ");
+      Serial.println("Contents of command data saved in EEPROM for this device: ");
       EEPROM.readBytes(0, showConfig,256);for(int i=0;i<10;i++){ 
       Serial.printf("%d ", showConfig[i+device]);
       }
       
       Serial.println();
-      for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device]; // Prepare command to sent to remote device.
+      for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device];   // Prepare command to be sent to remote device.
       for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+6]; // Assign sensor types to the particular device.
-      for (int i = 0; i < 6; i++) showConfig[i+device+1] = 0;    // Clear the content of command.
-      
-      
+                    
       timeSynch();
-      if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 101; timeSynch();}
+      if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 107; mac[2] = apChannel; timeSynch();}
                      
       esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
       Serial.println();
       Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
-           
+          
       rssi = info.ap_probereqrecved.rssi;         
       voltage = info.ap_probereqrecved.mac[1];
       voltage = voltage * 2 / 100;
@@ -134,7 +135,10 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
          myClient.publish("Warning/Battery Low", String(device));
       }         
     }
- }
+       // If command is related to change of device number send command only once.
+       if (mac[1] == 108 || mac[1] == 110){for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}}
+  }
+
 
 void receivedMessage(const MqttClient* source, const Topic& topic, const char* payload, size_t length)
 {
@@ -169,7 +173,7 @@ void saveCommand()
           
         }
 
-      EEPROM.commit();Serial.println();Serial.println("Command and sensor types saved to EEPROM");
+      EEPROM.commit();Serial.println();Serial.println("Command or sensor types saved to EEPROM.");
       EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
       
       }
@@ -228,11 +232,11 @@ void startAsyncwebserver()
    
     ssid = request->getParam(6)->value().c_str();                  
     password =request->getParam(7)->value().c_str();
-         
+  /*       
   if(p->isPost()){
-    Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value());
+    Serial.printf("Command[%s]: %s\n", p->name().c_str(), p->value()); // For debug purpose.
     }
- 
+  */
 } 
   request -> send(200, "text/plain", "Command received by server successfully, please click browser's back button to get back to main page.");
   Serial.print("Command received from Browser: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
