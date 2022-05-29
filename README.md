@@ -8,7 +8,7 @@ This is the main goal of this project. Proberequest protocol is used for data tr
 
 ## No local linux server or cloud service required.
 
-Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using uPlot graphing library and built in webserver. Sensor data of whole network is stored on gateway device using LittleFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files.Changing data format in LittleFS also also possible live from web interface using SPIFFSEditor.
+Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using uPlot graphing library and built in webserver. Sensor data of whole network is stored on gateway device using LittleFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files.Changing data format in LittleFS also possible live from web interface using SPIFFSEditor.
 
 
 ## Build it, position towards maximum sun exposure and forget about it. 
