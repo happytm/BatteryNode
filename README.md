@@ -1,31 +1,31 @@
-## Simplest DIY Low Power, low cost, Local standalone or web connected IOT Network (no third party software or cloud service or programming knowledge required) 
+### Simplest DIY Low Power, low cost, Local standalone or web connected IOT Network (no third party software or cloud service or programming knowledge required) 
 
 # Features:
 
-## Very low power consumption.
+### Very low power consumption.
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
-## No local linux server or cloud service required.
+### No local linux server or cloud service required.
 
 Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using uPlot graphing library and built in webserver. Sensor data of whole network is stored on gateway device using LittleFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files.Changing data format in LittleFS also possible live from web interface using SPIFFSEditor.
 
 
-## Build it, position towards maximum sun exposure and forget about it. 
+### Build it, position towards maximum sun exposure and forget about it. 
 
 No need to charge small 100 mAh LIR2450 coin cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell is used.
 
-## Very low cost DIY sensors.
+### Very low cost DIY sensors.
 
 Average sensor node could be below $5 each.
 
-## OTA update of all remote devices using Gateway to store single standard .bin file for all remote devices. 
+### OTA update of all remote devices using Gateway to store single standard .bin file for all remote devices. 
 
 Simply storing single standard .bin file for all remote devices to Gateway LittleFS file system and publishing MQTT command from MQTT client app or by issuing command from web interface each sensor device on the network can be updated with latest firmware. Again there is no need to physically access hard to reach remote devices.
 
-## Current time sent to all remote devices from Gateway for further time based automation in remote devices. 
+### Current time sent to all remote devices from Gateway for further time based automation in remote devices. 
 
-# Concept in detail:
+## Concept in detail:
 
 This code create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
 Each device can be controlled simply by MQTT app like MQTT Dash or built in web interface over local network or over internet if used with DynDNS service like DuckDNS.
@@ -107,7 +107,7 @@ commands are issued via MQTT payload with topic name "command/". At least first 
 Most suitable use cases around typical home - Light control, fan/AC control, Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection/motion sensor, Soil moisture sensor for garden/greenhouse, solar tracker etc. 
 
 
-## Tested with following MQTT front end GUI client software:
+### Tested with following MQTT front end GUI client software:
 
 - MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US (preffered).
             basic javascript automation possible with this App. 
@@ -119,18 +119,18 @@ Most suitable use cases around typical home - Light control, fan/AC control, Wea
 It is also possible to run Node-Red on android smartphones or tablets. 
 https://nodered.org/docs/getting-started/android
 
-## Useful tool to estimate power consumption and solar battery charging:
+### Useful tool to estimate power consumption and solar battery charging:
 
 https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 
 http://www.of-things.de/battery-life-calculator.php
       
-## Tool used to convert HTML/CSS/JAVASCRIPT TO HEX: 
+### Tool used to convert HTML/CSS/JAVASCRIPT TO HEX: 
       
 https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
 
 
-## This project was possible thanks to creators of following libraries used for this project:
+### This project was possible thanks to creators of following libraries used for this project:
  
  - https://github.com/lorol/LITTLEFS 
  - https://github.com/hsaturn/TinyMqtt
