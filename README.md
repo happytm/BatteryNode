@@ -87,7 +87,7 @@ commands are issued via MQTT payload with topic name "command/". At least first 
  - 110 =     Set device ID.
            - Example command payload 36/110/<00 or 255 if number ends with 2, 6, A, or E>/
            
- - 111 to 120 reserved for future exansion.
+ - 111 to 120 reserved for future expansion.
  
  - 121 =     Set sensor types for each device.
            - Example command payload 36/121/<00 to 256>/<00 to 256>/<00 to 256>/<00 to 256>/
