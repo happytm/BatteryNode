@@ -73,17 +73,20 @@ commands are issued via MQTT payload with topic name "command/". At least first 
  - 105 =     Neopixel.
            - Example command payload 36/105/<00 to 256>/<00 to 256>/<00 to 256>/<00 to 256>/
            
- - 106 =     Set target values - It is posiible to send and store 4 target values to remote device for further automation locally in remote device.
+ - 106 =     Set target values.
+             It is posiible to send and store 4 target values to remote device for further automation locally in remote device.
            - Example command payload 36/106/<00 to 256>/<00 to 256>/<00 to 256>/<00 to 256>/
  
  - 107 =     Set WiFi Channel.
            - Example command payload 36/107/<00 to 14>/
            
  - 108 =     Set device mode - device mode 0 = normal mode and device mode 1 = OTA update.
-           - Example command payload 36/108/<00 to 105>/ - Mainly used for OTA update but can be used to run any alternative Code block.
+           Mainly used for OTA update but can be used to run any alternative Code block.
+           - Example command payload 36/108/<00 to 105>/ 
  
  - 109 =     Set sleep time in minutes.
            - Example command payload 36/109/<00 or 255>/
+ 
  - 110 =     Set device ID.
            - Example command payload 36/110/<00 or 255 if number ends with 2, 6, A, or E>/
            
