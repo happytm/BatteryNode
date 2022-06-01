@@ -6,8 +6,9 @@
 #include <FS.h>
 #include "LITTLEFS.h"
 #include <SPIFFSEditor.h>
-#include <TinyMqtt.h>   // Thanks to https://github.com/hsaturn/TinyMqtt
+#include <TinyMqtt.h>       // Thanks to https://github.com/hsaturn/TinyMqtt
 #include "time.h"
+#include "motionDetector.h" // Thanks to: https://github.com/paoloinverse/motionDetector_esp
 
 struct tm timeinfo;
 #define MY_TZ "EST5EDT,M3.2.0,M11.1.0" //(New York) https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
@@ -26,6 +27,10 @@ const char* http_username = "admin";  // Web file editor interface Login.
 const char* http_password = "admin";  // Web file editor interface password.
 
 String dataFile = "/data.json";       // File to store sensor data.
+
+int enableCSVgraphOutput = 1; // 0 disable, 1 enable // if enabled, you may use Tools-> Serial Plotter to plot the variance output for each transmitter. 
+int scanInterval = 500; // in milliseconds
+int motionLevel = RADAR_BOOTING; // initial value = -1, any values < 0 are errors, see motionDetector.h , ERROR LEVELS sections for details on how to intepret any errors.
 
 //==================User configuration not required below this line ================================================
 
@@ -46,6 +51,44 @@ MqttBroker broker(1883);
 MqttClient myClient(&broker);
 
 AsyncWebServer webserver(80);
+AsyncWebSocket ws("/ws");
+
+void notifyClients(String level) {
+  ws.textAll(level);
+  Serial.print("Websocket message sent: ");Serial.println(level);
+}
+
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) 
+{
+    AwsFrameInfo *info = (AwsFrameInfo*)arg;
+    if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) 
+    {
+      
+      // Process incoming message.
+      data[len] = 0;
+      String message = "";
+      message = (char*)data;
+    
+    }
+}
+
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) 
+{
+    switch (type) {
+        case WS_EVT_CONNECT:
+            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            break;
+        case WS_EVT_DISCONNECT:
+            Serial.printf("WebSocket client #%u disconnected\n", client->id());
+            break;
+        case WS_EVT_DATA:
+            handleWebSocketMessage(arg, data, len);
+            break;
+        case WS_EVT_PONG:
+        case WS_EVT_ERROR:
+            break;
+    }
+}
 
 unsigned long getTime() {time_t now;if (!getLocalTime(&timeinfo)) {Serial.println("Failed to obtain time");return(0);}Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");time(&now);return now;}
 
@@ -64,6 +107,7 @@ void setup(){
   
   startWiFi();
   startAsyncwebserver();
+  startMotionDetector();
     
   configTime(0, 0, ntpServer); setenv("TZ", MY_TZ, 1); tzset(); // Set environment variable with your time zone
   epoch = getTime(); Serial.print("Epoch Time: "); Serial.println(epoch); delay(500); Epoch = String(epoch);
@@ -79,24 +123,45 @@ void setup(){
 
 void loop()
 {
- if (WiFi.waitForConnectResult() != WL_CONNECTED) {ssid = EEPROM.readString(270); password = EEPROM.readString(301);Serial.println("Wifi connection failed");Serial.print("Connect to Access Point ");Serial.print(apSSID);Serial.println(" and point your browser to 192.168.4.1 to set SSID and password" );WiFi.disconnect(false);delay(1000);WiFi.begin(ssid.c_str(), password.c_str());}
+   delay(scanInterval);
+   if (WiFi.waitForConnectResult() != WL_CONNECTED) {ssid = EEPROM.readString(270); password = EEPROM.readString(301);Serial.println("Wifi connection failed");Serial.print("Connect to Access Point ");Serial.print(apSSID);Serial.println(" and point your browser to 192.168.4.1 to set SSID and password" );WiFi.disconnect(false);delay(1000);WiFi.begin(ssid.c_str(), password.c_str());}
+   notifyClients(String(motionLevel));
+   unsigned long lastDetected;
+   int lastLevel;
+   if (motionLevel > 100)
+   {
+    lastDetected = getTime();
+    lastLevel = motionLevel;
+   }
+   notifyClients(String(lastDetected));
+   notifyClients(String(lastLevel));
+   ws.cleanupClients();
+   // manageSerialCommands();
+    
+    motionLevel = motionDetector_esp();  // if the connection fails, the radar will automatically try to switch to different operating modes by using ESP32 specific calls. 
+    if (enableCSVgraphOutput == 0) {  // for the graph via serial, we just let the library do the job. 
+      Serial.print("motionLevel: ");
+      Serial.println(motionLevel);
+    }
 }  // End of loop
 
 
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
 { 
-    Serial.println();
-    Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
-    Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1 with connection to ESP AP");Serial.println(" to monitor and control whole network");
-
-    if (info.ap_probereqrecved.mac[0] == 6 || info.ap_probereqrecved.mac[0] == 16 || info.ap_probereqrecved.mac[0] == 26 || info.ap_probereqrecved.mac[0] == 36 || info.ap_probereqrecved.mac[0] == 46 || info.ap_probereqrecved.mac[0] == 56 || info.ap_probereqrecved.mac[0] == 66 || info.ap_probereqrecved.mac[0] == 76 || info.ap_probereqrecved.mac[0] == 86 || info.ap_probereqrecved.mac[0] == 96 || info.ap_probereqrecved.mac[0] == 106 || info.ap_probereqrecved.mac[0] == 116 || info.ap_probereqrecved.mac[0] == 126 || info.ap_probereqrecved.mac[0] == 136 || info.ap_probereqrecved.mac[0] == 146 || info.ap_probereqrecved.mac[0] == 156 || info.ap_probereqrecved.mac[0] == 166 || info.ap_probereqrecved.mac[0] == 176 || info.ap_probereqrecved.mac[0] == 186 || info.ap_probereqrecved.mac[0] == 196 || info.ap_probereqrecved.mac[0] == 206 || info.ap_probereqrecved.mac[0] == 216 || info.ap_probereqrecved.mac[0] == 226 || info.ap_probereqrecved.mac[0] == 236 || info.ap_probereqrecved.mac[0] == 246) // only accept data from certain devices.
+  Serial.println();
+  Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
+  Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1 with connection to ESP AP");Serial.println(" to monitor and control whole network");
+  // Allow data from device ID ending in number 6 and voltage value between 2.4V and 3.6V.
+  for (int i = 6; i < 256; i = i+10) if (info.ap_probereqrecved.mac[0] == i && (info.ap_probereqrecved.mac[1] > 120 || info.ap_probereqrecved.mac[1] < 180))
+   {
+    // This helps reduce interference from unknown devices from far away with weak signals.
+    if (info.ap_probereqrecved.rssi > -70)  
     {
-     
+      
       device = info.ap_probereqrecved.mac[0];
       Serial.println("Contents of command data saved in EEPROM for this device: ");
       EEPROM.readBytes(0, showConfig,256);for(int i=0;i<10;i++){ 
-      Serial.printf("%d ", showConfig[i+device]);
-      }
+      Serial.printf("%d ", showConfig[i+device]);}
       
       Serial.println();
       for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device];   // Prepare command to be sent to remote device.
@@ -135,9 +200,10 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
          myClient.publish("Warning/Battery Low", String(device));
       }         
     }
-       // If command is related to change of device number send command only once.
-       if (mac[1] == 108 || mac[1] == 110){for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}}
-  }
+  }    
+       // In some cases send command only once.
+       if (mac[1] == 105 || mac[1] == 106 || mac[1] == 108 || mac[1] == 110){for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}}
+} // End of Proberequest function.
 
 
 void receivedMessage(const MqttClient* source, const Topic& topic, const char* payload, size_t length)
@@ -194,6 +260,7 @@ void timeSynch(){ if (mac[1] == 105 || mac[1] == 106) {return;}else{epoch = getT
 void startWiFi()
 {
   WiFi.mode(WIFI_AP_STA);
+  
   WiFi.softAP(apSSID, apPassword, apChannel, hidden);
   esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
   Serial.print("AP started with name: ");Serial.println(apSSID);
@@ -214,6 +281,10 @@ void startWiFi()
 
 void startAsyncwebserver()
 {
+  
+  ws.onEvent(onEvent);
+  webserver.addHandler(&ws);
+  
   webserver.addHandler(new SPIFFSEditor(MYFS, http_username,http_password));
   
   webserver.on("/post", HTTP_POST, [](AsyncWebServerRequest * request){
@@ -267,3 +338,17 @@ void startAsyncwebserver()
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     webserver.begin();
 }
+
+void startMotionDetector(){
+
+    motionDetector_init();  // initializes the storage arrays in internal RAM
+    motionDetector_config(64, 16, 3, 3, false); 
+    motionDetector_debug_via_serial(0); // show debugging information, at the simplest debugging level. Level 0 means no output. 
+    motionDetector_set_debug_level(1); // set a very verbose level for operating the radar.
+    
+    if (enableCSVgraphOutput > 0) {      // USE THE Tools->Serial Plotter to graph the live data!
+      motionDetector_enable_serial_CSV_graph_data(enableCSVgraphOutput); // output CSV data only
+    }
+
+    Serial.setTimeout(1000);
+ }
