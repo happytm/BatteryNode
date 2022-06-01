@@ -159,6 +159,65 @@ var attachEvent = function(node, event, listener, useCapture) {
     alert(result.message);
   };
 </script>
+
+<p>Current Motion Level: <span id="motion-level">0</span></p>
+<p>Last motion detected at: <span id="time">00</span></p>
+<p>Last Motion Level was: <span id="last-motion-level">0</span></p>
+
+<script>
+var gateway = `ws://${window.location.hostname}/ws`;
+var websocket;
+
+window.addEventListener('load', onLoad);
+
+function onLoad(event) {
+    initWebSocket();
+    
+}
+
+function initWebSocket() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    websocket.onopen    = onOpen;
+    websocket.onclose   = onClose;
+    websocket.onmessage = onMessage;
+}
+
+function onOpen(event) {
+    console.log('Connection opened');
+}
+
+function onClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+}
+
+function onMessage(event) {
+    let data = JSON.parse(event.data);
+    console.log(data);
+    
+    if (data < 1000) {
+      
+      document.getElementById("motion-level").innerHTML = data
+    
+      if (data > 100) { 
+      var utcSeconds = data; var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+      d.setUTCSeconds(utcSeconds);
+      document.getElementById("time").innerHTML = d
+      if (data < 1000) document.getElementById("last-motion-level").innerHTML = data
+      }
+    } 
+}
+
+function initButton() {
+    document.getElementById('toggle').addEventListener('click', onToggle);
+}
+
+function onToggle(event) {
+    websocket.send(JSON.stringify({'action':'toggle'}));
+}
+</script>
+
 <SELECT class="combine" id ="period" name = "period">
     <option value="all">Graph by Period</option>
     <option value="1">Last Hour</option>
@@ -363,7 +422,7 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 
 			function makeChart(data) {
 				console.time("chart");
-				console.log(data[4][1]); // SensorType1
+				
    
   
 		const opts = {
