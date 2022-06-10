@@ -33,42 +33,31 @@ body {margin: 0;}
 
 <SELECT class="combine" id ="device" name = "Device">
     <option value="">Select Device</option>
-    <option value="246">New Device(246)</option>
-    <option value="256">Gateway(256)</option>
-    <option value="6">Livingroom(6)</option>
-    <option value="16">Kitchen(16)</option>
-    <option value="26">Bedroom1(26)</option>
-    <option value="36">Bedroom2(36)</option>
-    <option value="46">Bedroom3(46)</option>
-    <option value="56">Bedroom4(56)</option>
-    <option value="66">Bathroom1(66)</option>
-    <option value="76">Bathroom2(76)</option>
-    <option value="86">Bathroom3(86)</option>
-    <option value="96">Bathroom4(96)</option>
-    <option value="106">Laundry(106)</option>
-    <option value="116">Boiler(116)</option>
-    <option value="126">Workshop(126)</option>
-    <option value="136">Garage(136)</option>
-    <option value="146">Office(146)</option>
-    <option value="156">WaterTank(156)</option>
-    <option value="166">SolarTracker(166)</option>
-    <option value="176">WeatherStation(176)</option>
-    <option value="186">Greenhouse(186)</option>
+    <option value="246">New Device</option>
+    <option value="256">Gateway</option>
+    <option value="6">Livingroom</option>
+    <option value="16">Kitchen</option>
+    <option value="26">Bedroom1</option>
+    <option value="36">Bedroom2</option>
+    <option value="56">Bathroom2</option>
+    <option value="66">Laundry</option>
+    <option value="76">Office</option>
+    
 </SELECT>
 
 <SELECT class="combine" id ="command" name = "Command">
     <option value="">Select Command Type</option>
-    <option value="101">Digital Write(101)</option>
-    <option value="102">Analog Write(102)</option>
-    <option value="103">Digital Read(103)</option>
-    <option value="104">Analog Read(104)</option>
-    <option value="105">Neopixel(105)</option>
-    <option value="106">Set Target Values(106)</option>
-    <option value="107">Set AP Channel(107)</option>
-    <option value="108">Set Device Mode(108)</option>
-    <option value="109">Set Sleep Time(109)</option>
-    <option value="110">Set Device ID(110)</option>
-    <option value="121">Set Sensor Types(121)</option>
+    <option value="101">Digital Write</option>
+    <option value="102">Analog Write</option>
+    <option value="103">Digital Read</option>
+    <option value="104">Analog Read</option>
+    <option value="105">Neopixel</option>
+    <option value="121">Set Sensor Types</option>
+    <option value="107">Set Target Values</option>
+    <option value="108">Set AP Channel</option>
+    <option value="109">Set Sleep Time</option>
+    <option value="110">Set Mode</option>
+    <option value="111">Set Device ID</option>
 </SELECT>
 
 <input id="command1" name="command1" type="number"  min="0" max="256">   
@@ -83,10 +72,6 @@ body {margin: 0;}
 <input name="Password" type="password" placeholder="Password"/>
 <button type="submit">Enter WiFi Config</button>
 <br><br>
-
-<p>Current Motion Level: <span id="motion-level">Sensor disabled or calibrating...</span></p>
-<p>Last motion detected at: <span id="time">Waiting for motion detection...</span></p>
-<p>Last Motion Level was: <span id="last-motion-level">Waiting for motion detection...</span></p>
 
 <script>
 var attachEvent = function(node, event, listener, useCapture) {
@@ -113,7 +98,7 @@ var attachEvent = function(node, event, listener, useCapture) {
       
      
 // Show and hide the appropriate select's
-     if (this.value == "105" || this.value == "106" || this.value == "121") {
+     if (this.value == "105" || this.value == "106" || this.value == "107" ) {
        
        option1.style.display = "";
        option2.style.display = "";
@@ -122,7 +107,7 @@ var attachEvent = function(node, event, listener, useCapture) {
        option5.style.display = "";
        
 	   
-     } else if (this.value == "103" || this.value == "104" || this.value == "107" || this.value == "108" || this.value == "109"|| this.value == "110") {
+     } else if (this.value == "103" || this.value == "104" || this.value == "108" || this.value == "109"|| this.value == "110" ) {
        
        option1.style.display = "";
        option2.style.display = "";
@@ -163,59 +148,6 @@ var attachEvent = function(node, event, listener, useCapture) {
     alert(result.message);
   };
 </script>
-
-<script>
-var gateway = `ws://${window.location.hostname}/ws`;
-var websocket;
-
-window.addEventListener('load', onLoad);
-
-function onLoad(event) {
-    initWebSocket();
-    
-}
-
-function initWebSocket() {
-    console.log('Trying to open a WebSocket connection...');
-    websocket = new WebSocket(gateway);
-    websocket.onopen    = onOpen;
-    websocket.onclose   = onClose;
-    websocket.onmessage = onMessage;
-}
-
-function onOpen(event) {
-    console.log('Connection opened');
-}
-
-function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-}
-
-function onMessage(event) {
-    let data = JSON.parse(event.data);
-    console.log(data);
-    
-    if (data < 1000) {document.getElementById("motion-level").innerHTML = data}
-    
-    if (data > 1000) { 
-        var utcSeconds = data; var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
-        d.setUTCSeconds(utcSeconds);
-        document.getElementById("time").innerHTML = d
-        } 
-      
-    if (data > 100 && data < 1000){document.getElementById("last-motion-level").innerHTML = data}
-}
-
-function initButton() {
-    document.getElementById('toggle').addEventListener('click', onToggle);
-}
-
-function onToggle(event) {
-    websocket.send(JSON.stringify({'action':'toggle'}));
-}
-</script>
-
 <SELECT class="combine" id ="period" name = "period">
     <option value="all">Graph by Period</option>
     <option value="1">Last Hour</option>
@@ -225,7 +157,21 @@ function onToggle(event) {
     <option value="5">This Year</option>
 </SELECT>
 
-
+<SELECT class="combine" id ="deviceid" name = "deviceid">
+    <option value="all">Graph by Device</option>
+    <option value="1">Gateway</option>
+    <option value="6">Livingroom</option>
+    <option value="16">Kitchen</option>
+    <option value="26">Bedroom1</option>
+    <option value="36">Bedroom2</option>
+    <option value="46">Bathroom1</option>
+    <option value="56">Bathroom2</option>
+    <option value="66">Laundry</option>
+    <option value="76">Solar Tracker</option>
+    <option value="86">Water Tank</option>
+    <option value="96">Weather Station</option>
+    <option value="106">Greenhouse</option>
+</SELECT>
 
 <SELECT class="combine" id ="sensortype" name = "sensortype">
     <option value="all">Graph by Sensor Type</option>
@@ -246,65 +192,10 @@ function onToggle(event) {
     <option value="13">Rainfall</option>
     <option value="14">Air Quality</option>
 </SELECT>
-
-<script>
-var gateway = `ws://${window.location.hostname}/ws`;
-var websocket;
-
-window.addEventListener('load', onLoad);
-
-function onLoad(event) {
-    initWebSocket();
-    
-}
-
-function initWebSocket() {
-    console.log('Trying to open a WebSocket connection...');
-    websocket = new WebSocket(gateway);
-    websocket.onopen    = onOpen;
-    websocket.onclose   = onClose;
-    websocket.onmessage = onMessage;
-}
-
-function onOpen(event) {
-    console.log('Connection opened');
-}
-
-function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-}
-
-function onMessage(event) {
-    let data = JSON.parse(event.data);
-    console.log(data);
-    
-    if (data < 1000) {document.getElementById("motion-level").innerHTML = data}
-    
-    if (data > 1000) { 
-        var utcSeconds = data; var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
-        d.setUTCSeconds(utcSeconds);
-        document.getElementById("time").innerHTML = d
-        } 
-      
-    if (data > 100 && data < 1000){document.getElementById("last-motion-level").innerHTML = data}
-}
-
-function initButton() {
-    document.getElementById('toggle').addEventListener('click', onToggle);
-}
-
-function onToggle(event) {
-    websocket.send(JSON.stringify({'action':'toggle'}));
-}
-</script>
-
-
 <script>
 
 var sensor1,sensor2,sensor3,sensor4,sensor5,sensor6,sensor7,sensor8,sensor9,sensor10,sensor11,sensor12,sensor13,sensor14;
-var title = "Environment data from sensor network";
-	
+
 // converts the legend into a simple tooltip
 function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255, 249, 196, 0.92)", color: "black" } } = {}) {
 				let legendEl;
@@ -366,19 +257,19 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 				// epoch,location,voltage,rssi,temperature,humidity,pressure,light
 
 				const numFields = packed[0];
-                console.log(numFields); //18
+                                console.log(numFields); //12
 				packed = packed.slice(numFields + 1);
-                console.log(packed);   //single array of all sensor data.
+                                console.log(packed);   //single array of all sensor data.
                 
         
 				let data = [
 					Array(packed.length/numFields), // Time
 					Array(packed.length/numFields), // Location
-          Array(packed.length/numFields), // Voltage
+                                        Array(packed.length/numFields), // Voltage
 					Array(packed.length/numFields), // RSSI
 					Array(packed.length/numFields), // Temperature
 					Array(packed.length/numFields), // Humidity
-          Array(packed.length/numFields), // Pressure
+                                        Array(packed.length/numFields), // Pressure
 					Array(packed.length/numFields), // Light
 					Array(packed.length/numFields), // Level
 					Array(packed.length/numFields), // Switch Status
@@ -389,45 +280,45 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					Array(packed.length/numFields), // Wind Speed
 					Array(packed.length/numFields), // Wind Direction
 					Array(packed.length/numFields), // Rainfall
-					Array(packed.length/numFields) // Air Quality
+					Array(packed.length/numFields), // Air Quality
 				];
 				
-			  console.log(data); // (18)arrays of values by field
-        
+			  console.log(data); // (12)arrays of values by field
+
 				for (let i = 0, j = 0; i < packed.length; i += numFields, j++) {
-				  
-					data[0][j] = packed[i+0];     // Time
-				  data[1][j] = packed[i+1];     // Location
-					data[2][j] = packed[i+2];     // Voltage
-					data[3][j] = packed[i+3];     // RSSI
+				
+					data[0][j] = packed[i+0];
+				  data[1][j] = packed[i+1];
+					data[2][j] = packed[i+2];
+					data[3][j] = packed[i+3];
 					
-						     if (packed[i+4] == 1) {data[4][j] = packed[i+5]; sensor1   = "Temperature";   
+					       if (packed[i+4] == 1) {data[4][j] = packed[i+5]; sensor1   = "Temperature";
 					} else if (packed[i+4] == 2) {data[5][j] = packed[i+5]; sensor2   = "Humidity";
 					} else if (packed[i+4] == 3) {data[6][j] = packed[i+5] * 4; sensor3   = "Pressure";
 					} else if (packed[i+4] == 4) {data[7][j] = packed[i+5]; sensor4   = "Light";
-				  } else if (packed[i+4] == 5) {data[8][j] = packed[i+5]; sensor5   = "Level";
+				        } else if (packed[i+4] == 5) {data[8][j] = packed[i+5]; sensor5   = "Level";
 					} else if (packed[i+4] == 6) {data[9][j] = packed[i+5]; sensor6   = "Switch Status";
 					} else if (packed[i+4] == 7) {data[10][j] = packed[i+5]; sensor7  = "Motion";
-				  } else if (packed[i+4] == 8) {data[11][j] = packed[i+5]; sensor8  = "Azimuth";
-				  } else if (packed[i+4] == 9) {data[12][j] = packed[i+5]; sensor9  = "Elevation";
+				        } else if (packed[i+4] == 8) {data[11][j] = packed[i+5]; sensor8  = "Azimuth";
+				        } else if (packed[i+4] == 9) {data[12][j] = packed[i+5]; sensor9  = "Elevation";
 					} else if (packed[i+4] == 10) {data[13][j] = packed[i+5];sensor10 = "Soil Moisture";
-				  } else if (packed[i+4] == 11) {data[14][j] = packed[i+5];sensor11 = "Wind Speed";
+				        } else if (packed[i+4] == 11) {data[14][j] = packed[i+5];sensor11 = "Wind Speed";
 					} else if (packed[i+4] == 12) {data[15][j] = packed[i+5];sensor12 = "Wind Direction";
 					} else if (packed[i+4] == 13) {data[16][j] = packed[i+5];sensor13 = "Rainfall";
 					} else if (packed[i+4] == 14) {data[17][j] = packed[i+5];sensor14 = "Air Quality";}
+				  
 					
-					       
-					       if (packed[i+6] == 1) {data[4][j] = packed[i+7]; sensor1   = "Temperature";   
+					       if (packed[i+6] == 1) {data[4][j] = packed[i+7]; sensor1   = "Temperature";
 					} else if (packed[i+6] == 2) {data[5][j] = packed[i+7]; sensor2   = "Humidity";
 					} else if (packed[i+6] == 3) {data[6][j] = packed[i+7] * 4; sensor3   = "Pressure";
 					} else if (packed[i+6] == 4) {data[7][j] = packed[i+7]; sensor4   = "Light";
-				  } else if (packed[i+6] == 5) {data[8][j] = packed[i+7]; sensor5   = "Level";
+				        } else if (packed[i+6] == 5) {data[8][j] = packed[i+7]; sensor5   = "Level";
 					} else if (packed[i+6] == 6) {data[9][j] = packed[i+7]; sensor6   = "Switch Status";
 					} else if (packed[i+6] == 7) {data[10][j] = packed[i+7]; sensor7  = "Motion";
-				  } else if (packed[i+6] == 8) {data[11][j] = packed[i+7]; sensor8  = "Azimuth";
-				  } else if (packed[i+6] == 9) {data[12][j] = packed[i+7]; sensor9  = "Elevation";
+				        } else if (packed[i+6] == 8) {data[11][j] = packed[i+7]; sensor8  = "Azimuth";
+				        } else if (packed[i+6] == 9) {data[12][j] = packed[i+7]; sensor9  = "Elevation";
 					} else if (packed[i+6] == 10) {data[13][j] = packed[i+7];sensor10 = "Soil Moisture";
-				  } else if (packed[i+6] == 11) {data[14][j] = packed[i+7];sensor11 = "Wind Speed";
+				        } else if (packed[i+6] == 11) {data[14][j] = packed[i+7];sensor11 = "Wind Speed";
 					} else if (packed[i+6] == 12) {data[15][j] = packed[i+7];sensor12 = "Wind Direction";
 					} else if (packed[i+6] == 13) {data[16][j] = packed[i+7];sensor13 = "Rainfall";
 					} else if (packed[i+6] == 14) {data[17][j] = packed[i+7];sensor14 = "Air Quality";}
@@ -436,13 +327,13 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					} else if (packed[i+8] == 2) {data[5][j] = packed[i+9]; sensor2   = "Humidity";
 					} else if (packed[i+8] == 3) {data[6][j] = packed[i+9] * 4; sensor3   = "Pressure";
 					} else if (packed[i+8] == 4) {data[7][j] = packed[i+9]; sensor4   = "Light";
-				  } else if (packed[i+8] == 5) {data[8][j] = packed[i+9]; sensor5   = "Level";
+				        } else if (packed[i+8] == 5) {data[8][j] = packed[i+9]; sensor5   = "Level";
 					} else if (packed[i+8] == 6) {data[9][j] = packed[i+9]; sensor6   = "Switch Status";
 					} else if (packed[i+8] == 7) {data[10][j] = packed[i+9]; sensor7  = "Motion";
-				  } else if (packed[i+8] == 8) {data[11][j] = packed[i+9]; sensor8  = "Azimuth";
-				  } else if (packed[i+8] == 9) {data[12][j] = packed[i+9]; sensor9  = "Elevation";
+				        } else if (packed[i+8] == 8) {data[11][j] = packed[i+9]; sensor8  = "Azimuth";
+				        } else if (packed[i+8] == 9) {data[12][j] = packed[i+9]; sensor9  = "Elevation";
 					} else if (packed[i+8] == 10) {data[13][j] = packed[i+9];sensor10 = "Soil Moisture";
-				  } else if (packed[i+8] == 11) {data[14][j] = packed[i+9];sensor11 = "Wind Speed";
+				        } else if (packed[i+8] == 11) {data[14][j] = packed[i+9];sensor11 = "Wind Speed";
 					} else if (packed[i+8] == 12) {data[15][j] = packed[i+9];sensor12 = "Wind Direction";
 					} else if (packed[i+8] == 13) {data[16][j] = packed[i+9];sensor13 = "Rainfall";
 					} else if (packed[i+8] == 14) {data[17][j] = packed[i+9];sensor14 = "Air Quality";}
@@ -451,13 +342,13 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 					} else if (packed[i+10] == 2) {data[5][j] = packed[i+11]; sensor2   = "Humidity";
 					} else if (packed[i+10] == 3) {data[6][j] = packed[i+11] * 4; sensor3   = "Pressure";
 					} else if (packed[i+10] == 4) {data[7][j] = packed[i+11]; sensor4   = "Light";
-				  } else if (packed[i+10] == 5) {data[8][j] = packed[i+11]; sensor5   = "Level";
+				        } else if (packed[i+10] == 5) {data[8][j] = packed[i+11]; sensor5   = "Level";
 					} else if (packed[i+10] == 6) {data[9][j] = packed[i+11]; sensor6   = "Switch Status";
 					} else if (packed[i+10] == 7) {data[10][j] = packed[i+11]; sensor7  = "Motion";
-				  } else if (packed[i+10] == 8) {data[11][j] = packed[i+11]; sensor8  = "Azimuth";
-				  } else if (packed[i+10] == 9) {data[12][j] = packed[i+11]; sensor9  = "Elevation";
+				        } else if (packed[i+10] == 8) {data[11][j] = packed[i+11]; sensor8  = "Azimuth";
+				        } else if (packed[i+10] == 9) {data[12][j] = packed[i+11]; sensor9  = "Elevation";
 					} else if (packed[i+10] == 10) {data[13][j] = packed[i+11];sensor10 = "Soil Moisture";
-				  } else if (packed[i+10] == 11) {data[14][j] = packed[i+11];sensor11 = "Wind Speed";
+				        } else if (packed[i+10] == 11) {data[14][j] = packed[i+11];sensor11 = "Wind Speed";
 					} else if (packed[i+10] == 12) {data[15][j] = packed[i+11];sensor12 = "Wind Direction";
 					} else if (packed[i+10] == 13) {data[16][j] = packed[i+11];sensor13 = "Rainfall";
 					} else if (packed[i+10] == 14) {data[17][j] = packed[i+11];sensor14 = "Air Quality";}					
@@ -477,11 +368,13 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 				console.log(data[4][1]); // SensorType1
    
   
+    
+		var title = "Environment data from sensor network";
 		const opts = {
 					title: title,
 					
 					width: 480,
-					height:400,
+					height:600,
 				//	ms:     1,
 				//	cursor: {
 				//		x: false,
@@ -657,4 +550,4 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 </script>
 
 </body>
-</html>   
+</html> 
