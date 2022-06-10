@@ -1,3 +1,5 @@
+// Transmit time only 1 millisecond.
+
 #include <WiFi.h>
 #include <esp_wifi.h>
 
