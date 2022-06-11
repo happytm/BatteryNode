@@ -8,11 +8,11 @@
 
 char header[HEADER_LENGTH]=                // This is defined globally
 {
-  0x08, 0x00,                         //  0- 1: Frame Control
+  0x08, 0x00,                         //  0- 1: Frame Control. Type 8 = Beacon.
   0x05, 0x06,                         //  2- 3: Duration
-  0x22, 0x22, 0x22, 0x26, 0x16, 0x06, //  4- 9: Destination address
-  0x4e, 0x5e, 0x6e, 0x22, 0x32, 0x42, // 10-15: Source address
-  0x36, 0x26, 0x16, 0x33, 0x33, 0x33, // 16-21: BSSID
+  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, //  4- 9: Destination address
+  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, // 10-15: Source address
+  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, // 16-21: BSSID
   0x00, 0x00,                         // 22-23: Sequence / fragment number
 };
 
@@ -32,7 +32,7 @@ WiFi.mode(WIFI_STA);
 
 void loop(){ 
   
-  header[4] = 2;
+  //header[4] = 2;
   Serial.println("sending packet....."); 
   long lastmillis = millis(); Serial.println(lastmillis);
   esp_wifi_80211_tx(WIFI_IF_STA, header, sizeof(header), true);
