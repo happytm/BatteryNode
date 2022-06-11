@@ -7,8 +7,8 @@ String deviceList[64][3];
 int deviceCount = 0;
 
 String knownDevices[10][2] = {  // Put devices you want to be reconized
-  {"ESP","222222222222"},
-  {"Ken","D0FCCC24C08A"},
+  {"ESP1","222222222222"},
+  {"ESP2","333333333333"},
   {"NAME","MACADDRESS"},
   {"NAME","MACADDRESS"},
   {"NAME","MACADDRESS"},
