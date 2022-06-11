@@ -20,38 +20,28 @@ String knownDevices[10][2] = {  // Put devices you want to be reconized
 
 String timeElapsed = "60"; // Maximum time (Apx seconds) elapsed before device is consirded offline
 
-const wifi_promiscuous_filter_t filt={ //Idk what this does
-    .filter_mask=WIFI_PROMIS_FILTER_MASK_MGMT|WIFI_PROMIS_FILTER_MASK_DATA
-};
-
 typedef struct { // or this
   uint8_t mac[6];
 } __attribute__((packed)) MacAddr;
 
 typedef struct { // still dont know much about this
-  int16_t fctl;
+  int16_t frameControl;
   int16_t duration;
   MacAddr da;
   MacAddr sa;
   MacAddr bssid;
   int16_t seqctl;
   unsigned char payload[];
-} __attribute__((packed)) WifiMgmtHdr;
+} __attribute__((packed)) managementHeader;
   
-#define maxCh 13 //max Channel -> US = 11, EU = 13, Japan = 14
+#define maximumChannels 13 //max Channel -> US = 11, EU = 13, Japan = 14
 int currentChannel = 1;
 
 void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_AP_STA);
- /* wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-  esp_wifi_init(&cfg);
-  esp_wifi_set_storage(WIFI_STORAGE_RAM);
-  esp_wifi_set_mode(WIFI_MODE_NULL);
-  esp_wifi_start();
-  */
+ 
   esp_wifi_set_promiscuous(true);
-  esp_wifi_set_promiscuous_filter(&filt);
   esp_wifi_set_promiscuous_rx_cb(&sniffer);
   esp_wifi_set_channel(currentChannel, WIFI_SECOND_CHAN_NONE);
   
@@ -61,7 +51,7 @@ void setup() {
 
 void loop() {
     //Serial.println("Changed channel:" + String(currentChannel));
-    if(currentChannel > maxCh){ 
+    if(currentChannel > maximumChannels){ 
       currentChannel = 1;
     }
     esp_wifi_set_channel(currentChannel, WIFI_SECOND_CHAN_NONE);
@@ -72,19 +62,23 @@ void loop() {
     currentChannel++;
 }
 
-void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) { //This is where packets end up after they get sniffed
-  wifi_promiscuous_pkt_t *p = (wifi_promiscuous_pkt_t*)buf; // Dont know what these 3 lines do
+void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) 
+{ 
+  
+  wifi_promiscuous_pkt_t *p = (wifi_promiscuous_pkt_t*)buf; // Dont know headerat these 3 lines do
   int len = p->rx_ctrl.sig_len;
-  WifiMgmtHdr *wh = (WifiMgmtHdr*)p->payload;
-  len -= sizeof(WifiMgmtHdr);
-  if (len < 0){
-    Serial.println("Receuved 0");
-    return;
-  }
+  managementHeader *header = (managementHeader*)p->payload;
+  
   String packet;
   String mac;
-  int fctl = ntohs(wh->fctl);
-  for(int i=8;i<=8+6+1;i++){ // This reads the first couple of bytes of the packet. This is where you can read the whole packet replaceing the "8+6+1" with "p->rx_ctrl.sig_len"
+  
+  for(int i=0;i<=57;i++){
+  Serial.print(p->payload[i], HEX);
+  }
+  
+  int frameControl = ntohs(header->frameControl);
+  
+  for(int i=8;i<=8+6+1;i++){ // This reads the first couple of bytes of the packet. This is headerere you can read the headerole packet replaceing the "8+6+1" with "p->rx_ctrl.sig_len"
      packet += String(p->payload[i],HEX);
   }
   for(int i=4;i<=15;i++){ // This removes the 'nibble' bits from the stat and end of the data we want. So we only get the mac address.
@@ -162,3 +156,4 @@ void showpeople(){ // This checks if the MAC is in the reckonized list and then 
     }
   }
 }
+
