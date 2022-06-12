@@ -8,7 +8,7 @@ uint8_t header[] =       // Looks like 1500 bytes is maximum limit.
  {
   
   0x80, 0x00,                                                 //  0- 1: Frame Control. Type 8 = Beacon.
-  0x05, 0x06,                                                 //  2- 3: Duration
+  0x00, 0x00,                                                 //  2- 3: Duration
   0x11, 0x11, 0x11, 0x11, 0x11, 0x11,                         //  4- 9: Destination address
   0x06, 0x22, 0x22, 0x22, 0x22, 0x22,                         // 10-15: Source address
   0x33, 0x33, 0x33, 0x33, 0x33, 0x33,                         // 16-21: BSSID
@@ -30,7 +30,7 @@ WiFi.mode(WIFI_OFF); // WiFi transmit & receive work finished so turn it off to 
 esp_wifi_stop();     // WiFi transmit & receive work finished so turn it off to save power.
 
 Serial.begin(115200);
-
+Serial.println();
 Serial.println("Initiating 802.11 receiver.....");
 }
 
@@ -69,4 +69,3 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
   
   }
 }
-
