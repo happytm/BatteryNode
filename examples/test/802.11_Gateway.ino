@@ -6,7 +6,7 @@ int WiFiChannel = 7;  // This must be same for all devices on network.
 uint8_t header[] =                                            // Maximum limit is 1500 bytes?
 {
   0x80, 0x00,                                                 //  0- 1: Frame Control. Type 8 = Beacon.
-  0x05, 0x06,                                                 //  2- 3: Duration
+  0x00, 0x00,                                                 //  2- 3: Duration
   0x44, 0x44, 0x44, 0x44, 0x44, 0x44,                         //  4- 9: Destination address
   0x06, 0x54, 0x54, 0x54, 0x54, 0x54,                         // 10-15: Source address
   0x64, 0x64, 0x64, 0x64, 0x64, 0x64,                         // 16-21: BSSID
