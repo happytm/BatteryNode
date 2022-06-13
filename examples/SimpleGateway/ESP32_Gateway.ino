@@ -4,7 +4,7 @@
 #include <AsyncTCP.h>
 #include <EEPROM.h>
 #include <FS.h>
-#include "LITTLEFS.h"
+#include "SPIFFS.h"
 #include <SPIFFSEditor.h>
 #include <TinyMqtt.h>       // Thanks to https://github.com/hsaturn/TinyMqtt
 #include "time.h"
@@ -44,8 +44,8 @@ unsigned long currentMillis, lastMillis;
 unsigned long epoch; 
 String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
 
-#define MYFS LITTLEFS
-#define FORMAT_LITTLEFS_IF_FAILED true
+#define MYFS SPIFFS
+#define FORMAT_SPIFFS_IF_FAILED true
 
 MqttBroker broker(1883);
 MqttClient myClient(&broker);
@@ -96,7 +96,7 @@ void setup(){
   Serial.begin(115200);
   //Serial.setDebugOutput(true);
   delay(500);
-  LITTLEFS.begin();
+  SPIFFS.begin();
   EEPROM.begin(512);
 #if FIRSTTIME  
   // Setup device numbers and wifi Channel for remote devices in EEPROM permanantly.
@@ -187,7 +187,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
        
       graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorTypes[0];graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorTypes[1];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorTypes[2];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorTypes[3];graphData += ",";graphData += sensorValues[3];graphData += "]";
      
-      File f = LITTLEFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
+      File f = SPIFFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
       Serial.print("File size: "); Serial.println(f.size());
       f.seek((f.size()-1), SeekSet);
       Serial.print("Position: "); Serial.println(f.position());
