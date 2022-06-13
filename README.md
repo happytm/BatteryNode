@@ -135,7 +135,6 @@ https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','inde
 
 ### This project was possible thanks to creators of following libraries used for this project:
  
- - https://github.com/lorol/LITTLEFS 
  - https://github.com/hsaturn/TinyMqtt
  - https://github.com/leeoniya/uPlot   
  - https://github.com/me-no-dev/ESPAsyncWebServer
