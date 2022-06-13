@@ -1,5 +1,3 @@
-//SPIFFS writing in loop function causes remote device not to receive command. Investiate the cause. 
-
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <ESPAsyncWebServer.h>
@@ -28,7 +26,6 @@ const char* http_username = "admin";  // Web file editor interface Login.
 const char* http_password = "admin";  // Web file editor interface password.
 
 String dataFile = "/data.json";       // File to store sensor data.
-
 
 //==================User configuration not required below this line ================================================
 
@@ -97,20 +94,29 @@ void setup() {
   esp_wifi_set_promiscuous(true);
   esp_wifi_set_promiscuous_rx_cb(&sniffer);
   esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
-  
+    
 }
 
 void loop() 
 { 
    if (WiFi.waitForConnectResult() != WL_CONNECTED) {ssid = EEPROM.readString(270); password = EEPROM.readString(301);Serial.println("Wifi connection failed");WiFi.disconnect(false);delay(1000);WiFi.begin(ssid.c_str(), password.c_str());}
-/*   delay(1000);
+   
+   delay(10);
    if (commandSent == 1)
    {
+      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);      
+      Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+      Serial.print("Epoch Time: ");Serial.println(epoch); Serial.print("Time Sent to remote device - ");Serial.print(device);Serial.print(" = ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
+      for(int i=0;i<10;i++){ Serial.printf("%d ", showConfig[i+device]);} Serial.println();
+      Serial.print("Received packet: ");
+            
+      Serial.print("Sent Command to remote device: "); for (int i = 4; i < 9; i++) {Serial.print(Command[i]);} Serial.println();
+      
       File f = SPIFFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
-      f.seek((f.size()-1), SeekSet);f.print(graphData);f.close(); 
+      f.seek((f.size()-1), SeekSet);f.print(graphData);f.close(); Serial.println("Sensor data saved to flash.");
       commandSent = 0;
-   }
-  */ 
+      }
+      
 }
 
 void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) 
@@ -143,26 +149,13 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
       myClient.publish("sensor", str);
        
       graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorTypes[0];graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorTypes[1];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorTypes[2];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorTypes[3];graphData += ",";graphData += sensorValues[3];graphData += "]";
-                                  
-      /*
-      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);      
-      Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-      Serial.print("Epoch Time: ");Serial.println(epoch); Serial.print("Time Sent to remote device - ");Serial.print(device);Serial.print(" = ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
-      for(int i=0;i<10;i++){ Serial.printf("%d ", showConfig[i+device]);} Serial.println();
-      Serial.print("Received packet: ");
-      
-      for(int i=0;i<=21;i++){Serial.print(p->payload[i], HEX);}Serial.println();
-      
-      Serial.print("Sent Command to remote device: "); for (int i = 4; i < 9; i++) {Serial.print(Command[i]);} Serial.println();
-      */        
-     
-      
+                                      
       if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
          myClient.publish("Warning/Battery Low", String(device));
+         }
+         commandSent = 1;  
       }
-    }
-  }
-       commandSent = 1;
+   }
 }
 
 void receivedMessage(const MqttClient* source, const Topic& topic, const char* payload, size_t length)
