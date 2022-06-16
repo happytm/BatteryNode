@@ -7,12 +7,15 @@
 #include "driver/adc.h"
 #include "motionDetector.h"    // Thanks to https://github.com/paoloinverse/motionDetector_esp
 
-int WiFiChannel = 7;           // This must be same for all devices on network.
-const char* ssid = "ESP";      // Required for OTA update.
-const char* password = "";     // Required for OTA update.
+int WiFiChannel = 7;             // This must be same for all devices on network.
+const char* ssid = "ESP";        // Required for OTA update & motion detection.
+const char* password = "";       // Required for OTA update & motion detection.
 
-int enableCSVgraphOutput = 1;  // 0 disable, 1 enable // if enabled, you may use Tools-> Serial Plotter to plot the variance output for each transmitter. 
-int motionLevel = -1;
+int enableCSVgraphOutput = 1;    // 0 disable, 1 enable.If enabled, you may use Tools-> Serial Plotter to plot the variance output for each transmitter. 
+//int scanInterval;                // Interval for scan to detect motion.
+long dataInterval;               // Interval to send data.
+int motionLevel = -1;         
+
 //==================User configuration generally not required below this line ============================
 
 String binFile = "http://192.168.4.1/device_246.bin";
@@ -70,41 +73,21 @@ void setup(){
 //===================== End of Setup ====================================================
 
 void loop(){ 
-  
- motionDetector_set_minimum_RSSI(-80);     // Minimum RSSI value to be considered reliable. Default value is 80 * -1 = -80.
+ dataInterval++; 
+ 
+ motionDetector_set_minimum_RSSI(-80);                // Minimum RSSI value to be considered reliable. Default value is 80 * -1 = -80.
  motionLevel = 0;  // Reset motionLevel to 0 to resume motion tracking.
- motionLevel = motionDetector_esp();  // if the connection fails, the radar will automatically try to switch to different operating modes by using ESP32 specific calls. 
+ motionLevel = motionDetector_esp();                  // if the connection fails, the radar will automatically try to switch to different operating modes by using ESP32 specific calls. 
  //Serial.print("Motion detected & motion level is: ");Serial.println(motionLevel);
-
- if (motionLevel > 20)  // Adjust the sensitivity of motion sensor.Higher the number means less sensetive motion sensor is.
- {     
+ if (dataInterval > (EEPROM.readByte(16) * 100))      // 100 for 1 minute & 10 for 6 seconds.
+ {
+  sendSensorvalues();
+ } else if (motionLevel > 20)  // Adjust the sensitivity of motion sensor.Higher the number means less sensetive motion sensor is.
+ {
   Serial.print("Motion detected & motion level is: ");Serial.println(motionLevel);
-
-  sensorValues[4] = EEPROM.readByte(0);   // Device ID.
-  sensorValues[5] = 165;                  // Voltage must be between 130 and 180 here in whole integer.
-  sensorValues[6] = random(70,74);        // Temperature F.
-  sensorValues[7] = random(40,100);       // Humidity %.
-  sensorValues[8] = random(900,1024) / 4; // Pressure mb.
-  sensorValues[9] = random(0,100);        // Light %.
-  sensorValues[10] = motionLevel;         // Motion Level.
-  // Values received from all sensors used on this device and should replace random values of sensorValues array.
-  
-  Serial.println("Sending sensor values....."); 
-  long lastmillis = millis();
-  WiFi.mode(WIFI_AP_STA); 
-  esp_wifi_set_promiscuous(true);
-  esp_wifi_set_promiscuous_rx_cb(&sniffer);
-  esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
-  esp_wifi_80211_tx(WIFI_IF_AP, sensorValues, sizeof(sensorValues), true);
-  
-  long currentmillis = millis() - lastmillis;
-  Serial.print("Transmit & receive time (Milliseconds) : ");Serial.println(currentmillis);
-  
-  //int upTime = millis();Serial.print("Total up time (Milliseconds) : "); Serial.println(upTime);
-  //esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 6000000);  // 60000000 for 1 minute.
-  //esp_deep_sleep_start();
-  delay(500);
- }
+  sendSensorvalues();
+  }
+  delay(600);   // Do not change this. Data interval is calculated based on this value.
 } // End of loop.
 
 //============= End of main loop and all functions below ====================================
@@ -216,10 +199,34 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
          delay(1);
     } else {
     
-   // Serial.println("Resending sensor values..."); 
-   // ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
+    Serial.println("Resending sensor values..."); 
+    ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
     }
   }
+}
+
+void sendSensorvalues()
+{
+  sensorValues[4] = EEPROM.readByte(0);   // Device ID.
+  sensorValues[5] = 165;                  // Voltage must be between 130 and 180 here in whole integer.
+  sensorValues[6] = random(70,74);        // Temperature F.
+  sensorValues[7] = random(40,100);       // Humidity %.
+  sensorValues[8] = random(900,1024) / 4; // Pressure mb.
+  sensorValues[9] = random(0,100);        // Light %.
+  sensorValues[10] = motionLevel;         // Motion Level.
+  // Values received from all sensors used on this device and should replace random values of sensorValues array.
+  
+  Serial.println("Sending sensor values....."); 
+  long lastmillis = millis();
+  WiFi.mode(WIFI_AP_STA); 
+  esp_wifi_set_promiscuous(true);
+  esp_wifi_set_promiscuous_rx_cb(&sniffer);
+  esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_80211_tx(WIFI_IF_AP, sensorValues, sizeof(sensorValues), true);
+  
+  long currentmillis = millis() - lastmillis;
+  Serial.print("Transmit & receive time (Milliseconds) : ");Serial.println(currentmillis);
+  dataInterval = 0;   // Data sent. Reset the data interval counter.
 }
 
 void synchTime() {
@@ -270,6 +277,7 @@ void OTAupdate() {  // Receive  OTA update from bin file on Gateway's LittleFS d
 
       case HTTP_UPDATE_OK:
        Serial.println("HTTP_UPDATE_OK");
+       ESP.restart();
        break;            
    }
 } 
