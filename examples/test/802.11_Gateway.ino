@@ -9,7 +9,7 @@
 #include <TinyMqtt.h>         // Thanks to https://github.com/hsaturn/TinyMqtt
 #include "time.h"
 
-#define FIRSTTIME  false  // Define true if setting up Gateway for first time.
+#define FIRSTTIME  false      // Define true if setting up Gateway for first time.
 
 int WiFiChannel = 7;          // This must be same for all devices on network.
 const char* apSSID = "ESP";   // SoftAP SSID.
@@ -39,9 +39,9 @@ AsyncWebServer webserver(80);
 
 char str [256], s [70];
 String ssid,password,graphData, Hour, Minute;
-int device, rssi, sleepTime, sensorValues[4], sensorTypes[4], commandSent;
+int device, rssi, sleepTime, motionLevel, sensorValues[4], sensorTypes[4], commandSent;
 float voltage;
-uint8_t mac[6],receivedCommand[6],showConfig[256];
+uint8_t receivedCommand[6],showConfig[256];
 const char* ntpServer = "pool.ntp.org";
 unsigned long currentMillis, lastMillis;
 unsigned long epoch; 
@@ -56,16 +56,7 @@ uint8_t Command[] =                                            // Maximum limit 
   0x66, 0x66, 0x66, 0x66, 0x66, 0x66,                         // 16-21: BSSID
   0x00, 0x00,                                                 // 22-23: Sequence / fragment number
 }; 
-  /*
-  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,             // 24-31: Timestamp (GETS OVERWRITTEN TO 0 BY HARDWARE)
-  0x64, 0x00,                                                 // 32-33: Beacon interval
-  0x31, 0x04,                                                 // 34-35: Capability info
-  0x00, 0x00, // FILL CONTENT HERE(Data  body?)                          // 36-38: SSID parameter set, 0x00:length:content
-  0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24, // 39-48: Supported rates
-  0x03, 0x01, 0x01,                                           // 49-51: DS Parameter set, current channel 1 (= 0x01),
-  0x05, 0x04, 0x01, 0x02, 0x00, 0x00,                         // 52-57: Traffic Indication Map
-};
-*/
+
 unsigned long getTime() {time_t now;if (!getLocalTime(&timeinfo)) {Serial.println("Failed to obtain time");return(0);}time(&now);return now;}
 
 void setup() {
@@ -103,20 +94,19 @@ void loop()
    
    delay(10);
    if (commandSent == 1)
-   {
-      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);      
+   {  
+      Serial.println();Serial.print("Data received from remote sensor -  ");Serial.print(device);Serial.println(" is below: ");for (int i = 0; i < 23; i++) {Serial.printf("%02X", sensorValues[i]);if (i < 22)Serial.print(":");}Serial.println();
       Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
       Serial.print("Epoch Time: ");Serial.println(epoch); Serial.print("Time Sent to remote device - ");Serial.print(device);Serial.print(" = ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
+      Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);      
       for(int i=0;i<10;i++){ Serial.printf("%d ", showConfig[i+device]);} Serial.println();
-      Serial.print("Received packet: ");
-            
+      Serial.println("Received packet & sending command...... ");
       Serial.print("Sent Command to remote device: "); for (int i = 4; i < 9; i++) {Serial.print(Command[i]);} Serial.println();
       
       File f = SPIFFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
       f.seek((f.size()-1), SeekSet);f.print(graphData);f.close(); Serial.println("Sensor data saved to flash.");
       commandSent = 0;
       }
-      
 }
 
 void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) 
@@ -130,7 +120,8 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
     if (p->payload[0] == 0x80 && p->payload[4] == i) // Hex value 80 for type - Beacon to filter out unwanted traffic.
     {
       
-      device = p->payload[4];
+      device = p->payload[4];  // Device ID.
+            
       EEPROM.readBytes(0, showConfig,256);
          
       for (int i = 0; i < 6; i++) Command[i+4] = showConfig[i+device];      // Prepare command to be sent to remote device.
@@ -140,19 +131,27 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
       if (Command[5] == 0 || Command[5] == 255) {Command[4] = device; Command[5] = 107; Command[6] = WiFiChannel; timeSynch();}
       esp_wifi_80211_tx(WIFI_IF_AP, Command, sizeof(Command), true);   // Avoid any Serial.print statements in this callback function to send command to remote devices as soon as possible.
       
-      //rssi = info.ap_probereqrecved.rssi;         
+      int remoteChannel = p->rx_ctrl.channel;
+      int rssi = p->rx_ctrl.rssi;         
       voltage = p->payload[5];
       voltage = voltage * 2 / 100;
+      motionLevel = p->payload[10];
       sensorValues[0] = p->payload[6];sensorValues[1] = p->payload[7];sensorValues[2] = p->payload[8];sensorValues[3] = p->payload[9];      
 
-      sprintf (str, "{");sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);sprintf (s, "}"); strcat (str, s);
+      sprintf (str, "{");sprintf (s, "\"%s\":\"%i\"", "Location", device);strcat(str, s);sprintf(s, ",\"%s\":\"%.2f\"", "Voltage", voltage);strcat(str, s);sprintf(s, ",\"%s\":\"%i\"", "RSSI", rssi);strcat(str, s);sprintf(s, ",\"%s\":\"%i\"", "Motion Level", motionLevel);strcat(str, s);
+      sprintf(s, ",\"%s\":\"%i\"", "Father", p->payload[11]);strcat(str, s);
+      sprintf(s, ",\"%s\":\"%i\"", "Mother", p->payload[12]);strcat(str, s);
+      sprintf(s, ",\"%s\":\"%i\"", "Son", p->payload[13]);strcat(str, s);
+      sprintf(s, ",\"%s\":\"%i\"", "Daughter", p->payload[14]);strcat(str, s);
+      sprintf(s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]);strcat(str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);sprintf (s, "}"); strcat (str, s);
       myClient.publish("sensor", str);
        
-      graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += sensorTypes[0];graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorTypes[1];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorTypes[2];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorTypes[3];graphData += ",";graphData += sensorValues[3];graphData += "]";
+      graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += motionLevel;graphData += ",";graphData += sensorTypes[0];graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorTypes[1];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorTypes[2];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorTypes[3];graphData += ",";graphData += sensorValues[3];graphData += "]";
                                       
       if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
          myClient.publish("Warning/Battery Low", String(device));
          }
+         for (int i = 0; i < 23; i++) {Command[i] = p->payload[i];}
          commandSent = 1;  
       }
    }
@@ -207,7 +206,7 @@ void saveWificonfig()
   }
 }
     
-void timeSynch(){ if (mac[1] == 105 || mac[1] == 106) {return;}else{epoch = getTime();Hour = timeinfo.tm_hour; mac[4] = Hour.toInt();Minute = timeinfo.tm_min; mac[5] = Minute.toInt();}}
+void timeSynch(){ if (Command[1] == 105 || Command[1] == 106) {return;}else{epoch = getTime();Hour = timeinfo.tm_hour; Command[8] = Hour.toInt();Minute = timeinfo.tm_min; Command[9] = Minute.toInt();}}
 
 void startWiFi()
 {
@@ -227,6 +226,7 @@ void startWiFi()
  }
    
     Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");
+
 }
 
 
