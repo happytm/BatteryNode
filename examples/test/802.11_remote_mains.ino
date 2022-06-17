@@ -9,8 +9,8 @@
 #include "motionDetector.h"                 // Thanks to https://github.com/paoloinverse/motionDetector_esp
 #include <ESP32Ping.h>                      // Thanks to https://github.com/marian-craciunescu/ESP32Ping
 
-const char* routerSSID = "HAPPYHOME";       // Main router's SSID.
-const char* routerPassword = "kb1henna";    // Main router's password.
+const char* routerSSID = "routerssid";       // Main router's SSID.
+const char* routerPassword = "routerpassword";    // Main router's password.
 
 const char* room = "Livingroom";            // Needed for person locator.Each location must run probeReceiver sketch to implement person locator.
 const char* apPassword = "";
