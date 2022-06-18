@@ -2,7 +2,7 @@
 <head> 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"> 
-<title>Proberequest, TinyMQTT, Websockets, Asyncwebserver, SPIFFS Editor & uPlot</title> 
+<title>802.11, Motion Sensor, TinyMQTT, Websockets, Asyncwebserver, WebSerial, SPIFFS Editor & uPlot</title> 
 
 <link rel="stylesheet" href="uPlot.min.css">
 
@@ -24,7 +24,7 @@ body {margin: 0;}
 <body>
 <script type="text/javascript" src="uPlot.iife.min.js"></script>
 
-<h2>Proberequest, TinyMQTT, Asyncwebserver, SPIFFS Editor & uPlot</h2>
+<h2>802.11, Motion Sensor, TinyMQTT, Websockets, Asyncwebserver, WebSerial, SPIFFS Editor & uPlot</h2>
 <h3>Send Command to ESP32 Gateway Server</h3>
 
 <form id="formElem">
@@ -83,7 +83,12 @@ body {margin: 0;}
 <input name="SSID" type="text" placeholder="SSID"/>
 <input name="Password" type="password" placeholder="Password"/>
 <button type="submit">Enter WiFi Config</button>
-<br><br>
+<br>
+
+<div style="border: 1px solid #FFFFFF; overflow: hidden; margin-left: 5px; max-width: 480px;">  // https://www.dimpost.com/2012/12/iframe-how-to-display-specific-part-of.html
+<iframe scrolling="no" src="webserial" style="border: 0px none; margin-left: -5px; height: 480px; margin-top: -180px; width: 480px;">
+</iframe>
+</div>
 
 <script>
 var attachEvent = function(node, event, listener, useCapture) {
@@ -206,8 +211,6 @@ var attachEvent = function(node, event, listener, useCapture) {
 </SELECT>
 <script>
 
-
-
 // converts the legend into a simple tooltip
 function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255, 249, 196, 0.92)", color: "black" } } = {}) {
 				let legendEl;
@@ -277,12 +280,12 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 				let data = [
 					Array(packed.length/numFields), // Timestamp
 					Array(packed.length/numFields), // Location
-          Array(packed.length/numFields), // Voltage
+                                        Array(packed.length/numFields), // Voltage
 					Array(packed.length/numFields), // RSSI
 					Array(packed.length/numFields), // Motion
 					Array(packed.length/numFields), // Temperature
 					Array(packed.length/numFields), // Humidity
-          Array(packed.length/numFields), // Pressure
+                                        Array(packed.length/numFields), // Pressure
 					Array(packed.length/numFields), // Light
 					Array(packed.length/numFields), // Level
 					Array(packed.length/numFields), // Switch Status
@@ -300,64 +303,64 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 				for (let i = 0, j = 0; i < packed.length; i += numFields, j++) {
 				
 					data[0][j] = packed[i+0];
-				  data[1][j] = packed[i+1];
+				        data[1][j] = packed[i+1];
 					data[2][j] = packed[i+2];
 					data[3][j] = packed[i+3];
 					data[4][j] = packed[i+4];
 				
-				         if (packed[i+5] == 1) {data[5][j] = packed[i+6]; 
+				               if (packed[i+5] == 1) {data[5][j] = packed[i+6]; 
 					} else if (packed[i+5] == 2) {data[6][j] = packed[i+6];
 					} else if (packed[i+5] == 3) {data[7][j] = packed[i+6] * 4; 
 					} else if (packed[i+5] == 4) {data[8][j] = packed[i+6]; 
-				  } else if (packed[i+5] == 5) {data[9][j] = packed[i+6]; 
+				        } else if (packed[i+5] == 5) {data[9][j] = packed[i+6]; 
 					} else if (packed[i+5] == 6) {data[10][j] = packed[i+6]; 
 					} else if (packed[i+5] == 7) {data[11][j] = packed[i+6]; 
-				  } else if (packed[i+5] == 8) {data[12][j] = packed[i+6]; 
+				        } else if (packed[i+5] == 8) {data[12][j] = packed[i+6]; 
 					} else if (packed[i+5] == 9) {data[13][j] = packed[i+6];
-				  } else if (packed[i+5] == 10) {data[14][j] = packed[i+6];
+				        } else if (packed[i+5] == 10) {data[14][j] = packed[i+6];
 					} else if (packed[i+5] == 11) {data[15][j] = packed[i+6];
 					} else if (packed[i+5] == 12) {data[16][j] = packed[i+6];
 					} else if (packed[i+5] == 13) {data[17][j] = packed[i+6];}
 				  
 					
-				         if (packed[i+7] == 1) {data[5][j] = packed[i+8]; 
+				               if (packed[i+7] == 1) {data[5][j] = packed[i+8]; 
 					} else if (packed[i+7] == 2) {data[6][j] = packed[i+8]; 
 					} else if (packed[i+7] == 3) {data[7][j] = packed[i+8] * 4; 
 					} else if (packed[i+7] == 4) {data[8][j] = packed[i+8]; 
-				  } else if (packed[i+7] == 5) {data[9][j] = packed[i+8]; 
+				        } else if (packed[i+7] == 5) {data[9][j] = packed[i+8]; 
 					} else if (packed[i+7] == 6) {data[10][j] = packed[i+8]; 
 					} else if (packed[i+7] == 7) {data[11][j] = packed[i+8]; 
-				  } else if (packed[i+7] == 8) {data[12][j] = packed[i+8]; 
+				        } else if (packed[i+7] == 8) {data[12][j] = packed[i+8]; 
 					} else if (packed[i+7] == 9) {data[13][j] = packed[i+8];
-				  } else if (packed[i+7] == 10) {data[14][j] = packed[i+8];
+				        } else if (packed[i+7] == 10) {data[14][j] = packed[i+8];
 					} else if (packed[i+7] == 11) {data[15][j] = packed[i+8];
 					} else if (packed[i+7] == 12) {data[16][j] = packed[i+8];
 					} else if (packed[i+7] == 13) {data[17][j] = packed[i+8];}
 					
-				         if (packed[i+9] == 1) {data[5][j] = packed[i+10]; 
+				               if (packed[i+9] == 1) {data[5][j] = packed[i+10]; 
 					} else if (packed[i+9] == 2) {data[6][j] = packed[i+10]; 
 					} else if (packed[i+9] == 3) {data[7][j] = packed[i+10] * 4; 
 					} else if (packed[i+9] == 4) {data[8][j] = packed[i+10]; 
-				  } else if (packed[i+9] == 5) {data[9][j] = packed[i+10]; 
+				        } else if (packed[i+9] == 5) {data[9][j] = packed[i+10]; 
 					} else if (packed[i+9] == 6) {data[10][j] = packed[i+10]; 
 					} else if (packed[i+9] == 7) {data[11][j] = packed[i+10]; 
-				  } else if (packed[i+9] == 8) {data[12][j] = packed[i+10]; 
+				        } else if (packed[i+9] == 8) {data[12][j] = packed[i+10]; 
 					} else if (packed[i+9] == 9) {data[13][j] = packed[i+10];
-				  } else if (packed[i+9] == 10) {data[14][j] = packed[i+10];
+				        } else if (packed[i+9] == 10) {data[14][j] = packed[i+10];
 					} else if (packed[i+9] == 11) {data[15][j] = packed[i+10];
 					} else if (packed[i+9] == 12) {data[16][j] = packed[i+10];
 					} else if (packed[i+9] == 13) {data[17][j] = packed[i+10];}
 					
-				         if (packed[i+11] == 1) {data[5][j] = packed[i+12]; 
+				               if (packed[i+11] == 1) {data[5][j] = packed[i+12]; 
 					} else if (packed[i+11] == 2) {data[6][j] = packed[i+12]; 
 					} else if (packed[i+11] == 3) {data[7][j] = packed[i+12] * 4; 
 					} else if (packed[i+11] == 4) {data[8][j] = packed[i+12]; 
-				  } else if (packed[i+11] == 5) {data[9][j] = packed[i+12]; 
+				        } else if (packed[i+11] == 5) {data[9][j] = packed[i+12]; 
 					} else if (packed[i+11] == 6) {data[10][j] = packed[i+12]; 
-				  } else if (packed[i+11] == 7) {data[11][j] = packed[i+12]; 
-				  } else if (packed[i+11] == 8) {data[12][j] = packed[i+12]; 
+				        } else if (packed[i+11] == 7) {data[11][j] = packed[i+12]; 
+				        } else if (packed[i+11] == 8) {data[12][j] = packed[i+12]; 
 					} else if (packed[i+11] == 9) {data[13][j] = packed[i+12];
-				  } else if (packed[i+11] == 10) {data[14][j] = packed[i+12];
+				        } else if (packed[i+11] == 10) {data[14][j] = packed[i+12];
 					} else if (packed[i+11] == 11) {data[15][j] = packed[i+12];
 					} else if (packed[i+11] == 12) {data[16][j] = packed[i+12];
 					} else if (packed[i+11] == 13) {data[17][j] = packed[i+12];}					
