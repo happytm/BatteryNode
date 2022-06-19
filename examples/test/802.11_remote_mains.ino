@@ -13,8 +13,8 @@
 
 #if PINGABLE
 #include <ESP32Ping.h>                      // Thanks to https://github.com/marian-craciunescu/ESP32Ping
-const char* routerSSID = "HAPPYHOME";       // Main router's SSID.
-const char* routerPassword = "kb1henna";    // Main router's password.
+const char* routerSSID = "testssid";       // Main router's SSID.
+const char* routerPassword = "testpass";    // Main router's password.
 #endif
 
 
