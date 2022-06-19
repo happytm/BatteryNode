@@ -38,7 +38,7 @@ MqttClient myClient(&broker);
 AsyncWebServer webserver(80);
 
 char str [256], s [70];
-String ssid,password,graphData, Hour, Minute;
+String ssid,password,graphData, Month, Date, Year, Hour, Minute, Second;
 int device, rssi, sleepTime, motionLevel, sensorValues[4], sensorTypes[4], commandSent;
 float voltage;
 uint8_t receivedCommand[6],showConfig[256];
@@ -46,6 +46,8 @@ const char* ntpServer = "pool.ntp.org";
 unsigned long currentMillis, lastMillis;
 unsigned long epoch; 
 String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
+
+int distance[4] = {10,30,40,20};  
 
 uint8_t Command[] =                                            // Maximum limit is 1500 bytes?
 {
@@ -58,10 +60,12 @@ uint8_t Command[] =                                            // Maximum limit 
 }; 
 
 unsigned long getTime() {time_t now;if (!getLocalTime(&timeinfo)) {Serial.println("Failed to obtain time");return(0);}time(&now);return now;}
+//int sort (const void * arg1, const void * arg2){int * a = (int *) arg1;int * b = (int *) arg2;if (*a > *b)return -1;if (*a < *b)return 1;return 0;}  // Make sort of array of integers to rearrange values of array in decending or ascending order.
 
 void setup() {
   Serial.begin(115200);
   delay(500);
+  
   SPIFFS.begin();
   EEPROM.begin(512);
 #if FIRSTTIME  
@@ -81,7 +85,7 @@ void setup() {
   myClient.setCallback(receivedMessage);
   myClient.subscribe(receivedTopic);
   myClient.subscribe(sentTopic);
-  
+ 
   esp_wifi_set_promiscuous(true);
   esp_wifi_set_promiscuous_rx_cb(&sniffer);
   esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
@@ -95,19 +99,25 @@ void loop()
    delay(10);
    if (commandSent == 1)
    {  
-      Serial.println();Serial.print("Data received from remote sensor -  ");Serial.print(device);Serial.println(" is below: ");for (int i = 0; i < 23; i++) {Serial.printf("%02X", sensorValues[i]);if (i < 22)Serial.print(":");}Serial.println();
+      //qsort(distance, 4, sizeof (int), sort); for (int i = 0; i < 4; i++){Serial.print(distance[i]);if (i<3){Serial.print(",");}}Serial.println(); // Make sort of array of integers to rearrange values of array in decending or ascending order.
+      Serial.println();Serial.print("Data received from remote sensor -  ");Serial.print(device);Serial.println(" is below: ");for (int i = 0; i < 23; i++) {Serial.printf("%02X", sensorValues[i]);}Serial.println();
       Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-      Serial.print("Epoch Time: ");Serial.println(epoch); Serial.print("Time Sent to remote device - ");Serial.print(device);Serial.print(" = ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
-      Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);      
-      for(int i=0;i<10;i++){ Serial.printf("%d ", showConfig[i+device]);} Serial.println();
+      Serial.print("Epoch Time: ");Serial.println(epoch); Serial.print("Time Sent to remote device - ");Serial.print(device);Serial.print(" = ");Serial.print(Month);Serial.print("/");Serial.print(Date);Serial.print("  ");Serial.print(Hour);Serial.print(":");Serial.print(Minute);Serial.print(":");Serial.println(Second);
+      Serial.print("Connect at IP: ");Serial.print(WiFi.localIP());Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");
+      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);      
+      for(int i=0;i<10;i++){Serial.print(showConfig[i+device]);} Serial.println();
       Serial.println("Received packet & sending command...... ");
+      Serial.print("Guest MAC received from remote device - ");Serial.print(device);Serial.print(" = "); for (int i = 10; i < 15; i++) {Serial.print(Command[i], HEX);if (i < 14)Serial.print(":");} Serial.print(" & Guest's signal strength = "); Serial.println(Command[17]);
+      Serial.print("Status of known devices near device - ");Serial.print(device);Serial.print(" = "); for (int i = 18; i < 21; i++) {Serial.print(Command[i]);if (i < 20)Serial.print(",");}Serial.println();
+      Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);
       Serial.print("Sent Command to remote device: "); for (int i = 4; i < 9; i++) {Serial.print(Command[i]);} Serial.println();
       
       File f = SPIFFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
-      f.seek((f.size()-1), SeekSet);f.print(graphData);f.close(); Serial.println("Sensor data saved to flash.");
+      f.seek((f.size()-1), SeekSet);f.print(graphData);f.close();Serial.println("Sensor data saved to flash.");
       commandSent = 0;
       }
 }
+
 
 void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) 
 { 
@@ -125,7 +135,7 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
       EEPROM.readBytes(0, showConfig,256);
          
       for (int i = 0; i < 6; i++) Command[i+4] = showConfig[i+device];      // Prepare command to be sent to remote device.
-      for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+6]; // Assign sensor types to the particular device.
+      for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+6];  // Assign sensor types to the particular device.
                     
       timeSynch();
       if (Command[5] == 0 || Command[5] == 255) {Command[4] = device; Command[5] = 107; Command[6] = WiFiChannel; timeSynch();}
@@ -135,14 +145,14 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
       int rssi = p->rx_ctrl.rssi;         
       voltage = p->payload[5];
       voltage = voltage * 2 / 100;
-      motionLevel = p->payload[10];
+      motionLevel = p->payload[16];
       sensorValues[0] = p->payload[6];sensorValues[1] = p->payload[7];sensorValues[2] = p->payload[8];sensorValues[3] = p->payload[9];      
 
       sprintf (str, "{");sprintf (s, "\"%s\":\"%i\"", "Location", device);strcat(str, s);sprintf(s, ",\"%s\":\"%.2f\"", "Voltage", voltage);strcat(str, s);sprintf(s, ",\"%s\":\"%i\"", "RSSI", rssi);strcat(str, s);sprintf(s, ",\"%s\":\"%i\"", "Motion Level", motionLevel);strcat(str, s);
-      sprintf(s, ",\"%s\":\"%i\"", "Father", p->payload[11]);strcat(str, s);
-      sprintf(s, ",\"%s\":\"%i\"", "Mother", p->payload[12]);strcat(str, s);
-      sprintf(s, ",\"%s\":\"%i\"", "Son", p->payload[13]);strcat(str, s);
-      sprintf(s, ",\"%s\":\"%i\"", "Daughter", p->payload[14]);strcat(str, s);
+      sprintf(s, ",\"%s\":\"%i\"", "Father", p->payload[18]);strcat(str, s);
+      sprintf(s, ",\"%s\":\"%i\"", "Mother", p->payload[19]);strcat(str, s);
+      sprintf(s, ",\"%s\":\"%i\"", "Son", p->payload[20]);strcat(str, s);
+      sprintf(s, ",\"%s\":\"%i\"", "Daughter", p->payload[21]);strcat(str, s);
       sprintf(s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]);strcat(str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);sprintf (s, "}"); strcat (str, s);
       myClient.publish("sensor", str);
        
@@ -201,12 +211,20 @@ void saveWificonfig()
   if (ssid.length() > 0 || password.length() > 0) 
   {  
     EEPROM.writeString(270,ssid);EEPROM.writeString(301, password);
-    EEPROM.commit();Serial.println();Serial.print("Wifi Configuration saved to EEPROM: SSID="); Serial.print(ssid);Serial.print(" & Password="); Serial.println(password);Serial.println("Restarting Gateway now...");delay(1000);
+    EEPROM.commit();Serial.println();Serial.print("Wifi Configuration saved to EEPROM: SSID=");Serial.print(ssid);Serial.print(" & Password="); Serial.println(password);Serial.println("Restarting Gateway now...");delay(1000);
     ESP.restart();
   }
 }
     
-void timeSynch(){ if (Command[1] == 105 || Command[1] == 106) {return;}else{epoch = getTime();Hour = timeinfo.tm_hour; Command[8] = Hour.toInt();Minute = timeinfo.tm_min; Command[9] = Minute.toInt();}}
+void timeSynch()
+{ 
+    epoch  = getTime();
+    Month  = timeinfo.tm_mon;Command[10] = (Month.toInt() + 1);  // January is 0.
+    Date   = timeinfo.tm_mday;Command[11] = Date.toInt();
+    Hour   = timeinfo.tm_hour;Command[12] = Hour.toInt();
+    Minute = timeinfo.tm_min;Command[13] = Minute.toInt();
+    Second = timeinfo.tm_sec;Command[14] = Second.toInt();
+}
 
 void startWiFi()
 {
@@ -225,7 +243,7 @@ void startWiFi()
     WiFi.begin(ssid.c_str(), password.c_str());
  }
    
-    Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");
+    Serial.print("Connect at IP: ");Serial.print(WiFi.localIP());Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");
 
 }
 
@@ -257,7 +275,7 @@ void startAsyncwebserver()
     }
   */
 } 
-  request -> send(200, "text/plain", "Command received by server successfully, please click browser's back button to get back to main page.");
+  request -> send(200, "text/plain", "Command received by server successfully.");
   Serial.print("Command received from Browser: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
 
   saveWificonfig();
@@ -265,7 +283,7 @@ void startAsyncwebserver()
 }); 
   
   webserver.serveStatic("/", MYFS, "/").setDefaultFile("index.html");
-
+      
   webserver.onFileUpload([](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final){
     if(!index)
       Serial.printf("UploadStart: %s\n", filename.c_str());
