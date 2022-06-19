@@ -1,23 +1,26 @@
 // 35 ms transmit & receive time for 24 bytes of data and 68 ms total uptime required in two way mode.Confirm and try to reduce this time.
-#include <WiFi.h>
-#include <esp_wifi.h>
-#include <HTTPClient.h>
+#include <WiFi.h>                           // Built in arduino librrary.
+#include <esp_wifi.h>                       // Built in arduino librrary.
+#include <HTTPClient.h>                     // Built in arduino librrary.
 #include <ESP32httpUpdate.h>                // Install from arduino library manager
-#include <EEPROM.h>
+#include <EEPROM.h>                         // Built in arduino librrary.
 #include "driver/adc.h"                     // required to turn off ADC.
 #include <esp_bt.h>                         // required to turn off BT.
 #include "motionDetector.h"                 // Thanks to https://github.com/paoloinverse/motionDetector_esp
 #include <ESP32Ping.h>                      // Thanks to https://github.com/marian-craciunescu/ESP32Ping
 
-const char* routerSSID = "routerssid";       // Main router's SSID.
-const char* routerPassword = "routerpassword";    // Main router's password.
+#define PINGABLE      true                  // If true use ESPPing library to detect presence of known devices.
 
-const char* room = "Livingroom";            // Needed for person locator.Each location must run probeReceiver sketch to implement person locator.
-const char* apPassword = "";
-const int apChannel = 0;
-const int hidden = 0;                       // If hidden is 1 probe request event handling does not work ?
+#if PINGABLE
+#include <ESP32Ping.h>                      // Thanks to https://github.com/marian-craciunescu/ESP32Ping
+const char* routerSSID = "HAPPYHOME";       // Main router's SSID.
+const char* routerPassword = "kb1henna";    // Main router's password.
+#endif
+
+
+const char* room = "Livingroom";            // Needed for devices locator.Each location must run probeReceiver sketch to implement devices locator.
 int rssiThreshold = -50;                    // Adjust according to signal strength by trial & error.
-int motionThreshold = 70;                   // Adjust the sensitivity of motion sensor.Higher the number means less sensetive motion sensor is.
+int motionThreshold = 40;                   // Adjust the sensitivity of motion sensor.Higher the number means less sensetive motion sensor is.
 
 int WiFiChannel = 7;                        // This must be same for all devices on network.
 const char* ssid = "ESP";                   // Required for OTA update & motion detection.
@@ -27,22 +30,23 @@ int enableCSVgraphOutput = 1;               // 0 disable, 1 enable.If enabled, y
 long dataInterval;                          // Interval to send data.
 int motionLevel = -1;         
 
+#if PINGABLE
 IPAddress deviceIP(192, 168, 0, 2);         // Fixed IP address assigned to family member's devices to be checked for their presence at home.
 //IPAddress deviceIP = WiFi.localIP();
 int device1IP = 2, device2IP = 3, device3IP = 4, device4IP = 5;
-uint8_t device1ID[3] = {0xD0, 0xC0, 0x8A};  // First and last 2 bytes of Mac ID of Cell phone #1.
-uint8_t device2ID[3] = {0x36, 0x33, 0x33};  // First and last 2 bytes of Mac ID of Cell phone #2.
-uint8_t device3ID[3] = {0x36, 0x33, 0x33};  // First and last 2 bytes of Mac ID of Cell phone #3.
-uint8_t device4ID[3] = {0x36, 0x33, 0x33};  // First and last 2 bytes of Mac ID of Cell phone #4.
+#endif   //#if PINGABLE
 
 
+uint8_t device1[3] = {0xD0, 0xC0, 0x8A};  // Device1. First and last 2 bytes of Mac ID of Device 1.
+uint8_t device2[3] = {0x3C, 0x1C, 0x20};  // Device2. First and last 2 bytes of Mac ID of Device 2.
+uint8_t device3[3] = {0x36, 0x33, 0x33};  // Device3. First and last 2 bytes of Mac ID of Device 3.
+uint8_t device4[3] = {0x36, 0x33, 0x33};  // Device4. First and last 2 bytes of Mac ID of Device 4.
 
 //==================User configuration generally not required below this line ============================
 
 String binFile = "http://192.168.4.1/device_246.bin";
 
-int Hour;               // Hour received from Gateway. More reliable source than internal RTC of local device
-int Minute;             // Minute received from Gateway. More reliable source than internal RTC of local device.
+int Month, Date, Hour, Minute, Second;      // Time synch received from Gateway stored here for further time based automation. More reliable source than internal RTC of local device
 
 uint8_t showConfig[20]; // Content of EEPROM is saved here.
 
@@ -54,38 +58,25 @@ int value4;             // 0 to 255 - value for BLUE neopixel or value for senso
 
 uint8_t sensorValues[] =                // Looks like 24 bytes is minimum (sending as WIFI_IF_AP) and 1500 bytes is maximum limit.
  {
-  0x80, 0x00,                           //  0- 1: Frame Control. Type 80 = Beacon.
-  0x00, 0x00,                           //  2- 3: Duration
-  0x11, 0x11, 0x11, 0x11, 0x11, 0x11,   //  4- 9: Destination address.Fill with custom data.
-  0x06, 0x22, 0x22, 0x22, 0x22, 0x22,   // 10-15: Source address.Fill with custom data.
-  0x33, 0x33, 0x33, 0x33, 0x33, 0x33,   // 16-21: BSSID.Fill with custom data.
-  0x00, 0x00,                           // 22-23: Sequence / fragment number
+  0x80, 0x00,                           //  0- 1:  First byte here must be 80 for Type = Beacon. 
+  0x00, 0x00,                           //  2- 3:  Duration
+  0xF6, 0x11, 0x11, 0x11, 0x11, 0x11,   //  4- 9:  First byte here must be device ID (default F6 for device ID 246).Second byte is voltage value.Fill rest with any 4 types of sensor data.
+  0x06, 0x22, 0x22, 0x22, 0x22, 0x22,   //  10-15: Unknown device's MAC.
+  0x33, 0x33, 0x33, 0x33, 0x33, 0x33,   //  16-21: Motion level, unknown device's RSSI, father ping time, mother ping type, son ping time, daughter ping time.
+  0x00, 0x00,                           //  22-23: Sequence / fragment number
  };
  
 void setup(){
   
-  EEPROM.begin(20);
+  EEPROM.begin(20);if (EEPROM.readByte(0) == 0 || EEPROM.readByte(0) == 255)  {EEPROM.writeByte(0, 246);} if (EEPROM.readByte(15) < 1 || EEPROM.readByte(15) > 14) {EEPROM.writeByte(15, WiFiChannel);}if (EEPROM.readByte(16) == 0 || EEPROM.readByte(16) == 255) {EEPROM.writeByte(16, 1);}EEPROM.commit();
+
+  motionDetector_init();motionDetector_config(64, 16, 3, 3, false); Serial.setTimeout(1000); // Initializes the storage arrays in internal RAM and start motion detector with custom configuration.
+
+  WiFi.mode(WIFI_AP_STA);if (WiFi.waitForConnectResult() != WL_CONNECTED) {Serial.println("Wifi connection failed");WiFi.disconnect(false);delay(500);WiFi.begin(ssid, password);}
+
+  esp_wifi_set_promiscuous(true);esp_wifi_set_promiscuous_rx_cb(&sniffer);esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
   
-  if (EEPROM.readByte(0) == 0 || EEPROM.readByte(0) == 255)  {EEPROM.writeByte(0, 246);} 
-  if (EEPROM.readByte(15) < 1 || EEPROM.readByte(15) > 14) {EEPROM.writeByte(15, WiFiChannel);}
-  if (EEPROM.readByte(16) == 0 || EEPROM.readByte(16) == 255) {EEPROM.writeByte(16, 1);}
-  EEPROM.commit();
-
-  motionDetector_init();  // initializes the storage arrays in internal RAM
-  motionDetector_config(64, 16, 3, 3, false); 
-  Serial.setTimeout(1000);
-
-  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Wifi connection failed");
-    WiFi.disconnect(false);
-    delay(1000);
-    WiFi.begin(ssid, password);
- }
-  
-  Serial.begin(115200);
-  Serial.println("Wait about 1 minute for motion sensor to be ready to detect motion.....");
-
-  WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED); 
+  Serial.begin(115200);Serial.println("Wait about 1 minute for motion sensor to be ready to detect motion.....");
 }
 
 //===================== End of Setup ====================================================
@@ -94,22 +85,39 @@ void loop(){
  dataInterval++; 
  
  motionDetector_set_minimum_RSSI(-80);                // Minimum RSSI value to be considered reliable. Default value is 80 * -1 = -80.
- motionLevel = 0;  // Reset motionLevel to 0 to resume motion tracking.
  motionLevel = motionDetector_esp();                  // if the connection fails, the radar will automatically try to switch to different operating modes by using ESP32 specific calls. 
-  //Serial.print("Motion detected & motion level is: ");Serial.println(motionLevel);
- if (dataInterval > (EEPROM.readByte(16) * 100))      // 100 for 1 minute & 10 for 6 seconds.
- {
+ //Serial.print("Motion detected & motion level is: ");Serial.println(motionLevel);
+ 
+ if (dataInterval > (EEPROM.readByte(16) * 100))  // 100 for 1 minute & 10 for 6 seconds.
+  {
+    sendSensorvalues();                           // Send sensor values to gateway at predefined interval (EEPROM.readByte(16)).
+  } else if (motionLevel > motionThreshold)       // Adjust the sensitivity of motion sensor. Higher the number means less sensetive motion sensor is.
+  {
+    Serial.print("Motion detected & motion level is: ");Serial.println(motionLevel);
+
+   #if PINGABLE
+       // Connect to main router to ping known devices.
+       if (WiFi.waitForConnectResult() != WL_CONNECTED) {Serial.println("Wifi connection failed");WiFi.disconnect(false);delay(500);WiFi.begin(routerSSID, routerPassword);}
+       Serial.println("Checking to see who is at home.... ");
+       
+         int pingTime;
+         
+         deviceIP[3] = device1IP;Serial.println("Pinging IP address 2... ");if(Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);sensorValues[18] = (pingTime);} else {sensorValues[18] = 0;}
+         deviceIP[3] = device2IP;Serial.println("Pinging IP address 3... ");if(Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);sensorValues[19] = (pingTime);} else {sensorValues[19] = 0;}
+         deviceIP[3] = device3IP;Serial.println("Pinging IP address 4... ");if(Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);sensorValues[20] = (pingTime);} else {sensorValues[20] = 0;}
+         deviceIP[3] = device4IP;Serial.println("Pinging IP address 5... ");if(Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);sensorValues[21] = (pingTime);} else {sensorValues[21] = 0;}      
+         
+         WiFi.disconnect(true);         // Pinging is done. Disconnect from main router.
+         delay(500);
+         WiFi.begin(ssid, password);    // Connect to motion detector link AP.
+         
+   #endif   // #if PINGABLE 
+   
   sendSensorvalues();
- } else if (motionLevel > motionThreshold)  // Adjust the sensitivity of motion sensor.Higher the number means less sensetive motion sensor is.
- {
-  Serial.print("Motion detected & motion level is: ");Serial.println(motionLevel);
-  sendSensorvalues();
-  WiFi.softAP(room, apPassword, apChannel, hidden);
-  esp_wifi_set_event_mask(WIFI_EVENT_MASK_NONE); // This line is must to activate probe request received event handler.
-  Serial.print("AP started with name: ");Serial.println(room);
   
   
-  }
+ }
+  
   delay(600);   // Do not change this. Data interval is calculated based on this value.
 } // End of loop.
 
@@ -120,7 +128,19 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
   
  wifi_promiscuous_pkt_t *p = (wifi_promiscuous_pkt_t*)buf;
  
- if (p->payload[0] == 0x80 && p->payload[4] == sensorValues[4])   // HEX 80 for type - Beacon to filter out unwanted traffic. 
+ if (p->payload[0] == 0x40 )   // HEX 40 for type = Proberequest to filter out unwanted traffic. 
+  {
+   //Check if any family member (known devices predefined above) came home.
+   if (p->payload[10] == device1[0] && p->payload[14] == device1[1] && p->payload[15] == device1[2]) {Serial.print("Device 1 is Home with RSSI : "); Serial.println(p->rx_ctrl.rssi);
+   } else if (p->payload[10] == device2[0] && p->payload[14] == device2[1] && p->payload[16] == device2[2]) {Serial.print("Device 2 is Home with RSSI : "); Serial.println(p->rx_ctrl.rssi);
+   } else if (p->payload[10] == device3[0] && p->payload[14] == device3[1] && p->payload[17] == device3[2]) {Serial.print("Device 3 is Home with RSSI : "); Serial.println(p->rx_ctrl.rssi);
+   } else if (p->payload[10] == device4[0] && p->payload[14] == device4[1] && p->payload[15] == device4[2]) {Serial.print("Device 4 is Home with RSSI : "); Serial.println(p->rx_ctrl.rssi);
+   } else {
+   Serial.print("Unknown device detected with MAC ID : ");for(int i=10;i<=15;i++){Serial.print(p->payload[i], HEX);sensorValues[i] = p->payload[i];}Serial.print(" & RSSI : ");Serial.println(p->rx_ctrl.rssi);int d=(p->rx_ctrl.rssi+45.0)/15.0;Serial.print("d: ");Serial.println(d);int distance = pow(10,-1*d); Serial.print("distance: ");Serial.println(distance);sensorValues[17] = (distance);
+   }
+}
+   
+ if (p->payload[0] == 0x80 && p->payload[4] == EEPROM.readByte(0))   // HEX 80 for type = Beacon to filter out unwanted traffic and match device number. 
   {
    Serial.print("Command received from Gateway : ");
   
@@ -129,7 +149,7 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
    }
    
    Serial.println();
-   EEPROM.writeByte(1, p->payload[5]);  // Command type at address 1. 
+   EEPROM.writeByte(1, p->payload[5]);  // Command type at EEPROM address 1. 
    EEPROM.commit();
 
    commandType = EEPROM.readByte(1);
@@ -143,12 +163,18 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
       Serial.println();
       Serial.print("This device's Wifi Channel is: ");Serial.println(EEPROM.readByte(15));  
       Serial.print("This device's MAC ID is: ");Serial.println(WiFi.macAddress());
+      
       value1 = p->payload[6];
       value2 = p->payload[7];
       value3 = p->payload[8];
       value4 = p->payload[9];
-      
-       synchTime();
+      //  New time synch received from Gateway.
+      Month  = p->payload[10];  // January is 0.
+      Date   = p->payload[11];
+      Hour   = p->payload[12];
+      Minute = p->payload[13];
+      Second = p->payload[14];
+      Serial.print("Time synch received from Gateway: ");Serial.print(Month); Serial.print("/"); Serial.print(Date);Serial.print("  ");Serial.print(Hour); Serial.print(":"); Serial.print(Minute);Serial.print(":"); Serial.println(Second);
 
        if (commandType == 101)        // Digital Write
        {
@@ -228,46 +254,6 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
   }
 }
 
-void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
-{ 
-  Serial.println();
-    
-  if (info.ap_probereqrecved.mac[0] != device1ID[0] && info.ap_probereqrecved.mac[4] != device1ID[1] && info.ap_probereqrecved.mac[5] != device1ID[2]) 
-  { // write code to match MAC ID of cell phone to predefined variable and store presence/absense in new variable.
-    if (info.ap_probereqrecved.rssi > -70)
-    {
-      Serial.print("Guest MAC ID is :  ");for (int i = 16; i < 21; i++) {sensorValues[i] = info.ap_probereqrecved.mac[i - 16];Serial.printf("%02X", sensorValues[i]);if (i < 20)Serial.print(":");}Serial.println();
-      Serial.println("################ Guest arrived ###################### ");    
-      Serial.print("Signal Strength of guest device: "); Serial.println(info.ap_probereqrecved.rssi);
-      sensorValues[15] = info.ap_probereqrecved.rssi;
-      
-    if (info.ap_probereqrecved.rssi > rssiThreshold) // Adjust according to signal strength by trial & error.
-     { // write code to match MAC ID of cell phone to predefined variable and store presence/absense in new variable.
-       Serial.print("Guest is near device: ");Serial.println(EEPROM.readByte(0));
-         
-     }
-    }          
-  }
-       WiFi.softAPdisconnect(true);
-       WiFi.enableAP(false);
-       WiFi.disconnect(true);
-       
-       // Connect to main router to ping known devices.
-       if (WiFi.waitForConnectResult() != WL_CONNECTED) {Serial.println("Wifi connection failed");WiFi.disconnect(false);delay(500);WiFi.begin(routerSSID, routerPassword);}
-       Serial.println("Checking to see who is at home.... ");
-        
-       int pingTime;
-         
-         deviceIP[3] = device1IP;Serial.println("Pinging IP address 2... ");if(Ping.ping(deviceIP)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);sensorValues[11] = (pingTime);} else {sensorValues[11] = 0;}
-         deviceIP[3] = device2IP;Serial.println("Pinging IP address 3... ");if(Ping.ping(deviceIP)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);sensorValues[12] = (pingTime);} else {sensorValues[12] = 0;}
-         deviceIP[3] = device3IP;Serial.println("Pinging IP address 4... ");if(Ping.ping(deviceIP)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);sensorValues[13] = (pingTime);} else {sensorValues[13] = 0;}
-         deviceIP[3] = device4IP;Serial.println("Pinging IP address 5... ");if(Ping.ping(deviceIP)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);sensorValues[14] = (pingTime);} else {sensorValues[14] = 0;}
-
-       sendSensorvalues();
- 
- } // End of Proberequest function.
-
- 
 void sendSensorvalues()
 {
   sensorValues[4] = EEPROM.readByte(0);   // Device ID.
@@ -276,35 +262,17 @@ void sendSensorvalues()
   sensorValues[7] = random(40,100);       // Sensor 2 value.
   sensorValues[8] = random(900,1024) / 4; // Sensor 3 value.
   sensorValues[9] = random(0,100);        // Sensor 4 value.
-  sensorValues[10] = motionLevel;         // Motion Level.
+  sensorValues[16] = motionLevel / 10;     // Motion Level.
   // Values received from all sensors used on this device and should replace random values of sensorValues array.
   
   Serial.println("Sending sensor values....."); 
   long lastmillis = millis();
-  WiFi.mode(WIFI_AP_STA); 
-  esp_wifi_set_promiscuous(true);
-  esp_wifi_set_promiscuous_rx_cb(&sniffer);
-  esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
-  esp_wifi_80211_tx(WIFI_IF_AP, sensorValues, sizeof(sensorValues), true);
-  
+  esp_wifi_80211_tx(WIFI_IF_STA, sensorValues, sizeof(sensorValues), true);
   long currentmillis = millis() - lastmillis;
   Serial.print("Transmit & receive time (Milliseconds) : ");Serial.println(currentmillis);
+  
   dataInterval = 0;   // Data sent. Reset the data interval counter.
 }
-
-void synchTime() {
-  if (commandType == 105 || commandType == 106)
-  {
-    Hour = EEPROM.readByte(17);                           // Hour value from EEPROM.
-    Minute = EEPROM.readByte(18) + EEPROM.readByte(16);   // Minute from EEPROM + Sleep Time from EEPROM.
-  } else {
-    EEPROM.writeByte(17,value3);                   // Save hour to EEPROM.
-    EEPROM.writeByte(18,value4); EEPROM.commit();  // Save minute to EEPROM.
-    Hour = value3;     // New hour value received from Gateway.
-    Minute = value4;   //  New minute value received from Gateway.
-  }
-  Serial.print("Time received from Gateway: ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
-  }
 
 
 void gpioControl() {
@@ -344,3 +312,4 @@ void OTAupdate() {  // Receive  OTA update from bin file on Gateway's LittleFS d
        break;            
    }
 } 
+
