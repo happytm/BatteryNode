@@ -29,8 +29,6 @@ body {margin: 0;}
 
 <form id="formElem">
   
-
-
 <SELECT class="combine" id ="device" name = "Device">
     <option value="">Select Device</option>
     <option value="246">New Device(246)</option>
@@ -166,25 +164,6 @@ var attachEvent = function(node, event, listener, useCapture) {
   };
 </script>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
  <!--
 <p>Father :   <a id="father">Unknown</a>
 <p>Mother :   <a id="mother">Unknown</a>
@@ -206,11 +185,11 @@ function onOpen(event) {console.log('Connection opened');}
 function onClose(event) {console.log('Connection closed');setTimeout(initWebSocket, 2000);}
 
 function onMessage(event) {
-    display.value += event.data + "\n";
-
-    let wsData = JSON.parse(event.data);
+    
+    //let wsData = [];
+    //wsData = event.data;//JSON.parse(event.data);
     /*
-    console.log(data);
+    console.log(wsdata);
     
     if (data < 1000) {document.getElementById("motion-level").innerHTML = data}
     
@@ -233,42 +212,96 @@ function onMessage(event) {
     if (data == 5050){ document.getElementById("daughter").innerHTML = "Home"}
     if (data == 5000){ document.getElementById("daughter").innerHTML = "Away"}
     */
-    display.value += event.data + "\n";
+    //display.value += event.data + "\n";
 
-    var textarea = document.getElementById('messages');
+    //var textarea = document.getElementById('messages');
     //data = '['+event.data.replace(/,/g, '],.')+']';
     //data = data.replace(/./g, '[');		
 	  //console.log(JSON.parse(data)); // See https://stackoverflow.com/questions/54511538/convert-string-into-an-array-of-arrays-in-javascript
 	  //data = evt.data.replace(',',''); // Remove first comma.
-	  wsData = Function('return [' +  event.data + ']')(); 
+	  display.value += event.data + "\n";
+	  let wsData = Function('return [' +  event.data + ']')(); 
 	  console.log(wsData);
+
+    var title = "Live Environment data from sensor network";
+	  const opts = {
+         title: title,
+         width: 360,
+         height: 640,
+         hooks: {
+  	     ready: [
+    	 u => {
+      	 let legend = u.root.querySelector(".u-legend");
+        
+         legend.addEventListener("contextmenu", e => {
+            e.preventDefault();
+
+            let seriesEl = e.target.closest(".u-series");
+          
+            let seriesIdx = Array.prototype.slice.call(legend.childNodes).indexOf(seriesEl);
+          
+            let series = u.series[seriesIdx];
+          
+            console.log(series.label);
+        });
+      }
+    ],
+  },
+  scales: {
+    x: {
+      time: true,
+    }
+  },
+  series: [
+    {},
+    {
+      label: "Location",
+      stroke: "purple",
+      fill: "rgba(0,0,255,0.2)",
+    },
+    {
+      label: "V",
+      stroke: "olive",
+      fill: "rgba(0,0,255,0.2)",
+    },
+    {
+      label: "S",
+      stroke: "orange",
+      fill: "rgba(0,0,255,0.2)",
+    },
+    {
+      label: "T",
+      stroke: "blue",
+      fill: "rgba(0,0,255,0.2)",
+    },
+    {
+      label: "H",
+      stroke: "red",
+      fill: "rgba(255,0,0,0.2)",
+    },
+    {
+      label: "P",
+      stroke: "green",
+      fill: "rgba(0,0,255,0.2)",
+    },
+    {
+      label: "L",
+      stroke: "yellow",
+      fill: "rgba(255,0,0,0.2)",
+    },
+  ],
+};
+
+
+  let u = new uPlot(opts, wsData, document.body);
+  }		
+
 }
 
 function initButton() {document.getElementById('toggle').addEventListener('click', onToggle);}
 function onToggle(event) {websocket.send(JSON.stringify({'action':'toggle'}));}
 
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 <SELECT class="combine" id ="period" name = "period">
@@ -670,7 +703,7 @@ function legendAsTooltipPlugin({ className, style = { backgroundColor:"rgba(255,
 </script>
 
 </body>
-</html>    
+</html>  
   
   
   
