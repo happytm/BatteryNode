@@ -2,30 +2,57 @@
 #include <esp_wifi.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
+#include <HTTPClient.h>                    
+#include <ESP32httpUpdate.h>                
 #include <EEPROM.h>
 #include "FS.h"
 #include "SPIFFS.h"
 #include <SPIFFSEditor.h>
 #include <TinyMqtt.h>         // Thanks to https://github.com/hsaturn/TinyMqtt
 #include "time.h"
+#include "motionDetector.h"                 // Thanks to https://github.com/paoloinverse/motionDetector_esp
+#include <ESP32Ping.h>                      // Thanks to https://github.com/marian-craciunescu/ESP32Ping
+#include <SimpleKalmanFilter.h>             // Built in arduino library. Reference : https://github.com/denyssene/SimpleKalmanFilter
 
-#define FIRSTTIME  false      // Define true if setting up Gateway for first time.
+#define PINGABLE      false                 // If true use ESPPing library to detect presence of known devices.
+#define FIRSTTIME     false                 // Define true if setting up Gateway for first time.
 
-int WiFiChannel = 7;          // This must be same for all devices on network.
-const char* apSSID = "ESP";   // SoftAP SSID.
-const char* apPassword = "";  // SoftAP password.
-const int hidden = 0;         // If hidden is 1 probe request event handling does not work ?
+#if PINGABLE
+#include <ESP32Ping.h>                      // Thanks to https://github.com/marian-craciunescu/ESP32Ping
+#endif
+
+const char* room = "Gateway";            // Needed for devices locator.Each location must run probeReceiver sketch to implement devices locator.
+int rssiThreshold = -50;                    // Adjust according to signal strength by trial & error.
+int motionThreshold = 40;                   // Adjust the sensitivity of motion sensor.Higher the number means less sensetive motion sensor is.
+
+int WiFiChannel = 7;                        // This must be same for all devices on network.
+const char* apSSID = "ESP";                 // SoftAP SSID.
+const char* apPassword = "";                // SoftAP password.
+const int hidden = 0;                       // If hidden is 1 probe request event handling does not work ?
+
+int enableCSVgraphOutput = 1;               // 0 disable, 1 enable.If enabled, you may use Tools-> Serial Plotter to plot the variance output for each transmitter.
+int dataInterval;                           // Interval in minutes to send data.
+int pingInterval;                           // interval in minutes to ping known devices.
+int motionLevel = -1;
+float receivedRSSI = 0;
 
 struct tm timeinfo;
-#define MY_TZ "EST5EDT,M3.2.0,M11.1.0" //(New York) https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
+#define MY_TZ "EST5EDT,M3.2.0,M11.1.0"      //(New York) https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
 
 std::string sentTopic = "data";
 std::string receivedTopic = "command";
 
-const char* http_username = "admin";  // Web file editor interface Login.
-const char* http_password = "admin";  // Web file editor interface password.
+const char* http_username = "admin";        // Web file editor interface Login.
+const char* http_password = "admin";        // Web file editor interface password.
 
-String dataFile = "/data.json";       // File to store sensor data.
+String dataFile = "/data.json";             // File to store sensor data.
+String binFile = "http://192.168.4.1/gateway.bin";
+
+#if PINGABLE
+IPAddress deviceIP(192, 168, 0, 2);         // Fixed IP address assigned to family member's devices to be checked for their presence at home.
+//IPAddress deviceIP = WiFi.localIP();
+int device1IP = 2, device2IP = 3, device3IP = 4, device4IP = 5;
+#endif   //#if PINGABLE
 
 //==================User configuration not required below this line ================================================
 
@@ -36,10 +63,11 @@ MqttBroker broker(1883);
 MqttClient myClient(&broker);
 
 AsyncWebServer webserver(80);
+AsyncWebSocket ws("/ws");
 
 char str [256], s [70];
-String ssid,password,graphData, Month, Date, Year, Hour, Minute, Second;
-int device, rssi, sleepTime, motionLevel, sensorValues[4], sensorTypes[4], commandSent;
+String ssid,password,graphData, graphDataToWS, Month, Date, Year, Hour, Minute, Second;
+int device, rssi, sleepTime, sensorValues[4], sensorTypes[4], commandSent;
 float voltage;
 uint8_t receivedCommand[6],showConfig[256];
 const char* ntpServer = "pool.ntp.org";
@@ -47,16 +75,16 @@ unsigned long currentMillis, lastMillis;
 unsigned long epoch; 
 String Epoch = String(epoch);String Loc = String(device);String V = String(voltage, 2);String S = String(rssi);String T = String(sensorValues[0]);String H = String(sensorValues[1]);String P = String(sensorValues[2]);String L = String(sensorValues[3]); 
 
-int distance[4] = {10,30,40,20};  
+//int distance[4] = {10,30,40,20};  
 
 uint8_t Command[] =                                            // Maximum limit is 1500 bytes?
 {
-  0x80, 0x00,                                                 //  0- 1: Frame Control. Type 8 = Beacon.
-  0x00, 0x00,                                                 //  2- 3: Duration
-  0x06, 0x44, 0x44, 0x44, 0x44, 0x44,                         //  4- 9: Destination address
-  0x06, 0x55, 0x55, 0x55, 0x55, 0x55,                         // 10-15: Source address
-  0x66, 0x66, 0x66, 0x66, 0x66, 0x66,                         // 16-21: BSSID
-  0x00, 0x00,                                                 // 22-23: Sequence / fragment number
+  0x80, 0x00,                                                 //  0- 1: First byte here must be 80 for Type = Beacon.
+  0x00, 0x00,                                                 //  2- 3: Can it be used to send more data to remote device?
+  0x06, 0x44, 0x44, 0x44, 0x44, 0x44,                         //  4- 9: First byte here must be device ID (It will be filled automaticallywith Device ID of remote sensor sending sensor data).Second byte is Command type.Rest will be filled with command values received from web interface.
+  0x06, 0x55, 0x55, 0x55, 0x55, 0x55,                         // 10-15: Month, Date, Hour, Minute & second sent to remote device for time synch.
+  0x66, 0x66, 0x66, 0x66, 0x66, 0x66,                         // 16-21: Can be used to send more data to remote device.
+  0x00, 0x00,                                                 // 22-23: Can it be used to send more data to remote device?
 }; 
 
 unsigned long getTime() {time_t now;if (!getLocalTime(&timeinfo)) {Serial.println("Failed to obtain time");return(0);}time(&now);return now;}
@@ -68,11 +96,17 @@ void setup() {
   
   SPIFFS.begin();
   EEPROM.begin(512);
+  
 #if FIRSTTIME  
   // Setup device IDs and wifi Channel for remote devices in EEPROM permanantly.
   for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i, i);EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}}
   EEPROM.writeByte(0, WiFiChannel);EEPROM.commit();
+  File f = LITTLEFS.open(dataFile, "w");
+  f.print("[13,\"Epoch\",\"Location\",\"Voltage\",\"SSID\",\"Motion\",\"T1\",\"S1\",\"T2\"\"S2\",\"T3\",\"S3\",\"T4\",\"S4\"]"); // See http://davidgiard.com/2018/11/02/EmbeddingQuotesWithinACString.aspx
+  f.close();
+  Serial.println("Wrote first line to file: [13,\"Epoch\",\"Location\",\"Voltage\",\"SSID\",\"Motion\",\"T1\",\"S1\",\"T2\"\"S2\",\"T3\",\"S3\",\"T4\",\"S4\"]");Serial.println();
 #endif  
+  
   EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
   
   startWiFi();
@@ -94,30 +128,59 @@ void setup() {
 
 void loop() 
 { 
+   dataInterval++; pingInterval++;
+   motionDetector_set_minimum_RSSI(-80);                // Minimum RSSI value to be considered reliable. Default value is 80 * -1 = -80.
+   motionLevel = motionDetector_esp();                  // if the connection fails, the radar will automatically try to switch to different operating modes by using ESP32 specific calls.
+
+   if (pingInterval > (1 * 500))      // 500 for 5 minutes.
+  {
+   
+   #if PINGABLE
+    Serial.println("Checking to see who is at home.... ");
+
+    int pingTime;
+
+    deviceIP[3] = device1IP; Serial.println("Pinging IP address 2... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);/*sensorValues[18] = (pingTime);*/} else {/*sensorValues[18] = 0;*/}
+    deviceIP[3] = device2IP; Serial.println("Pinging IP address 3... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);/*sensorValues[19] = (pingTime);*/} else {/*sensorValues[19] = 0;*/}
+    deviceIP[3] = device3IP; Serial.println("Pinging IP address 4... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);/*sensorValues[20] = (pingTime);*/} else {/*sensorValues[20] = 0;*/}
+    deviceIP[3] = device4IP; Serial.println("Pinging IP address 5... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);/*sensorValues[21] = (pingTime);*/} else {/*sensorValues[21] = 0;*/}
+  #endif   // #if PINGABLE 
+  
+ }
+   
+ if (motionLevel > motionThreshold)        // Adjust the sensitivity of motion sensor. Higher the number means less sensetive motion sensor is.
+  {Serial.print("Motion detected & motion level is: "); Serial.println(motionLevel);}  
    if (WiFi.waitForConnectResult() != WL_CONNECTED) {ssid = EEPROM.readString(270); password = EEPROM.readString(301);Serial.println("Wifi connection failed");WiFi.disconnect(false);delay(1000);WiFi.begin(ssid.c_str(), password.c_str());}
    
-   delay(10);
+   delay(600);
    if (commandSent == 1)
    {  
       //qsort(distance, 4, sizeof (int), sort); for (int i = 0; i < 4; i++){Serial.print(distance[i]);if (i<3){Serial.print(",");}}Serial.println(); // Make sort of array of integers to rearrange values of array in decending or ascending order.
       Serial.println();Serial.print("Data received from remote sensor -  ");Serial.print(device);Serial.println(" is below: ");for (int i = 0; i < 23; i++) {Serial.printf("%02X", sensorValues[i]);}Serial.println();
       Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-      Serial.print("Epoch Time: ");Serial.println(epoch); Serial.print("Time Sent to remote device - ");Serial.print(device);Serial.print(" = ");Serial.print(Month);Serial.print("/");Serial.print(Date);Serial.print("  ");Serial.print(Hour);Serial.print(":");Serial.print(Minute);Serial.print(":");Serial.println(Second);
+      Serial.print("Epoch Time: ");Serial.println(epoch); Serial.print("Time Sent to remote device - ");Serial.print(device);Serial.print(" = ");Serial.print(Month + 1);Serial.print("/");Serial.print(Date);Serial.print("  ");Serial.print(Hour);Serial.print(":");Serial.print(Minute);Serial.print(":");Serial.println(Second);
       Serial.print("Connect at IP: ");Serial.print(WiFi.localIP());Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");
       Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);      
       for(int i=0;i<10;i++){Serial.print(showConfig[i+device]);} Serial.println();
       Serial.println("Received packet & sending command...... ");
-      Serial.print("Guest MAC received from remote device - ");Serial.print(device);Serial.print(" = "); for (int i = 10; i < 15; i++) {Serial.print(Command[i], HEX);if (i < 14)Serial.print(":");} Serial.print(" & Guest's signal strength = "); Serial.println(Command[17]);
+      Serial.print("Unknown device's MAC received from remote device - ");Serial.print(device);Serial.print(" = "); for (int i = 10; i < 15; i++) {Serial.print(Command[i], HEX);if (i < 14)Serial.print(":");} Serial.print(" & Guest's signal strength = "); Serial.println(Command[17]);
       Serial.print("Status of known devices near device - ");Serial.print(device);Serial.print(" = "); for (int i = 18; i < 21; i++) {Serial.print(Command[i]);if (i < 20)Serial.print(",");}Serial.println();
       Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);
-      Serial.print("Sent Command to remote device: "); for (int i = 4; i < 9; i++) {Serial.print(Command[i]);} Serial.println();
+      Serial.print("Sent Command to remote device: "); for (int i = 4; i < 9; i++) {Serial.print(Command[i]);} Serial.println();Serial.println();
+      Serial.print("Graph data size: ");Serial.println(graphDataToWS.length());
+      Serial.println("Graph Data: ");Serial.println(graphDataToWS);
+      
+      notifyClients(graphDataToWS);  // Send data to web interface.
+      //notifyClients(str);          // Send data to web interface.
+      ws.cleanupClients();
       
       File f = SPIFFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
       f.seek((f.size()-1), SeekSet);f.print(graphData);f.close();Serial.println("Sensor data saved to flash.");
       commandSent = 0;
+      dataInterval = 0;   // Data sent. Reset the data interval counter.
+
       }
 }
-
 
 void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) 
 { 
@@ -125,11 +188,23 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
   
   wifi_promiscuous_pkt_t *p = (wifi_promiscuous_pkt_t*)buf;
   
+  if (p->payload[0] == 0x40 && p->rx_ctrl.rssi > -70 && p->payload[10] != 0xCC) {        // Limit devices with type proberequest with SSID of more than -70 (nearest devices). Adjust according to area to be monitored.Also filter ESP devices (vendor ID starting with CC) out.
+        receivedRSSI = p->rx_ctrl.rssi;
+               
+      // RSSI = -10nlog10(d/d0)+A0 // https://www.wouterbulten.nl/blog/tech/kalman-filters-explained-removing-noise-from-rssi-signals/#fn:2
+      // https://create.arduino.cc/projecthub/deodates/rssi-based-social-distancing-af0e26
+      // Following three variables must be float type.
+
+      float RSSI_1meter = -50; // RSSI at 1 meter distance. Adjust according to your environment.Use WiFi Analyser android app from VREM Software & take average of RSSI @ 1 meter. .
+      float Noise = 2;         // Try between 2 to 4. 2 is acceptable number but Adjust according to your environment.
+      float Distance = pow(10, (RSSI_1meter -  receivedRSSI) / (10 * Noise)); Serial.print("Distance:  "); Serial.println(Distance);    
+      Serial.print("Unknown device detected with MAC ID : "); for (int i = 10; i <= 15; i++) { /*sensorValues[i] = p->payload[i]; */Serial.print(p->payload[i], HEX); }
+      Serial.print(" & RSSI : "); Serial.println(receivedRSSI);
+     }
   for (int i = 6; i < 256; i = i+10) 
-   {
+   {     
     if (p->payload[0] == 0x80 && p->payload[4] == i) // Hex value 80 for type - Beacon to filter out unwanted traffic.
     {
-      
       device = p->payload[4];  // Device ID.
             
       EEPROM.readBytes(0, showConfig,256);
@@ -157,12 +232,22 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
       myClient.publish("sensor", str);
        
       graphData = ",";graphData += epoch;graphData += ",";graphData += device;graphData += ",";graphData += voltage;graphData += ",";graphData += rssi;graphData += ",";graphData += motionLevel;graphData += ",";graphData += sensorTypes[0];graphData += ",";graphData += sensorValues[0];graphData += ",";graphData += sensorTypes[1];graphData += ",";graphData += sensorValues[1];graphData += ",";graphData += sensorTypes[2];graphData += ",";graphData += sensorValues[2];graphData += ",";graphData += sensorTypes[3];graphData += ",";graphData += sensorValues[3];graphData += "]";
-                                      
+      
+      Epoch += "," + String(epoch);Loc += "," + String(device);V += "," + String(voltage, 2);S += "," + String(rssi);T += "," + String(sensorValues[0]);H += "," + String(sensorValues[1]);P += "," + String(sensorValues[2]);L += "," + String(sensorValues[3]);
+      graphDataToWS = "[" + Epoch + "]," + "[" + Loc + "]," + "[" + V + "]," + "[" + S + "]," + "[" + T + "]," + "[" + H + "]," + "[" + P + "]," + "[" + L + "]";
+
+      if (graphDataToWS.length() > 1000) {
+      Epoch = String(epoch);
+      //graphDataToWS.remove(0, 34); // Remove first 34 charachters from string.
+      Loc = "";V = "";S = "";T = "";H = "";P = "";L = "";
+      commandSent = 1;
+      }
+      
       if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
          myClient.publish("Warning/Battery Low", String(device));
          }
          for (int i = 0; i < 23; i++) {Command[i] = p->payload[i];}
-         commandSent = 1;  
+                  
       }
    }
 }
@@ -219,7 +304,7 @@ void saveWificonfig()
 void timeSynch()
 { 
     epoch  = getTime();
-    Month  = timeinfo.tm_mon;Command[10] = (Month.toInt() + 1);  // January is 0.
+    Month  = timeinfo.tm_mon;Command[10] = Month.toInt() + 1;  // January is 0.
     Date   = timeinfo.tm_mday;Command[11] = Date.toInt();
     Hour   = timeinfo.tm_hour;Command[12] = Hour.toInt();
     Minute = timeinfo.tm_min;Command[13] = Minute.toInt();
@@ -229,7 +314,9 @@ void timeSynch()
 void startWiFi()
 {
   WiFi.mode(WIFI_AP_STA);
-  
+  motionDetector_init(); motionDetector_config(64, 16, 3, 3, false); Serial.setTimeout(1000); // Initializes the storage arrays in internal RAM and start motion detector with custom configuration.
+  esp_wifi_set_promiscuous(true); esp_wifi_set_promiscuous_rx_cb(&sniffer); esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
+
   WiFi.softAP(apSSID, apPassword, WiFiChannel, hidden);
   Serial.print("AP started with name: ");Serial.println(apSSID);
   
@@ -250,6 +337,8 @@ void startWiFi()
 
 void startAsyncwebserver()
 {
+  ws.onEvent(onEvent);
+  webserver.addHandler(&ws);
   
   webserver.addHandler(new SPIFFSEditor(MYFS, http_username,http_password));
   
@@ -276,7 +365,7 @@ void startAsyncwebserver()
   */
 } 
   request -> send(200, "text/plain", "Command received by server successfully.");
-  Serial.print("Command received from Browser: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
+  Serial.print("Command received from web interface: ");Serial.print(receivedCommand[0]);Serial.print(receivedCommand[1]);Serial.print(receivedCommand[2]);Serial.print(receivedCommand[3]);Serial.print(receivedCommand[4]);Serial.println(receivedCommand[5]);
 
   saveWificonfig();
   saveCommand();
@@ -303,4 +392,82 @@ void startAsyncwebserver()
   //Followin line must be added before server.begin() to allow local lan request see : https://github.com/me-no-dev/ESPAsyncWebServer/issues/726
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     webserver.begin();
+}
+
+void notifyClients(String wsData) {
+  ws.textAll(wsData);
+  Serial.print("Websocket message sent: ");Serial.println(wsData);
+}
+
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) 
+{
+    AwsFrameInfo *info = (AwsFrameInfo*)arg;
+    if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) 
+    {
+      
+      // Process incoming message.
+      data[len] = 0;
+      String message = "";
+      message = (char*)data;
+    
+    }
+}
+
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) 
+{
+    switch (type) {
+        case WS_EVT_CONNECT:
+            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            break;
+        case WS_EVT_DISCONNECT:
+            Serial.printf("WebSocket client #%u disconnected\n", client->id());
+            break;
+        case WS_EVT_DATA:
+            handleWebSocketMessage(arg, data, len);
+            break;
+        case WS_EVT_PONG:
+        case WS_EVT_ERROR:
+            break;
+    }
+}
+
+void gpioControl() {
+
+  if ((EEPROM.readByte(2) >= 1 && EEPROM.readByte(2) <= 5) || (EEPROM.readByte(2) >= 12 && EEPROM.readByte(2) <= 39))
+  { if (EEPROM.readByte(3) == 1) {
+      digitalWrite(EEPROM.readByte(2), HIGH);
+    } else if (EEPROM.readByte(2) == 0) {
+      digitalWrite(EEPROM.readByte(2), LOW);
+    }
+    /*
+      } else if (commandType == 102){
+         analogWrite(EEPROM.readByte(4), EEPROM.readByte(5));
+
+      }
+      }
+      /*
+      } else if (receivedCommand == 105)    {
+        // TO DO - write function for neopixel
+    */
+  }
+}
+
+void OTAupdate() {  // Receive  OTA update from bin file on Gateway's LittleFS data folder.
+ 
+  t_httpUpdate_return ret = ESPhttpUpdate.update(binFile);
+
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+      break;
+
+    case HTTP_UPDATE_NO_UPDATES:
+      Serial.println("HTTP_UPDATE_NO_UPDATES");
+      break;
+
+    case HTTP_UPDATE_OK:
+      Serial.println("HTTP_UPDATE_OK");
+      ESP.restart();
+      break;
+  }
 }
