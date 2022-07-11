@@ -1,4 +1,5 @@
 // 35 ms transmit & receive time for 24 bytes of data and 68 ms total uptime required in two way mode.Confirm and try to reduce this time.
+// Reference : http://nomartini-noparty.blogspot.com/2016/07/esp8266-and-beacon-frames.html
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <HTTPClient.h>
