@@ -129,9 +129,10 @@ https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 http://www.of-things.de/battery-life-calculator.php
       
 ### Tools used to convert HTML/CSS/JAVASCRIPT TO HEX: 
-      
+
+https://ayushsharma82.github.io/file2raw/      
 https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
-https://ayushsharma82.github.io/file2raw/
+
 
 ### This project was possible thanks to creators of following libraries used for this project:
  
