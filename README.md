@@ -122,16 +122,16 @@ Most suitable use cases around typical home - Light control, fan/AC control, Wea
 It is also possible to run Node-Red on android smartphones or tablets. 
 https://nodered.org/docs/getting-started/android
 
-### Useful tool to estimate power consumption and solar battery charging:
+### Useful tools to estimate power consumption and solar battery charging:
 
 https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 
 http://www.of-things.de/battery-life-calculator.php
       
-### Tool used to convert HTML/CSS/JAVASCRIPT TO HEX: 
+### Tools used to convert HTML/CSS/JAVASCRIPT TO HEX: 
       
 https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
-
+https://ayushsharma82.github.io/file2raw/
 
 ### This project was possible thanks to creators of following libraries used for this project:
  
