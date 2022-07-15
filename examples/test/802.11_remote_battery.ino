@@ -1,124 +1,87 @@
-// 35 ms transmit & receive time for 24 bytes of data and 68 ms total uptime required in two way mode.Confirm and try to reduce this time.
-// Reference : http://nomartini-noparty.blogspot.com/2016/07/esp8266-and-beacon-frames.html
+// 45 ms transmit & receive time and 82 ms total uptime required in two way mode.Confirm and try to reduce this time.
 #include <WiFi.h>
 #include <esp_wifi.h>
+#include "sdkconfig.h"
+#include "esp_system.h"
 #include <HTTPClient.h>
 #include <ESP32httpUpdate.h>  // Install from arduino library manager
 #include <EEPROM.h>
 #include "driver/adc.h"
 
-int WiFiChannel = 7;           // This must be same for all devices on network.
-const char* ssid = "ESP";      // Required for OTA update.
-const char* password = "";     // Required for OTA update.
+const char* ssid = "ESP";
+const char* password = "";
 
-//==================User configuration generally not required below this line ============================
+//==================User configuration generally not required below this line ================================================
 
 String binFile = "http://192.168.4.1/device_246.bin";
 
-int Hour;               // Hour received from Gateway. More reliable source than internal RTC of local device
-int Minute;             // Minute received from Gateway. More reliable source than internal RTC of local device.
+int Hour;          // Hour received from Gateway. More reliable source than internal RTC of local device
+int Minute;        // Minute received from Gateway. More reliable source than internal RTC of local device.
 
+// Sensor values to be sent to Gateway
+uint8_t sensorData[6];  // = {device, voltage, Sensorvalue4, Sensorvalue4, Sensorvalue4, Sensorvalue4};
 uint8_t showConfig[20]; // Content of EEPROM is saved here.
 
-int commandType;        // digitalwrite, analogwrite, digitalRead, analogRead, neopixel, pin setup etc.
-int value1;             // gpio pin number or other values like device ID, sleeptime, Ap Channel, Device mode etc.
-int value2;             // 0 or 1 in case of digitalwrte, 0 to 255 in case of analogwrite or value for RED neopixel or value for sensorType 4.
-int value3;             // 0 to 255 - value for GREEN neopixel or value for sensorType 5.
-int value4;             // 0 to 255 - value for BLUE neopixel or value for sensorType 6.
+int commandType;      // digitalwrite, analogwrite, digitalRead, analogRead, neopixel, pin setup etc.
+int value1;           // gpio pin number or other values like device ID, sleeptime, Ap Channel, Device mode etc.
+int value2;           // 0 or 1 in case of digitalwrte, 0 to 255 in case of analogwrite or value for RED neopixel or value for sensorType 4.
+int value3;           // 0 to 255 - value for GREEN neopixel or value for sensorType 5.
+int value4;           // 0 to 255 - value for BLUE neopixel or value for sensorType 6.
      
-int warnVolt = 130;     // Start warning when battery level goes below 2.60 volts (260/2 = 130).
+int warnVolt = 130;   // Start warning when battery level goes below 2.60 volts (260/2 = 130).
 
-uint8_t sensorValues[] =       // Looks like 24 bytes is minimum (sending as WIFI_IF_AP) and 1500 bytes is maximum limit.
- {
-  0x80, 0x00,                                                 //  0- 1: Frame Control. Type 80 = Beacon.
-  0x00, 0x00,                                                 //  2- 3: Duration
-  0x11, 0x11, 0x11, 0x11, 0x11, 0x11,                         //  4- 9: Destination address.Fill with custom data.
-  0x06, 0x22, 0x22, 0x22, 0x22, 0x22,                         // 10-15: Source address.Fill with custom data.
-  0x33, 0x33, 0x33, 0x33, 0x33, 0x33,                         // 16-21: BSSID.Fill with custom data.
-  0x00, 0x00,                                                 // 22-23: Sequence / fragment number
- };
- 
-void setup(){
-  //adc_power_off();     // ADC work finished so turn it off to save power.
-  WiFi.mode(WIFI_OFF);   // WiFi transmit & receive work finished so turn it off to save power.
-  esp_wifi_stop();       // WiFi transmit & receive work finished so turn it off to save power.
-
+void setup() {
   EEPROM.begin(20);
   
-  if (EEPROM.readByte(0) == 0 || EEPROM.readByte(0) == 255)  {EEPROM.writeByte(0, 246);} 
-  if (EEPROM.readByte(15) < 1 || EEPROM.readByte(15) > 14) {EEPROM.writeByte(15, WiFiChannel);}
-  if (EEPROM.readByte(16) == 0 || EEPROM.readByte(16) == 255) {EEPROM.writeByte(16, 1);}
+  int lastmillis = millis();
+  
+  if (EEPROM.readByte(0) == 255)  {EEPROM.writeByte(0, 246);} 
+  if (EEPROM.readByte(15) == 255) {EEPROM.writeByte(15, 7);}
+  if (EEPROM.readByte(16) == 255) {EEPROM.writeByte(16, 1);}
   EEPROM.commit();
-
+  
+  sensorValues();
+  //int16_t scanNetworks(bool async = false, bool show_hidden = false, bool passive = false, uint32_t max_ms_per_chan = 300, uint8_t channel = 0, const char * ssid=nullptr, const uint8_t * bssid=nullptr);
+  
+  int n = WiFi.scanNetworks(true, false, false, 5, EEPROM.readByte(15));
+    
   Serial.begin(115200);
-  Serial.println();
-}
+  Serial.print("Sensors values data sent to controller: ");Serial.println(WiFi.macAddress());
+  
+  delay(10);  // Minimum 10 milliseonds delay required to reliably receive message from Gateway.
+     
+  lastmillis = millis()-lastmillis;
+  Serial.println();Serial.print("Transmit & receive Time (Milliseconds):     ");Serial.println(lastmillis);    
+  
+  // If WiFi channels of Gateway and thid device do not match. 
+  // if (WiFi.BSSID(0)[0] < 6) {sensorValues();Serial.println("Scanning multiple channels...");int n = WiFi.scanNetworks(true, false, false, 5, 0);delay(10);}
 
-//===================== End of Setup ====================================================
+  EEPROM.writeByte(1, WiFi.BSSID(0)[1]);  // Command type at address 1. 
+  EEPROM.commit();
+  
+  adc_power_off();     // ADC work finished so turn it off to save power.
+  WiFi.mode(WIFI_OFF); // WiFi transmit & receive work finished so turn it off to save power.
+  esp_wifi_stop();     // WiFi transmit & receive work finished so turn it off to save power.
+  
+  commandType = EEPROM.readByte(1);
 
-void loop(){ 
-  
-  sensorValues[4] = EEPROM.readByte(0);   // Device ID.
-  sensorValues[5] = 165;                  // Voltage must be between 130 and 180 here in whole integer.
-  sensorValues[6] = random(70,74);        // Temperature F;
-  sensorValues[7] = random(40,100);       // Humidity %;
-  sensorValues[8] = random(850,1024) / 4; // Pressure mb;
-  sensorValues[9] = random(0,100);        // Light %;
-  
-  // Values received from all sensors used on this device and should replace random values of sensorValues array.
-  
-  Serial.println("sending sensor values....."); 
-  long lastmillis = millis();
-  WiFi.mode(WIFI_AP_STA); 
-  esp_wifi_set_promiscuous(true);
-  esp_wifi_set_promiscuous_rx_cb(&sniffer);
-  esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
-  esp_wifi_80211_tx(WIFI_IF_AP, sensorValues, sizeof(sensorValues), true);
-  
-  long currentmillis = millis() - lastmillis;
-  Serial.print("Transmit & receive time (Milliseconds) : ");Serial.println(currentmillis);
-  
-  int upTime = millis();Serial.print("Total up time (Milliseconds) : "); Serial.println(upTime);
-  esp_sleep_enable_timer_wakeup(1 * 6000000);  // 60000000 for 1 minute.
-  esp_deep_sleep_start();
-  }
-
-//============= End of main loop and all functions below ====================================
-
-void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) 
-{ 
-  
- wifi_promiscuous_pkt_t *p = (wifi_promiscuous_pkt_t*)buf;
- 
- if (p->payload[0] == 0x80 && p->payload[4] == sensorValues[4])   // HEX 80 for type - Beacon to filter out unwanted traffic. 
-  {
-   Serial.print("Command received from Gateway : ");
-  
-   for(int i=0;i<=21;i++){
-   Serial.print(p->payload[i], HEX);
-   }
-   
-   Serial.println();
-   EEPROM.writeByte(1, p->payload[5]);  // Command type at address 1. 
-   EEPROM.commit();
-
-   commandType = EEPROM.readByte(1);
-
-   Serial.println("Contents of EEPROM for this device below: ");
-   EEPROM.readBytes(0, showConfig,19);for(int i=0;i<19;i++){ 
-   Serial.printf("%d ", showConfig[i]);}
+  Serial.println("Contents of EEPROM for this device below: ");
+  EEPROM.readBytes(0, showConfig,19);for(int i=0;i<19;i++){ 
+  Serial.printf("%d ", showConfig[i]);}
       
-   if ( commandType > 100 && commandType < 121)  {   // If commandType is 101 to 120.
+  if ( commandType > 100 && commandType < 121)  {   // If commandType is 101 to 120.
       
       Serial.println();
+      Serial.print("Gateway Name is: ");Serial.print(WiFi.SSID(0));Serial.print(" & Gateway's Wifi Channel is: ");Serial.println(WiFi.channel(0));
       Serial.print("This device's Wifi Channel is: ");Serial.println(EEPROM.readByte(15));  
-      Serial.print("This device's MAC ID is: ");Serial.println(WiFi.macAddress());
-      value1 = p->payload[6];
-      value2 = p->payload[7];
-      value3 = p->payload[8];
-      value4 = p->payload[9];
       
-       synchTime();
+      value1 = WiFi.BSSID(0)[2];
+      value2 = WiFi.BSSID(0)[3];
+      value3 = WiFi.BSSID(0)[4];
+      value4 = WiFi.BSSID(0)[5];
+      
+      Serial.print("Command received from Gateway: ");Serial.println(&WiFi.BSSIDstr(0)[0]);
+      synchTime();
 
        if (commandType == 101)        // Digital Write
        {
@@ -193,27 +156,65 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
     } else {
     
     Serial.println("Resending sensor values..."); 
+    //esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 100);
+    //esp_deep_sleep_start();
     ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
     }
-  }
+      
+  }  // Setup ends here
+
+//========================Main Loop================================
+
+void loop() {
+  
+  Serial.print("I will wakeup in: ");
+  Serial.print(EEPROM.readByte(16));   // Sleeptime in minutes.
+  Serial.println(" Minutes");
+  int upTime = (millis());  
+  Serial.print("Total time I spent before going to sleep: ");
+  Serial.println(upTime);
+   //esp_bluedroid_disable();
+   //esp_bt_controller_disable(); 
+   //esp_sleep_pd_config(ESP_PD_DOMAIN_XTAL, ESP_PD_OPTION_OFF); 
+   //esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);             // see https://esp32.com/viewtopic.php?t=9681
+   //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);    // see https://esp32.com/viewtopic.php?t=9681
+   //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);       // see https://esp32.com/viewtopic.php?t=9681
+  esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 6000000);            // 60000000 for 1 minute.
+  esp_deep_sleep_start();
+}     
+//=========================Main Loop ends==========================
+
+void sensorValues() 
+{
+  sensorData[0] = EEPROM.readByte(0);
+  sensorData[1] = 165;                  //voltage must be between 130 and 180 here in whole integer.
+  sensorData[2] = random(70,74);        //temperature F;
+  sensorData[3] = random(40,100);       //humidity %;
+  sensorData[4] = random(850,1024) / 4;  //pressure mb;
+  sensorData[5] = random(0,100);        //light %;
+  
+  esp_base_mac_addr_set(sensorData);
+  
+  //Functions for all sensors used on this device goes here.
+  //Values received from sensors replaces 4 random values of sensorData array.
 }
 
-void synchTime() {
+void synchTime(){
   if (commandType == 105 || commandType == 106)
   {
-    Hour = EEPROM.readByte(17);                           // Hour value from EEPROM.
-    Minute = EEPROM.readByte(18) + EEPROM.readByte(16);   // Minute from EEPROM + Sleep Time from EEPROM.
+    Hour = EEPROM.readByte(17);                           // Hour value from local RTC memory.
+    Minute = EEPROM.readByte(18) + EEPROM.readByte(16);   // Minute from local RTC memory + Sleep Time.
   } else {
-    EEPROM.writeByte(17,value3);                   // Save hour to EEPROM.
-    EEPROM.writeByte(18,value4); EEPROM.commit();  // Save minute to EEPROM.
+    EEPROM.writeByte(17,value3);
+    EEPROM.writeByte(18,value4);
     Hour = value3;     // New hour value received from Gateway.
     Minute = value4;   //  New minute value received from Gateway.
   }
   Serial.print("Time received from Gateway: ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
-  }
+}
 
 
-void gpioControl() {
+void gpioControl()   {
  
     if ((EEPROM.readByte(2) >= 1 && EEPROM.readByte(2) <= 5) || (EEPROM.readByte(2) >= 12 && EEPROM.readByte(2) <= 39))   
     {if (EEPROM.readByte(3) == 1){digitalWrite(EEPROM.readByte(2), HIGH);} else if (EEPROM.readByte(2) == 0){digitalWrite(EEPROM.readByte(2), LOW);}
@@ -227,34 +228,34 @@ void gpioControl() {
         } else if (receivedCommand == 105)    {
           // TO DO - write function for neopixel
          */ 
-   }      
-}
+      }      
+    }
 
-void OTAupdate() {  // Receive  OTA update from bin file on Gateway's LittleFS data folder.
-
+void OTAupdate(){  // Receive  OTA update from bin file on Gateway's LittleFS data folder.
+WiFi.begin(ssid, password);
+  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.printf("STA: Failed!\n");
+    WiFi.disconnect(false);
+    delay(1000);
     WiFi.begin(ssid, password);
-    
-    if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-     Serial.printf("STA: Failed!\n");
-     WiFi.disconnect(false);
-     delay(1000);
-     WiFi.begin(ssid, password);
-     }
-     delay(500);
+  }
+  delay(500);
 
-  t_httpUpdate_return ret = ESPhttpUpdate.update(binFile);
 
-    switch(ret) {
-      case HTTP_UPDATE_FAILED:
-       Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-       break;
-    
-      case HTTP_UPDATE_NO_UPDATES:
-       Serial.println("HTTP_UPDATE_NO_UPDATES");
-       break;
+        t_httpUpdate_return ret = ESPhttpUpdate.update(binFile);
 
-      case HTTP_UPDATE_OK:
-       Serial.println("HTTP_UPDATE_OK");
-       break;            
-   }
-} 
+        switch(ret) {
+            case HTTP_UPDATE_FAILED:
+                Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+                break;
+
+            case HTTP_UPDATE_NO_UPDATES:
+                Serial.println("HTTP_UPDATE_NO_UPDATES");
+                break;
+
+            case HTTP_UPDATE_OK:
+                
+                Serial.println("HTTP_UPDATE_OK");
+                break;
+        }
+    } 
