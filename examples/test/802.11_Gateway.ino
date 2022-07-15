@@ -12,18 +12,17 @@
 #include "time.h"
 #include "motionDetector.h"                 // Thanks to https://github.com/paoloinverse/motionDetector_esp
 #include <ESP32Ping.h>                      // Thanks to https://github.com/marian-craciunescu/ESP32Ping
-#include <SimpleKalmanFilter.h>             // Built in arduino library. Reference : https://github.com/denyssene/SimpleKalmanFilter
 
-#define PINGABLE      false                 // If true use ESPPing library to detect presence of known devices.
 #define FIRSTTIME     false                 // Define true if setting up Gateway for first time.
+#define PINGABLE      true                 // If true use ESPPing library to detect presence of known devices.
 
 #if PINGABLE
 #include <ESP32Ping.h>                      // Thanks to https://github.com/marian-craciunescu/ESP32Ping
 #endif
 
-const char* room = "Gateway";            // Needed for devices locator.Each location must run probeReceiver sketch to implement devices locator.
+const char* room = "Gateway";               // Needed for devices locator.
 int rssiThreshold = -50;                    // Adjust according to signal strength by trial & error.
-int motionThreshold = 40;                   // Adjust the sensitivity of motion sensor.Higher the number means less sensetive motion sensor is.
+int motionThreshold = 100;                  // Adjust the sensitivity of motion sensor.Higher the number means less sensetive motion sensor is.
 
 int WiFiChannel = 7;                        // This must be same for all devices on network.
 const char* apSSID = "ESP";                 // SoftAP SSID.
@@ -31,7 +30,7 @@ const char* apPassword = "";                // SoftAP password.
 const int hidden = 0;                       // If hidden is 1 probe request event handling does not work ?
 
 int enableCSVgraphOutput = 1;               // 0 disable, 1 enable.If enabled, you may use Tools-> Serial Plotter to plot the variance output for each transmitter.
-int dataInterval;                           // Interval in minutes to send data.
+int scanInterval = 600;                     // Interval in minutes to send data.
 int pingInterval;                           // interval in minutes to ping known devices.
 int motionLevel = -1;
 float receivedRSSI = 0;
@@ -52,6 +51,7 @@ String binFile = "http://192.168.4.1/gateway.bin";
 IPAddress deviceIP(192, 168, 0, 2);         // Fixed IP address assigned to family member's devices to be checked for their presence at home.
 //IPAddress deviceIP = WiFi.localIP();
 int device1IP = 2, device2IP = 3, device3IP = 4, device4IP = 5;
+int device1Status, device2Status, device3Status, device4Status;
 #endif   //#if PINGABLE
 
 //==================User configuration not required below this line ================================================
@@ -128,32 +128,31 @@ void setup() {
 
 void loop() 
 { 
-   dataInterval++; pingInterval++;
+   pingInterval++; 
    motionDetector_set_minimum_RSSI(-80);                // Minimum RSSI value to be considered reliable. Default value is 80 * -1 = -80.
    motionLevel = motionDetector_esp();                  // if the connection fails, the radar will automatically try to switch to different operating modes by using ESP32 specific calls.
 
-   if (pingInterval > (1 * 500))      // 500 for 5 minutes.
+   if (pingInterval > (scanInterval * 500))             // 500 for 5 minutes if scanInterval is 600.
   {
    
-   #if PINGABLE
+  #if PINGABLE
     Serial.println("Checking to see who is at home.... ");
 
     int pingTime;
 
-    deviceIP[3] = device1IP; Serial.println("Pinging IP address 2... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);/*sensorValues[18] = (pingTime);*/} else {/*sensorValues[18] = 0;*/}
-    deviceIP[3] = device2IP; Serial.println("Pinging IP address 3... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);/*sensorValues[19] = (pingTime);*/} else {/*sensorValues[19] = 0;*/}
-    deviceIP[3] = device3IP; Serial.println("Pinging IP address 4... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);/*sensorValues[20] = (pingTime);*/} else {/*sensorValues[20] = 0;*/}
-    deviceIP[3] = device4IP; Serial.println("Pinging IP address 5... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime();Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);/*sensorValues[21] = (pingTime);*/} else {/*sensorValues[21] = 0;*/}
+    deviceIP[3] = device1IP; Serial.println("Pinging IP address 2... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime(); device1Status = (pingTime);} else {device1Status = 0;} Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);
+    deviceIP[3] = device2IP; Serial.println("Pinging IP address 3... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime(); device2Status = (pingTime);} else {device2Status = 0;} Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);
+    deviceIP[3] = device3IP; Serial.println("Pinging IP address 4... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime(); device3Status = (pingTime);} else {device3Status = 0;} Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);
+    deviceIP[3] = device4IP; Serial.println("Pinging IP address 5... "); if (Ping.ping(deviceIP, 5)) {pingTime = Ping.averageTime(); device4Status = (pingTime);} else {device4Status = 0;} Serial.print("Ping time in milliseconds: ");Serial.println(pingTime);
+    pingInterval = 0;   // Data sent. Reset the ping interval counter.
   #endif   // #if PINGABLE 
-  
- }
+}
    
  if (motionLevel > motionThreshold)        // Adjust the sensitivity of motion sensor. Higher the number means less sensetive motion sensor is.
   {Serial.print("Motion detected & motion level is: "); Serial.println(motionLevel);}  
    if (WiFi.waitForConnectResult() != WL_CONNECTED) {ssid = EEPROM.readString(270); password = EEPROM.readString(301);Serial.println("Wifi connection failed");WiFi.disconnect(false);delay(1000);WiFi.begin(ssid.c_str(), password.c_str());}
    
-   delay(600);
-   if (commandSent == 1)
+   if (commandSent == 1)  // Set frequency for printing serial statements.
    {  
       //qsort(distance, 4, sizeof (int), sort); for (int i = 0; i < 4; i++){Serial.print(distance[i]);if (i<3){Serial.print(",");}}Serial.println(); // Make sort of array of integers to rearrange values of array in decending or ascending order.
       Serial.println();Serial.print("Data received from remote sensor -  ");Serial.print(device);Serial.println(" is below: ");for (int i = 0; i < 23; i++) {Serial.printf("%02X", sensorValues[i]);}Serial.println();
@@ -164,7 +163,7 @@ void loop()
       for(int i=0;i<10;i++){Serial.print(showConfig[i+device]);} Serial.println();
       Serial.println("Received packet & sending command...... ");
       Serial.print("Unknown device's MAC received from remote device - ");Serial.print(device);Serial.print(" = "); for (int i = 10; i < 15; i++) {Serial.print(Command[i], HEX);if (i < 14)Serial.print(":");} Serial.print(" & Guest's signal strength = "); Serial.println(Command[17]);
-      Serial.print("Status of known devices near device - ");Serial.print(device);Serial.print(" = "); for (int i = 18; i < 21; i++) {Serial.print(Command[i]);if (i < 20)Serial.print(",");}Serial.println();
+      Serial.print("Status of known devices near device - ");Serial.print(device);Serial.print(" = "); for (int i = 18; i < 21; i++) {Serial.print(Command[i], HEX);if (i < 20)Serial.print(",");}Serial.println();
       Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);
       Serial.print("Sent Command to remote device: "); for (int i = 4; i < 9; i++) {Serial.print(Command[i]);} Serial.println();Serial.println();
       Serial.print("Graph data size: ");Serial.println(graphDataToWS.length());
@@ -177,9 +176,8 @@ void loop()
       File f = SPIFFS.open(dataFile, "r+"); // See https://github.com/lorol/LITTLEFS/issues/33
       f.seek((f.size()-1), SeekSet);f.print(graphData);f.close();Serial.println("Sensor data saved to flash.");
       commandSent = 0;
-      dataInterval = 0;   // Data sent. Reset the data interval counter.
-
       }
+      delay(scanInterval);
 }
 
 void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) 
@@ -240,14 +238,14 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
       Epoch = String(epoch);
       //graphDataToWS.remove(0, 34); // Remove first 34 charachters from string.
       Loc = "";V = "";S = "";T = "";H = "";P = "";L = "";
-      commandSent = 1;
+      
       }
       
       if (voltage < 2.50) {      // if voltage of battery gets to low, print the warning below.
          myClient.publish("Warning/Battery Low", String(device));
          }
          for (int i = 0; i < 23; i++) {Command[i] = p->payload[i];}
-                  
+         commandSent = 1;         
       }
    }
 }
@@ -331,9 +329,7 @@ void startWiFi()
  }
    
     Serial.print("Connect at IP: ");Serial.print(WiFi.localIP());Serial.print(" or 192.168.4.1");Serial.println(" to monitor and control whole network");
-
 }
-
 
 void startAsyncwebserver()
 {
