@@ -8,7 +8,7 @@ This is the main goal of this project. Proberequest protocol is used for data tr
 
 ### No local server or cloud service required except built in webserver on Gateway device.
 
-Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using uPlot graphing library and built in webserver. Sensor data of whole network is stored on gateway device using LittleFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files.Changing data format in LittleFS also possible live from web interface using SPIFFSEditor.
+Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using uPlot graphing library and built in webserver. Sensor data of whole network is stored on gateway device using SPIFFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files.Changing data format in SPIFFS also possible live from web interface using SPIFFSEditor.
 
 
 ### Build it, position towards maximum sun exposure and forget about it. 
@@ -21,13 +21,13 @@ Average sensor node could be below $5 each.
 
 ### OTA update of all remote devices using Gateway to store single standard .bin file for all remote devices. 
 
-Simply storing single standard .bin file for all remote devices to Gateway LittleFS file system and publishing MQTT command from MQTT client app or by issuing command from web interface each sensor device on the network can be updated with latest firmware. Again there is no need to physically access hard to reach remote devices.
+Simply storing single standard .bin file for all remote devices to Gateway SPIFFS file system and publishing MQTT command from MQTT client app or by issuing command from web interface each sensor device on the network can be updated with latest firmware. Again there is no need to physically access hard to reach remote devices.
 
 ### Current time sent to all remote devices from Gateway for further time based automation in remote devices. 
 
 ## Concept in detail:
 
-This code create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
+This code can create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
 Each device can be controlled simply by MQTT app like MQTT Dash or built in web interface over local network or over internet if used with DynDNS service like DuckDNS.
 There is no need for other home automation software locally or on cloud.
 
@@ -38,14 +38,14 @@ My testing shows data communication is achieved within 80 milliseconds total upt
 - To test the code at minimum 1 remote ESP32 and 1 ESP32 Gateway device are required.
 - One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.
 - There are .bin files for gateway and remote sketches in their respective folders if do not want to compile the code.
-- Please format flash as LittleFS file system and upload data folder within Simple Gateway folder.
+- Please format flash as SPIFFS file system and upload data folder within Simple Gateway folder.
 - New remote device will show up with device ID 246 but the device ID can be changed to any other unused ID on network from web interface or MQTT client.
 - There can be as many as 100 battery powered devices which can send data to one gateway device. 
 - Web interface is started at IP 192.168.4.1 if connected to AP named "ESP" and shows graphs of sensor data from whole network, It also allows to issue commands to   any remote device on network.
 
 ### Command structure:  
 
-commands are issued via MQTT payload with topic name "command/". At least first three commands are necessary.
+commands are issued via MQTT payload with topic name "command/" or using dropdown menu at built-in web interface. At least first three commands are necessary.
       
 #### Command1 = Device ID Number (required for all commands) -               
 ```c
