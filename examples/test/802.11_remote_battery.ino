@@ -27,8 +27,8 @@ uint8_t sensorValues[] =                // Looks like 24 bytes is minimum (sendi
   0x80, 0x00,                           //  0- 1:  First byte here must be 80 for Type = Beacon.
   0x00, 0x00,                           //  2- 3:  Can it be used to send more data to gateway?
   0xF6, 0x11, 0x11, 0x11, 0x11, 0x11,   //  4- 9:  First byte here must be device ID (default F6 for device ID 246).Second byte is voltage value.Fill rest with any 4 types of sensor data.
-  0x06, 0x22, 0x22, 0x22, 0x22, 0x22,   //  10-15: Unknown device's MAC.
-  0x33, 0x33, 0x33, 0x33, 0x33, 0x33,   //  16-21: Motion level, unknown device's RSSI, device1 ping time, device2 ping type, device3 ping time, device4 ping time.
+  0x06, 0x22, 0x22, 0x22, 0x22, 0x22,   //  10-15: All 6 bytes can be filled with sensor values.
+  0x33, 0x33, 0x33, 0x33, 0x33, 0x33,   //  16-21: All 6 bytes can be filled with sensor values.
   0x00, 0x00,                           //  22-23: Can it be used to send more data to remote device?
 };
 
