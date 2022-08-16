@@ -45,7 +45,7 @@ void setup() {
   esp_wifi_set_promiscuous(true); esp_wifi_set_promiscuous_rx_cb(&sniffer); esp_wifi_set_channel(WiFiChannel, WIFI_SECOND_CHAN_NONE);
 
   Serial.begin(115200); 
-  sendSensorvalues();
+  //sendSensorvalues();
 }
 
 //===================== End of Setup ====================================================
@@ -53,18 +53,19 @@ void setup() {
 void loop() {
  
   sendSensorvalues();
-
+  
   Serial.print("I will wakeup in: ");
   Serial.print(EEPROM.readByte(16));   // Sleeptime in minutes.
   Serial.println(" Minutes");
   int upTime = (millis());  
   Serial.print("Total time I spent before going to sleep: ");
   Serial.println(upTime);
-  esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 6000000);            // 60000000 for 1 minute.
+  
+  esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 60000000);            // 60000000 for 1 minute.
   esp_deep_sleep_start();  
 } // End of loop.
 
-//============= End of main loop and all functions below ====================================
+//============= End of main loop and start of all functions below ====================================
 
 void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
 {
@@ -86,7 +87,7 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type)
 
     commandType = EEPROM.readByte(1);
 
-    Serial.println("Contents of EEPROM for this device below: "); EEPROM.readBytes(0, showConfig, 19); for (int i = 0; i < 19; i++) {Serial.printf("%d ", showConfig[i]);}
+    Serial.println("Contents of EEPROM for this device below: "); EEPROM.readBytes(0, showConfig, 19); for (int i = 0; i < 19; i++) {Serial.printf("%d ", showConfig[i]);} Serial.println();
 
     if ( commandType > 100 && commandType < 121)  {   // If commandType is 101 to 120.
 
