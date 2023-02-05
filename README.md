@@ -2,7 +2,7 @@
 
 # Features:
 
-### Very low power consumption.
+### Ultra low power consumption.
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
