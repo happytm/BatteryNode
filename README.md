@@ -127,6 +127,8 @@ https://nodered.org/docs/getting-started/android
 - https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
 
 - http://www.of-things.de/battery-life-calculator.php
+
+- Very informative discussion on energy harvesting: https://forum.mysensors.org/topic/10812/the-harvester-ultimate-power-supply-for-the-raybeacon-dk/105?lang=en-US 
       
 ### Tools used to convert HTML/CSS/JAVASCRIPT TO HEX: 
 
