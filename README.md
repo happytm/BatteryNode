@@ -129,7 +129,8 @@ https://nodered.org/docs/getting-started/android
 - http://www.of-things.de/battery-life-calculator.php
 
 - Very informative discussion on energy harvesting: https://forum.mysensors.org/topic/10812/the-harvester-ultimate-power-supply-for-the-raybeacon-dk/105?lang=en-US 
-      
+- Interesting paper describing Batteryless remote sensor device: https://arxiv.org/pdf/1505.06815.pdf
+
 ### Tools used to convert HTML/CSS/JAVASCRIPT TO HEX: 
 
 - https://ayushsharma82.github.io/file2raw/      
