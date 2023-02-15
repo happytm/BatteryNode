@@ -130,6 +130,7 @@ https://nodered.org/docs/getting-started/android
 
 - Very informative discussion on energy harvesting: https://forum.mysensors.org/topic/10812/the-harvester-ultimate-power-supply-for-the-raybeacon-dk/105?lang=en-US 
 - Interesting paper describing Batteryless remote sensor device: https://arxiv.org/pdf/1505.06815.pdf
+- In depth energy harvesting video at Dave Jones: https://www.youtube.com/watch?v=9aSPopIcKLQ
 
 ### Tools used to convert HTML/CSS/JAVASCRIPT TO HEX: 
 
