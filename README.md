@@ -1,31 +1,32 @@
-### Simplest DIY Low Power, low cost, Local standalone or web connected IOT Network (no third party software or cloud service or programming knowledge required) 
+# BatteryNode
 
-# Features:
+Simplest DIY Low Power, low cost, Local standalone or web connected IOT Network (no third party software or cloud service or programming knowledge required) 
 
-### Ultra low power consumption.
+## Features
+
+### Ultra low power consumption
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
-### No local server or cloud service required except built in webserver on Gateway device.
+### No local server or cloud service required except built in webserver on Gateway device
 
 Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using uPlot graphing library and built in webserver. Sensor data of whole network is stored on gateway device using SPIFFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files.Changing data format in SPIFFS also possible live from web interface using SPIFFSEditor.
 
-
-### Build it, position towards maximum sun exposure and forget about it. 
+### Build it, position towards maximum sun exposure and forget about it
 
 No need to charge small 100 mAh LIR2450 coin cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell is used.
 
-### Very low cost DIY sensors.
+### Very low cost DIY sensors
 
 Average sensor node could be below $5 each.
 
-### OTA update of all remote devices using Gateway to store single standard .bin file for all remote devices. 
+### OTA update of all remote devices using Gateway to store single standard .bin file for all remote devices
 
 Simply storing single standard .bin file for all remote devices to Gateway SPIFFS file system and publishing MQTT command from MQTT client app or by issuing command from web interface each sensor device on the network can be updated with latest firmware. Again there is no need to physically access hard to reach remote devices.
 
-### Current time sent to all remote devices from Gateway for further time based automation in remote devices. 
+### Current time sent to all remote devices from Gateway for further time based automation in remote devices
 
-## Concept in detail:
+## Concept in detail
 
 This code can create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
 Each device can be controlled simply by MQTT app like MQTT Dash or built in web interface over local network or over internet if used with DynDNS service like DuckDNS.
@@ -33,7 +34,7 @@ There is no need for other home automation software locally or on cloud.
 
 My testing shows data communication is achieved within 80 milliseconds total uptime for remote device out of which only 45 milliseconds of time used for more power hungry WiFi receive & transmit on average thereby saving significant battery power. I think this is better than ESPNow protocol.
 
-### Installation:
+### Installation
 
 - To test the code at minimum 1 remote ESP32 and 1 ESP32 Gateway device are required.
 - One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.
@@ -43,18 +44,20 @@ My testing shows data communication is achieved within 80 milliseconds total upt
 - There can be as many as 100 battery powered devices which can send data to one gateway device. 
 - Web interface is started at IP 192.168.4.1 if connected to AP named "ESP" and shows graphs of sensor data from whole network, It also allows to issue commands to   any remote device on network.
 
-### Command structure:  
+### Command structure
 
 commands are issued via MQTT payload with topic name "command/" or using dropdown menu at built-in web interface. At least first three commands are necessary.
       
-#### Command1 = Device ID Number (required for all commands) -               
+#### Command1 = Device ID Number - (required for all commands)    
+
 ```c
 - Device ID must be 2 or 3 digits and ending with 2,6,A or E to avoid conflict with other devices.
 - See https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines.
 - Any of following for device ID is valid.
 - 06,16,26,36,46,56,66,76,86,96,106,116,126,136,146,156,166,176,186,196,206,216,226,236,246.
 ```                                            
-#### Command2 = Command type  (required for all commands)   -         
+#### Command2 = Command type - (required for all commands)
+
 ```c
 - value 101 to 121 is reserved for following commands:
 
@@ -95,39 +98,38 @@ commands are issued via MQTT payload with topic name "command/" or using dropdow
  - 121 =     Set sensor types for each device.
            - Example command payload 36/121/<00 to 256>/<00 to 256>/<00 to 256>/<00 to 256>/
 ```
-#### Command3 = Command  pinNumber or value1  -    (required for all commands)        
+
+#### Command3 = Command  pinNumber or value1 - (required for all commands)        
+
 ```c
 - pinNumber in case of command type 101 to 105 above. 
 - Value1 in case of command type 106,107,108,109 & 110 commandtype.
+```
 
-```                                            
-#### Command4 = value2.           
+#### Command4 = value2
 
-#### Command5 = value3.           
+#### Command5 = value3
 
-#### Command6 = value4.          
+#### Command6 = value4     
 
 Most suitable use cases around typical home - Light control, fan/AC control, Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection/motion sensor, Soil moisture sensor for garden/greenhouse, solar tracker etc. 
 
 
-### Tested with following MQTT front end GUI client software:
+### Tested with following MQTT front end GUI client software
 
 - MQTT Dash : https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=en_US (preffered).
             basic javascript automation possible with this App. 
             See https://github.com/ByTE1974/byte1974.github.io/tree/master/mqttdash/js
-
 - MQTT Explorer : https://github.com/thomasnordquist/MQTT-Explorer
-
 - Node-Red :
+
 It is also possible to run Node-Red on android smartphones or tablets. 
 https://nodered.org/docs/getting-started/android
 
 ### Useful tools to estimate power consumption and solar battery charging:
 
 - https://github.com/G6EJD/Processor-Solar-Power-Sleep-Calc
-
 - http://www.of-things.de/battery-life-calculator.php
-
 - Very informative discussion on energy harvesting: https://forum.mysensors.org/topic/10812/the-harvester-ultimate-power-supply-for-the-raybeacon-dk/105?lang=en-US 
 - Interesting paper describing Batteryless remote sensor device: https://arxiv.org/pdf/1505.06815.pdf
 - In depth energy harvesting video at Dave Jones: https://www.youtube.com/watch?v=9aSPopIcKLQ
@@ -135,11 +137,11 @@ https://nodered.org/docs/getting-started/android
 ### Tools used to convert HTML/CSS/JAVASCRIPT TO HEX: 
 
 - https://ayushsharma82.github.io/file2raw/      
-
 - https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
 
+## Acknowledgments
 
-### This project was possible thanks to creators of following libraries used for this project:
+This project was possible thanks to creators of following libraries used for this project:
  
  - https://github.com/hsaturn/TinyMqtt
  - https://github.com/leeoniya/uPlot   
