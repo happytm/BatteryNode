@@ -121,10 +121,8 @@ Most suitable use cases around typical home - Light control, fan/AC control, Wea
             basic javascript automation possible with this App. 
             See https://github.com/ByTE1974/byte1974.github.io/tree/master/mqttdash/js
 - MQTT Explorer : https://github.com/thomasnordquist/MQTT-Explorer
-- Node-Red :
-
-It is also possible to run Node-Red on android smartphones or tablets. 
-https://nodered.org/docs/getting-started/android
+- Node-Red : It is also possible to run Node-Red on android smartphones or tablets. 
+             https://nodered.org/docs/getting-started/android
 
 ### Useful tools to estimate power consumption and solar battery charging:
 
