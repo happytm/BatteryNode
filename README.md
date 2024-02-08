@@ -6,7 +6,10 @@ Simplest end to end complete DIY Low Power, low cost, Local standalone (non IOT)
 
 ### KISS (Keep It Simple Stupid) design principle  - no over engeeniering.
 
-### True DIY - No need to buy expensive commercial products except ESP32 barebone modules and some low cost sensor modules, coin cell battery and/or small solar panels based on use cases. 
+### True DIY
+
+In most use cases no need to buy expensive commercial products except ESP32 barebone modules and NTC thermistors for temperature sensor, photoresistors or phototransistors for light sensor,
+some low cost sensor modules, LDO and/or battery charging IC, coin cell battery and/or small solar panels based on use cases. 
 
 ### Ultra low power consumption - This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
@@ -20,7 +23,7 @@ Whole network can be monitored and controlled using any android or ios MQTT fron
 
 ### Build it, position towards maximum sun exposure and forget about it
 
-No need to charge small 100 mAh LIR2450 coin cell battery manually for life of battery or solar cell if LIR2450 coin cell battery and 53mmx30mm small solar cell is used.
+No need to charge small 100 mAh LIR2450 coin cell battery or any chargable manually for life of battery or solar cell  53mmx30mm small or even smaller solar cell is used.
 
 ### Very low cost DIY sensors
 
