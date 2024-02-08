@@ -6,9 +6,9 @@ Simplest end to end complete DIY Low Power, low cost, Local standalone (non IOT)
 
 ### KISS (Keep It Simple Stupid) design principle  - no over engeeniering.
 
-### Ultra low power consumption
+### True DIY - No need to buy expensive commercial products except ESP32 barebone modules and some low cost sensor modules, coin cell battery and/or small solar panels based on use cases. 
 
-This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
+### Ultra low power consumption - This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
 ### Easily customisable with basic coding knowledge
 
