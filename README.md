@@ -8,7 +8,7 @@
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power. 
 #### TODO : Implement BLE communication using CH582F for battery powered sensors for hardware/software simplicity, lower cost (less than $2) and power consumption (around 15 mA).
-#### TODO : Implement IR wakeup when required using either apllication described on page-5 https://www.vishay.com/docs/80067/appoverview.pdf or simply using IR phototransistor/photodiode to wakeup microcontroller with sleep interrupt. 
+#### TODO : Implement IR wakeup when required using either apllication described on page-5 https://www.vishay.com/docs/80067/appoverview.pdf or simply using IR phototransistor/photodiode to wakeup microcontroller with sleep interrupt. There is no need of BLE or WiFi communication if IR transmitter is also implemented.
 
 ### KISS (Keep It Simple Stupid) design principle
 
@@ -26,9 +26,10 @@ some low cost sensor modules, LDO and/or battery charging IC, coin cell battery 
 
 #### There are 3 types of ESP32 devices.
 
-- The mains powered single ESP32 Gateway device (may or may not be connected to internet) with SoftAP setting.This is the main brain and single point entry from a smartphone or a PC responsible for providing access to moniter and control whole home automation network.
+- The mains powered single ESP32 Gateway device (may or may not be connected to internet) with SoftAP setting.This is the main brain and single point entry from a smartphone or a PC responsible for providing access to moniter and 
+control whole home automation network.
 - Maines powered room/zone sensors with WiFi station setting. There must be atleast 1 sensor for each room/zone. Ideally they should have IR transmitter/IR blaster to control any appliace with IR receiver within line of sight.
-- Battery powered sensors mostly for locations where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE communication using CH582F for battery powered sensors for lower cost (less than $2) and power consumption (around 15 mA).
+- Battery powered sensors mostly for locations (indoor/outdoor) where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE communication using CH582F for battery powered sensors for lower cost (less than $2) and power consumption (around 15 mA).
    
 ### Easily customisable with basic coding knowledge
 
