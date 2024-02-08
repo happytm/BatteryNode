@@ -8,6 +8,7 @@
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power. 
 #### TODO : Implement BLE communication using CH582F for battery powered sensors for hardware/software simplicity, lower cost (less than $2) and power consumption (around 15 mA).
+#### TODO : Implement IR wakeup when required using either apllication described on page-5 https://www.vishay.com/docs/80067/appoverview.pdf or simply using IR phototransistor/photodiode to wakeup microcontroller with sleep interrupt. 
 
 ### KISS (Keep It Simple Stupid) design principle
 
