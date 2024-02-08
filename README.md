@@ -4,17 +4,19 @@ Simplest end to end complete DIY Low Power, low cost, Local standalone (non IOT)
 
 ## Features
 
+### Ultra low power consumption 
+
+This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
+
 ### KISS (Keep It Simple Stupid) design principle
 
-no over engeeniering. Voice commands to control home automation system using microphones and speakers are expensive, stupid and funny except used by blind people.
+No over engeeniering. Voice commands to control home automation system using microphones and speakers are expensive, stupid and funny except used by blind people.
 Use analog sensors as much as possible for simplicity in hardware and code and low cost.
 
-### True DIY
+### True DIY for low cost system
 
 In most use cases no need to buy expensive commercial products except ESP32 barebone modules and NTC thermistors for temperature sensor, photoresistors or phototransistors for light sensor,
 some low cost sensor modules, LDO and/or battery charging IC, coin cell battery and/or small solar panels based on use cases. 
-
-### Ultra low power consumption - This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
 ### Easily customisable with basic coding knowledge
 
