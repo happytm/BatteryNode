@@ -14,7 +14,7 @@ This is the main goal of this project. Proberequest protocol is used for data tr
 No over engeeniering. Voice commands to control home automation system using microphones and speakers are expensive, stupid and funny except used by blind people.
 Use analog sensors as much as possible for simplicity in hardware and code with lower hardware cost.
 Use ESP-CAM hardware for low cost video survailance or motion tracking. 
-See https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam
+- See https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam
 
 ### True DIY for low cost system
 
@@ -39,11 +39,11 @@ Whole network can be monitored and controlled using any android or ios MQTT fron
 
 ### Build it, position towards maximum sun exposure and forget about it
 
-No need to charge small 100 mAh LIR2450 coin cell battery or any chargable manually for life of battery or solar cell  53mmx30mm small or even smaller solar cell is used.
+No need to charge small 100 mAh LIR2450 coin cell battery or any chargable battery manually for life of battery or solar cell. Small 53mmx30mm or even smaller 3V to 5V solar cell can be used.
 
 ### Very low cost DIY sensors (see ideas below)
 
-Average sensor node could be made for $2 to $5 each including battery and/or small solar panel for charging. Use of IR transmitters recommended as much as possible for in room automation. 
+Average sensor node could be made for $2 to $5 (less than $2 using CH582F microcontroller) each including battery and/or small solar panel for charging. Use of IR transmitters recommended as much as possible for in room automation. 
 Average home can be automated with more than 10 remote sensors for below $100 total cost.
 
 ### Intruder alarm, presence detection and locator service for family members.
