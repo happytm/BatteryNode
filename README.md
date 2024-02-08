@@ -4,7 +4,10 @@ Simplest end to end complete DIY Low Power, low cost, Local standalone (non IOT)
 
 ## Features
 
-### KISS (Keep It Simple Stupid) design principle  - no over engeeniering.
+### KISS (Keep It Simple Stupid) design principle
+
+no over engeeniering. Voice commands to control home automation system using microphones and speakers are expensive, stupid and funny except used by blind people.
+Use analog sensors as much as possible for simplicity in hardware and code and low cost.
 
 ### True DIY
 
@@ -25,7 +28,7 @@ Whole network can be monitored and controlled using any android or ios MQTT fron
 
 No need to charge small 100 mAh LIR2450 coin cell battery or any chargable manually for life of battery or solar cell  53mmx30mm small or even smaller solar cell is used.
 
-### Very low cost DIY sensors
+### Very low cost DIY sensors (see ideas below)
 
 Average sensor node could be made for $2 to $5 each including battery and/or small solar panel for charging. Use of IR transmitters recommended as much as possible for in room automation. 
 Average home can be automated with more than 10 remote sensors for below $100 total cost.
@@ -42,17 +45,20 @@ Simply storing single standard .bin file for all remote devices to ESP32 Gateway
 
 ### Most suitable use cases around typical home either fully automated or all manually controlled by using a smartphone
 
-- Light control
 - TV or any appliance with IR receiver
-- fan/AC control
-- Weather Station
-- Door/Window sensors using battery as switch shutting down whole micro controller for 0 power consunption.
-- Water/Oil tank level sensors
-- Presence/location detection for family members without using any hardware sensors
-- Intruder alarm system for whole house without using any hardware sensors
-- Soil moisture sensor for garden/greenhouse
-- solar tracker etc.
- 
+- DIY light control (AC or DC) using WS2812B, photoresistor, triacs, diacs.
+- DIY Fan/AC control either using WS2812B, photoresistor, triacs & diacs or built in IR receiver.
+- DIY energy monitor for whole house using either current transformer or ACS712.
+- DIY analog weather station using NTC/temperature, photoresistor/phototransistor and hall effect/IR proximity sensors for rain guage and wind sensors.
+- DIY Door/Window sensors using battery as switch shutting down whole micro controller for 0 power consunption.
+- DIY analog Water/Oil tank level sensors
+- DIY analog leak detection sensor
+- DIY analog Soil moisture sensor for garden/greenhouse
+- DIY solar tracker. See https://github.com/happytm/SunTracker
+- DIY wire antennas for long range sensors like basement, water/oil tank, garden, wether station, solar tracker if needed. see https://github.com/happytm/EasyAntennas 
+- Presence/location detection for family members without using any hardware sensors. https://github.com/happytm/MotionDetector
+- Intruder alarm system for whole house without using any hardware sensors. https://github.com/happytm/MotionDetector
+  
 ## Concept in detail
 
 This code can create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
