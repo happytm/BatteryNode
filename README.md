@@ -20,7 +20,8 @@ No need to charge small 100 mAh LIR2450 coin cell battery manually for life of b
 
 ### Very low cost DIY sensors
 
-Average sensor node could be made for below $5 each including battery and small solar panel for charging. Use of IR transmitters recommended as much as possible for in room automation. Average home can be automated with more than 10 remote sensors for below $100 total cost.
+Average sensor node could be made for $2 to $5 each including battery and/or small solar panel for charging. Use of IR transmitters recommended as much as possible for in room automation. 
+Average home can be automated with more than 10 remote sensors for below $100 total cost.
 
 ### Intruder alarm, presence detection and locator service for family members.
 
