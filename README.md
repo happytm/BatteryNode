@@ -6,19 +6,28 @@ Simplest end to end complete DIY Low Power, low cost, Local standalone (non IOT)
 
 ### Ultra low power consumption 
 
-This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
+This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power. 
+#### TODO : Implement BLE communication using CH582F for battery powered sensors for hardware/software simplicity, lower cost (less than $2) and power consumption (around 15 MA).
 
 ### KISS (Keep It Simple Stupid) design principle
 
 No over engeeniering. Voice commands to control home automation system using microphones and speakers are expensive, stupid and funny except used by blind people.
-Use analog sensors as much as possible for simplicity in hardware and code and low cost.
-Use ESP-CAM hardware for low cost video survailance or motion tracking. See https://github.com/eloquentarduino/EloquentVision
+Use analog sensors as much as possible for simplicity in hardware and code with lower hardware cost.
+Use ESP-CAM hardware for low cost video survailance or motion tracking. See https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam
 
 ### True DIY for low cost system
 
 In most use cases no need to buy expensive commercial products except ESP32 barebone modules and NTC thermistors for temperature sensor, photoresistors or phototransistors for light sensor,
 some low cost sensor modules, LDO and/or battery charging IC, coin cell battery and/or small solar panels based on use cases. 
 
+### Simple hardware structure
+
+#### There are 3 types of ESP32 devices.
+
+- The mains powered single ESP32 Gateway device (may or may not be connected to internet) with SoftAP setting.This is the main brain and single point entry from a smartphone or a PC responsible for providing access to moniter and control whole home automation network.
+- Maines powered room/zone sensors with WiFi station setting. There must be atleast 1 sensor for each room/zone. Ideally they should have IR transmitter/IR blaster to control any appliace with IR receiver within line of sight.
+- Battery powered sensors mostly for locations where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE communication using CH582F for battery powered sensors for lower cost (less than $2) and power consumption (around 15 MA).
+   
 ### Easily customisable with basic coding knowledge
 
 There is no need to use overwhelming and heavy software like home assistance. Easily customise look and feel of front end in javascript or remote sensors code in C++  as you wish. 
@@ -65,7 +74,7 @@ Simply storing single standard .bin file for all remote devices to ESP32 Gateway
   See https://github.com/happytm/MotionDetector
 - Intruder alarm system for whole house without using any hardware sensors. See
   https://github.com/happytm/MotionDetector
-  
+- Low cost video survailance with or without motion tracking Using ESP-CAM hardware for . See https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam  
 ## Concept in detail
 
 This code can create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
