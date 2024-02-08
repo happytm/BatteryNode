@@ -10,6 +10,10 @@ Simplest end to end complete DIY Low Power, low cost, Local standalone (non IOT)
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
+### Easily customisable with basic coding knowledge
+
+There is no need to use overwhelming and heavy software like home assistance. Easily customise look and feel of front end in javascript or remote sensors code in C++  as you wish. 
+
 ### No local server or cloud service (no IOT) required except built in webserver on ESP32 Gateway device
 
 Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using awsome uPlot graphing library and built in webserver. Sensor data of whole network is stored on ESP32 gateway device using SPIFFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files. Changing data format in SPIFFS also possible live from web interface using SPIFFSEditor.
