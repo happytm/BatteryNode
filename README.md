@@ -86,9 +86,9 @@ There is no need for other home automation software locally or on cloud.
 
 My testing shows data communication is achieved within 80 milliseconds total uptime for remote device out of which only 45 milliseconds of time used for more power hungry WiFi receive & transmit on average thereby saving significant battery power. I think this is better than ESPNow protocol.
 
-### Installation
+### Installation & testing
 
-- To test the code at minimum 1 remote ESP32 and 1 ESP32 Gateway device are required.
+- To test the code at least 1 remote ESP32 and 1 ESP32 Gateway device are required.
 - One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.
 - There are .bin files for gateway and remote sketches in their respective folders if do not want to compile the code.
 - Please format flash as SPIFFS file system and upload data folder within Simple Gateway folder.
