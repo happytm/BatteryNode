@@ -1,16 +1,18 @@
 # BatteryNode
 
-Simplest DIY Low Power, low cost, Local standalone or web connected IOT Network (no third party software or cloud service or programming knowledge required) 
+Simplest end to end complete DIY Low Power, low cost, Local standalone (non IOT) or web connected IOT Network (no third party software or cloud service or programming knowledge required) framework template.
 
 ## Features
+
+### KISS (Keep It Simple Stupid) design principle  - no over engeeniering.
 
 ### Ultra low power consumption
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power.
 
-### No local server or cloud service required except built in webserver on Gateway device
+### No local server or cloud service (no IOT) required except built in webserver on ESP32 Gateway device
 
-Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using uPlot graphing library and built in webserver. Sensor data of whole network is stored on gateway device using SPIFFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files.Changing data format in SPIFFS also possible live from web interface using SPIFFSEditor.
+Whole network can be monitored and controlled using any android or ios MQTT front end dashboard client app like MQTT Dash thereby making it very simple to implement.There is also very simple but powerful dashbord to monitor sensor data from whole network using awsome uPlot graphing library and built in webserver. Sensor data of whole network is stored on ESP32 gateway device using SPIFFS file system. The web interface is simple one page but powerful enough to monitor and control whole network of devices. Web interface could be customised any way you want live by changing html, css or javascript code using built in SPIFFSEditor library without recompiling or reuploading files. Changing data format in SPIFFS also possible live from web interface using SPIFFSEditor.
 
 ### Build it, position towards maximum sun exposure and forget about it
 
@@ -18,14 +20,31 @@ No need to charge small 100 mAh LIR2450 coin cell battery manually for life of b
 
 ### Very low cost DIY sensors
 
-Average sensor node could be below $5 each.
+Average sensor node could be made for below $5 each including battery and small solar panel for charging. Use of IR transmitters recommended as much as possible for in room automation. Average home can be automated with more than 10 remote sensors for below $100 total cost.
 
-### OTA update of all remote devices using Gateway to store single standard .bin file for all remote devices
+### Intruder alarm, presence detection and locator service for family members.
 
-Simply storing single standard .bin file for all remote devices to Gateway SPIFFS file system and publishing MQTT command from MQTT client app or by issuing command from web interface each sensor device on the network can be updated with latest firmware. Again there is no need to physically access hard to reach remote devices.
+Built in whole house intruder motion detector, presence and location detector for family members all implemented in software saving cost for any motion or presence detector hardware sensors.
 
-### Current time sent to all remote devices from Gateway for further time based automation in remote devices
+### OTA update of all remote devices using ESP32 Gateway to store single standard .bin file for all remote devices
 
+Simply storing single standard .bin file for all remote devices to ESP32 Gateway SPIFFS file system and publishing MQTT command from MQTT client app or by issuing command from web interface each sensor device on the network can be updated with latest firmware. Again there is no need to physically access hard to reach remote devices.
+
+### Current time sent to all remote devices from ESP32 Gateway for further time based automation in remote devices
+
+### Most suitable use cases around typical home either fully automated or all manually controlled by using a smartphone
+
+- Light control
+- TV or any appliance with IR receiver
+- fan/AC control
+- Weather Station
+- Door/Window sensors using battery as switch shutting down whole micro controller for 0 power consunption.
+- Water/Oil tank level sensors
+- Presence/location detection for family members without using any hardware sensors
+- Intruder alarm system for whole house without using any hardware sensors
+- Soil moisture sensor for garden/greenhouse
+- solar tracker etc.
+ 
 ## Concept in detail
 
 This code can create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
@@ -40,9 +59,9 @@ My testing shows data communication is achieved within 80 milliseconds total upt
 - One device (always on and mains powered) use gateway sketch and another device (sleeping most of the time and battery powered) use remote code.
 - There are .bin files for gateway and remote sketches in their respective folders if do not want to compile the code.
 - Please format flash as SPIFFS file system and upload data folder within Simple Gateway folder.
-- New remote device will show up with device ID 246 but the device ID can be changed to any other unused ID on network from web interface or MQTT client.
+- New remote device will show up with device ID 246 but the device ID can be changed to any other unused DEVICE ID on network from web interface or MQTT client.
 - There can be as many as 100 battery powered devices which can send data to one gateway device. 
-- Web interface is started at IP 192.168.4.1 if connected to AP named "ESP" and shows graphs of sensor data from whole network, It also allows to issue commands to   any remote device on network.
+- Web interface is started at IP 192.168.4.1 if connected to AP named "ESP" and shows graphs of sensor data from whole network, It also allows to issue commands to any remote device on network.
 
 ### Command structure
 
@@ -111,9 +130,6 @@ commands are issued via MQTT payload with topic name "command/" or using dropdow
 #### Command5 = value3
 
 #### Command6 = value4     
-
-Most suitable use cases around typical home - Light control, fan/AC control, Weather Station, Door/Window sensor, Water/Oil tank level sensor, Presence Detection/motion sensor, Soil moisture sensor for garden/greenhouse, solar tracker etc. 
-
 
 ### Tested with following MQTT front end GUI client software
 
