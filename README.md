@@ -7,7 +7,7 @@
 ### Ultra low power consumption 
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power. 
-#### TODO : Implement BLE communication using CH582F for battery powered sensors for hardware/software simplicity, lower cost (less than $2) and power consumption (around 15 MA).
+#### TODO : Implement BLE communication using CH582F for battery powered sensors for hardware/software simplicity, lower cost (less than $2) and power consumption (around 15 mA).
 
 ### KISS (Keep It Simple Stupid) design principle
 
