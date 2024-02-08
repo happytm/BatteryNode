@@ -12,6 +12,7 @@ This is the main goal of this project. Proberequest protocol is used for data tr
 
 No over engeeniering. Voice commands to control home automation system using microphones and speakers are expensive, stupid and funny except used by blind people.
 Use analog sensors as much as possible for simplicity in hardware and code and low cost.
+Use ESP-CAM hardware for low cost video survailance or motion tracking. See https://github.com/eloquentarduino/EloquentVision
 
 ### True DIY for low cost system
 
