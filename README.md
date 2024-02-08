@@ -56,10 +56,14 @@ Simply storing single standard .bin file for all remote devices to ESP32 Gateway
 - DIY analog Water/Oil tank level sensors
 - DIY analog leak detection sensor
 - DIY analog Soil moisture sensor for garden/greenhouse
-- DIY solar tracker. See https://github.com/happytm/SunTracker
-- DIY wire antennas for long range sensors like basement, water/oil tank, garden, wether station, solar tracker if needed. see https://github.com/happytm/EasyAntennas 
-- Presence/location detection for family members without using any hardware sensors. https://github.com/happytm/MotionDetector
-- Intruder alarm system for whole house without using any hardware sensors. https://github.com/happytm/MotionDetector
+- DIY solar tracker using either couple of motors (geared motors/DIY linear actuators/chinese windlass system) or small DC water pumps/geared motors and 2 servos to lock down solar panel in windy conditions.
+  See https://github.com/happytm/SunTracker
+- DIY wire antennas for long range sensors like basement, water/oil tank, garden, wether station, solar tracker if needed.
+  See https://github.com/happytm/EasyAntennas 
+- Presence/location detection for family members without using any hardware sensors.
+  See https://github.com/happytm/MotionDetector
+- Intruder alarm system for whole house without using any hardware sensors. See
+  https://github.com/happytm/MotionDetector
   
 ## Concept in detail
 
