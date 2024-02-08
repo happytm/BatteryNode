@@ -191,3 +191,4 @@ This project was possible thanks to creators of following libraries used for thi
  - https://github.com/hsaturn/TinyMqtt
  - https://github.com/leeoniya/uPlot   
  - https://github.com/me-no-dev/ESPAsyncWebServer
+ - https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam
