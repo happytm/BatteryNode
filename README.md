@@ -27,7 +27,7 @@ some low cost sensor modules, LDO and/or battery charging IC, coin cell battery 
 
 - The mains powered single ESP32 Gateway device (may or may not be connected to internet) with SoftAP setting.This is the main brain and single point entry from a smartphone or a PC responsible for providing access to moniter and control whole home automation network.
 - Maines powered room/zone sensors with WiFi station setting. There must be atleast 1 sensor for each room/zone. Ideally they should have IR transmitter/IR blaster to control any appliace with IR receiver within line of sight.
-- Battery powered sensors mostly for locations where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE communication using CH582F for battery powered sensors for lower cost (less than $2) and power consumption (around 15 MA).
+- Battery powered sensors mostly for locations where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE communication using CH582F for battery powered sensors for lower cost (less than $2) and power consumption (around 15 mA).
    
 ### Easily customisable with basic coding knowledge
 
@@ -75,7 +75,9 @@ Simply storing single standard .bin file for all remote devices to ESP32 Gateway
   - For details see https://github.com/happytm/MotionDetector
 - Intruder alarm system for whole house without using any hardware sensors.
   - For details see https://github.com/happytm/MotionDetector
-- Low cost video survailance with or without motion tracking Using ESP-CAM hardware for . See https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam  
+- Low cost video survailance with or without motion tracking Using ESP-CAM hardware for . See
+  - For details see https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam  
+
 ## Concept in detail
 
 This code can create small standalone network (maximum of 100) of battery powered WiFi devices connecting to one ESP32 gateway device in star network topology.
