@@ -68,7 +68,7 @@ Simply storing single standard .bin file for all remote devices to ESP32 Gateway
 - DIY Door/Window sensors using battery as switch shutting down whole micro controller for 0 power consunption.
 - DIY analog Water/Oil tank level sensors
 - DIY analog leak detection sensor
-- DIY analog Soil moisture sensor for garden/greenhouse
+- DIY analog Soil moisture sensor for garden/greenhouse https://github.com/rbaron/b-parasite
 - DIY solar tracker using either couple of motors (geared motors/DIY linear actuators/chinese windlass system) or miniature DC water pumps, inexpensive accelerometer like LIS2DH12 and 2 servos to lock down solar panel.
   - For details see https://github.com/happytm/SunTracker
 - DIY wire antennas for long range sensors like basement, water/oil tank, garden, wether station, solar tracker if needed.
