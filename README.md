@@ -1,6 +1,6 @@
 # BatteryNode
 
-### Framework template for simplest end to end complete DIY low power, low cost, local standalone (non IOT) or web connected IOT network (no cloud service or programming knowledge required).
+### Framework for simplest end to end complete DIY low power, low cost, local standalone (non IOT) or web connected IOT network (no cloud service or programming knowledge required).
 
 ## Features
 
