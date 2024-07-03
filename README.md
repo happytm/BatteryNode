@@ -23,7 +23,7 @@ some low cost sensor modules, LDO and/or battery charging IC, coin cell battery 
 
 ### Simple hardware structure using 3 types of technology - WiFi for motion/presence detection and data/graphs, BLE for remote battery powered sensors, IR for in-room control.
 
-#### There are 3 types of ESP32 devices.
+#### There are 3 types of ESP32/CH582F devices.
 
 - The mains powered single ESP32 Gateway device (may or may not be connected to internet) with SoftAP setting.This is the main brain and single point entry from a smartphone or a PC responsible for providing access to moniter and 
 control whole home automation network.
