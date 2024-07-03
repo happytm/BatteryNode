@@ -21,7 +21,7 @@ Use ESP-CAM hardware for low cost video survailance or motion tracking.
 In most use cases no need to buy expensive commercial products except ESP32 barebone modules and NTC thermistors for temperature sensor, photoresistors or phototransistors for light sensor,
 some low cost sensor modules, LDO and/or battery charging IC, coin cell battery and/or small solar panels based on use cases. 
 
-### Simple hardware structure
+### Simple hardware structure using 3 types of technology - WiFi for motion/presence detection and data/graphs, BLE for remote battery powered sensors, IR for in-room control.
 
 #### There are 3 types of ESP32 devices.
 
