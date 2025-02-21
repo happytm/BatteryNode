@@ -192,7 +192,8 @@ commands are issued via MQTT payload with topic name "command/" or using dropdow
 
 This project was possible thanks to creators of following libraries used for this project:
  
- - https://github.com/hsaturn/TinyMqtt  TO DO: Try https://github.com/mlesniew/PicoMQTT/blob/master/examples/websocket_server/websocket_server.ino
+ - https://github.com/hsaturn/TinyMqtt
+   - TO DO: Try https://github.com/mlesniew/PicoMQTT/blob/master/examples/websocket_server/websocket_server.ino
  - https://github.com/leeoniya/uPlot   
  - https://github.com/me-no-dev/ESPAsyncWebServer
  - https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam
