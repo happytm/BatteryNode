@@ -9,6 +9,7 @@
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power. 
 #### TODO : Implement BLE communication using CH582F for battery powered sensors for hardware/software simplicity, lower cost (less than $2) and power consumption (around 15 mA).
 #### TODO : Use IR for in-room control of devices.Implement IR wakeup when required using IR phototransistor/photodiode to wakeup microcontroller with sleep interrupt.
+#### TODO : https://github.com/mlesniew/PicoMQTT/blob/master/examples/websocket_server/websocket_server.ino
 ### KISS (Keep It Simple Stupid) design principle
 
 No over engeeniering.
@@ -191,7 +192,7 @@ commands are issued via MQTT payload with topic name "command/" or using dropdow
 
 This project was possible thanks to creators of following libraries used for this project:
  
- - https://github.com/hsaturn/TinyMqtt
+ - https://github.com/hsaturn/TinyMqtt  TO DO: Try https://github.com/mlesniew/PicoMQTT/blob/master/examples/websocket_server/websocket_server.ino
  - https://github.com/leeoniya/uPlot   
  - https://github.com/me-no-dev/ESPAsyncWebServer
  - https://github.com/eloquentarduino/EloquentVision & https://github.com/eloquentarduino/EloquentEsp32cam
