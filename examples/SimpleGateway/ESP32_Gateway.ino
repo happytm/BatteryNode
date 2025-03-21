@@ -117,7 +117,8 @@ void setup(){
   myClient.subscribe(receivedTopic);
   myClient.subscribe(sentTopic);
         
-  WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED); Serial.print("Waiting for probe requests ... ");
+  WiFi.onEvent(probeRequest, ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED); Serial.print("Waiting for probe requests ... ");
+ 
 
 } // End of setup
 
@@ -149,16 +150,16 @@ void loop()
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
 { 
   Serial.println();
-  Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
+  Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.wifi_ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
   Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1 with connection to ESP AP");Serial.println(" to monitor and control whole network");
   // Allow data from device ID ending in number 6 and voltage value between 2.4V and 3.6V.
-  for (int i = 6; i < 256; i = i+10) if (info.ap_probereqrecved.mac[0] == i && (info.ap_probereqrecved.mac[1] > 120 || info.ap_probereqrecved.mac[1] < 180))
+  for (int i = 6; i < 256; i = i+10) if (info.wifi_ap_probereqrecved.mac[0] == i && (info.wifi_ap_probereqrecved.mac[1] > 120 || info.wifi_ap_probereqrecved.mac[1] < 180))
    {
     // This helps reduce interference from unknown devices from far away with weak signals.
-    if (info.ap_probereqrecved.rssi > -70)  
+    if (info.wifi_ap_probereqrecved.rssi > -70)  
     {
       
-      device = info.ap_probereqrecved.mac[0];
+      device = info.wifi_ap_probereqrecved.mac[0];
       Serial.println("Contents of command data saved in EEPROM for this device: ");
       EEPROM.readBytes(0, showConfig,256);for(int i=0;i<10;i++){ 
       Serial.printf("%d ", showConfig[i+device]);}
@@ -174,10 +175,10 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       Serial.println();
       Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
           
-      rssi = info.ap_probereqrecved.rssi;         
-      voltage = info.ap_probereqrecved.mac[1];
+      rssi = info.wifi_ap_probereqrecved.rssi;         
+      voltage = info.wifi_ap_probereqrecved.mac[1];
       voltage = voltage * 2 / 100;
-      sensorValues[0] = info.ap_probereqrecved.mac[2];sensorValues[1] = info.ap_probereqrecved.mac[3];sensorValues[2] = info.ap_probereqrecved.mac[4];sensorValues[3] = info.ap_probereqrecved.mac[5];
+      sensorValues[0] = info.wifi_ap_probereqrecved.mac[2];sensorValues[1] = info.wifi_ap_probereqrecved.mac[3];sensorValues[2] = info.wifi_ap_probereqrecved.mac[4];sensorValues[3] = info.wifi_ap_probereqrecved.mac[5];
            
       sprintf (str, "{");sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);sprintf (s, "}"); strcat (str, s);
                     
