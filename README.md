@@ -24,12 +24,12 @@ some low cost sensor modules, LDO and/or battery charging IC, coin cell battery 
 
 ### Simple hardware structure using 3 types of technology - WiFi for motion/presence detection and data/graphs, BLE for remote battery powered sensors, IR for in-room control.
 
-#### There are 3 types of ESP32/CH582F devices.
+#### There are 3 types of ESP32/CH582F/CH570/CH572 devices.
 
 - The mains powered single ESP32 Gateway device (may or may not be connected to internet) with SoftAP setting.This is the main brain and single point entry from a smartphone or a PC responsible for providing access to moniter and 
 control whole home automation network.
 - Maines powered room/zone sensors with WiFi station setting. There must be atleast 1 sensor for each room/zone. Ideally they should have IR transmitter/IR blaster to control any appliace with IR receiver within line of sight.
-- Battery powered sensors mostly for locations (indoor/outdoor) where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE communication using CH582F for battery powered sensors for lower cost (less than $2) and power consumption (around 15 mA).
+- Battery powered sensors mostly for locations (indoor/outdoor) where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE communication using CH582F/CH570/CH572 for battery powered sensors for lower cost (less than $2) and power consumption (around 15 mA).
    
 ### Easily customisable with basic coding knowledge
 
