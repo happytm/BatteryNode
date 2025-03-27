@@ -58,19 +58,29 @@ const char webpage[] PROGMEM = R"raw(
 void handleNotFound() {String message = "File Not Found\n\n";message += "URI: ";message += server.uri();message += "\nMethod: ";message += (server.method() == HTTP_GET) ? "GET" : "POST";message += "\nArguments: ";message += server.args();message += "\n";for (uint8_t i = 0; i < server.args(); i++) {message += " " + server.argName(i) + ": " + server.arg(i) + "\n";}server.send(404, "text/plain", message);log_i("reply: %s", message.c_str());}
 
 
-// Had to move this function above setup function to compile the sketch
+// Had to move this function above setup function to compile the sketch successfully.
 // See: https://forum.arduino.cc/t/exit-status-1-was-not-declared-in-this-scope-error-message/632717
 void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info) 
 {       
-  Serial.println();
-  Serial.print("Probe received from MAC ID :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.wifi_ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
-    
+  int macID[6];
+  Serial.print("Probe received from MAC ID :  ");for (int i = 0; i < 6; i++) {macID[i] = info.wifi_ap_probereqrecved.mac[i]; Serial.printf("%02X", info.wifi_ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
+  for (int i = 0; i < 6; i++) {Serial.println(macID[i], HEX);} 
+  
   // This helps reduce interference from unknown devices from far away with weak signals.
   if (info.wifi_ap_probereqrecved.rssi > -90)  
   {
     rssi = info.wifi_ap_probereqrecved.rssi;
     Serial.print("RSSI: "); Serial.println(rssi);  
     Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.print(" or 192.168.4.1 with connection to ESP AP");Serial.println(" to access the website");
+    
+    char str [256], s [70];
+    
+    sprintf (str, "{");
+    sprintf (s, "%i, ", rssi);    
+    strcat (str, s);sprintf (s, "%i:%i:%i:%i:%i:%i", macID[0], macID[1], macID[2], macID[3], macID[4], macID[5]); 
+    strcat (str, s);sprintf (s, "}"); 
+    strcat (str, s);
+    mqtt.publish("fromServer", str);
   
   }
 }      
