@@ -55,7 +55,7 @@ void sensorValues()
   sensorData[5] = random(30,100);         // Light;
   
   wifi_set_macaddr(STATION_IF, sensorData);
-  
+   
   //Functions for all sensors used on this device goes here.
   //Values received from sensors replaces 4 random values of sensorData array.
 }
