@@ -55,8 +55,10 @@ void sensorValues()
   sensorData[4] = random(850,1024) / 4;   // Pressure;
   sensorData[5] = random(30,100);         // Light;
   
-  esp_base_mac_addr_set(sensorData);
   
+  esp_err_t esp_base_mac_addr_set(uint8_t *sensorData);  // https://github.com/justcallmekoko/ESP32Marauder/issues/418
+  Serial.print("Probe request sent: ");for (int i = 0; i < 6; i++) {Serial.print(sensorData[i], HEX);if (i < 5)Serial.print(":");} Serial.println();
+
   //Functions for all sensors used on this device goes here.
   //Values received from sensors replaces 4 random values of sensorData array.
 }
