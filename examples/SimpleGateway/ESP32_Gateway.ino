@@ -117,7 +117,8 @@ void setup(){
   myClient.subscribe(receivedTopic);
   myClient.subscribe(sentTopic);
         
-  WiFi.onEvent(probeRequest, ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED); Serial.print("Waiting for probe requests ... ");
+  WiFi.onEvent(probeRequest,WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED);
+  Serial.print("Waiting for probe requests ... ");
  
 
 } // End of setup
