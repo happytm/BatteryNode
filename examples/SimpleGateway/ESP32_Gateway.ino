@@ -172,9 +172,8 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       timeSynch();
       if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 107; mac[2] = apChannel; timeSynch();}
                      
-      esp_wifi_set_mac(ESP_IF_WIFI_AP, mac);
-      Serial.println();
-      Serial.print("Command sent to remote device :  ");Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
+      esp_err_t esp_base_mac_addr_set(uint8_t *mac);  // https://github.com/justcallmekoko/ESP32Marauder/issues/418
+      Serial.print("Command sent to remote device :  "); Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
           
       rssi = info.wifi_ap_probereqrecved.rssi;         
       voltage = info.wifi_ap_probereqrecved.mac[1];
