@@ -96,7 +96,7 @@ const char webpage[] PROGMEM = R"raw(
       option5 = document.getElementById("command4");
       
       // Show and hide the appropriate select's
-      if (this.value == "105" || this.value == "106" || this.value == "107" ) {
+      if (this.value == "105" || this.value == "106" || this.value == "121") {
        
       option1.style.display = "";
       option2.style.display = "";
@@ -104,7 +104,7 @@ const char webpage[] PROGMEM = R"raw(
       option4.style.display = "";
       option5.style.display = "";
        
-      } else if (this.value == "103" || this.value == "104" || this.value == "108" || this.value == "109"|| this.value == "110" ) {
+      } else if (this.value == "103" || this.value == "104" || this.value == "107" || this.value == "108" || this.value == "109"|| this.value == "110" ) {
        
       option1.style.display = "";
       option2.style.display = "";
@@ -135,8 +135,8 @@ const char webpage[] PROGMEM = R"raw(
 <section class="command">
 <form id="formElem">
   
-  <input name="SSID" type="text" placeholder="SSID"/>
-  <input name="Password" type="password" placeholder="Password"/>
+  <input name="SSID" type="text" size="12" placeholder="SSID"/>
+  <input name="Password" type="password" size="12" placeholder="Password"/>
   <button type="submit">Enter WiFi Config</button>
   <br><br>
   
@@ -181,10 +181,10 @@ const char webpage[] PROGMEM = R"raw(
     <option value="121">Set Sensor Types(121)</option>
 </SELECT>
 
-<input id="command1" name="command1" type="number"  min="0" max="256">   
-<input id="command2" name="command2" type="number"  min="0" max="256">
-<input id="command3" name="command3" type="number"  min="0" max="256">
-<input id="command4" name="command4" type="number"  min="0" max="256">  
+<input id="command1" name="command1" type="number" size="4" min="0" max="250">   
+<input id="command2" name="command2" type="number" size="4" min="0" max="250">
+<input id="command3" name="command3" type="number" size="4" min="0" max="250">
+<input id="command4" name="command4" type="number" size="4" min="0" max="250">  
 
 <button type="submit">Send Command</button>
 <br>
@@ -378,7 +378,7 @@ void loop()
         
   mqtt.subscribe("command", [](const char * payload) {if (payload && strlen(payload)) {Serial.println(payload);Serial.printf("Received message in topic 'command' & message is:- %s\n", payload); 
      
-  auto result = sscanf(payload, R"(["%u","%u","%u","%u","%u","%u","%20[^"]","%20[^"]"])", &receivedCommand[0], &receivedCommand[1], &receivedCommand[2], &receivedCommand[3], &receivedCommand[4], &receivedCommand[5], &ssid, &password);
+  auto result = sscanf(payload, R"(["%10[^"]","%10[^"]","%u","%u","%u","%u","%u","%u"])", &ssid, &password, &receivedCommand[0], &receivedCommand[1], &receivedCommand[2], &receivedCommand[3], &receivedCommand[4], &receivedCommand[5]);
   
   Serial.println(receivedCommand[0]);Serial.println(receivedCommand[1]);Serial.println(receivedCommand[2]);Serial.println(receivedCommand[3]);Serial.println(receivedCommand[4]);Serial.println(receivedCommand[5]);Serial.println(ssid.c_str());Serial.println(password.c_str()); 
 }
