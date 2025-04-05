@@ -40,7 +40,8 @@ void setup() {
   
   sensorValues();
   //int16_t scanNetworks(bool async = false, bool show_hidden = false, bool passive = false, uint32_t max_ms_per_chan = 300, uint8_t channel = 0, const char * ssid=nullptr, const uint8_t * bssid=nullptr);
-  int n = WiFi.scanNetworks(true, false, false, 5, EEPROM.readByte(15));
+  int n = WiFi.scanNetworks(false, false, false, 5, NULL, "HTM");
+
     
   Serial.begin(115200);
   Serial.print("Sensors values data sent to controller: ");Serial.println(WiFi.macAddress());
