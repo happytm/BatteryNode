@@ -24,7 +24,7 @@ int warnVolt = 130;   // Start warning when battery level goes below 2.60 volts 
 
 void setup() {
   
-  int lastmillis = millis();
+  long lastmillis = millis();
 
   EEPROM.begin(20);
   
@@ -34,7 +34,9 @@ void setup() {
   if (EEPROM.readByte(16) == 255) {EEPROM.writeByte(16, 1);}       // Sleep time in minutes
   apChannel = EEPROM.writeByte(14, 7);
   EEPROM.commit();
-
+  
+  WiFi.mode(WIFI_STA);
+  WiFi.STA.begin();
  
   sensorValues();
   
@@ -147,6 +149,10 @@ void setup() {
     
     ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
   }
+
+   lastmillis = millis()-lastmillis;
+   Serial.println();Serial.print("Transmit & receive Time (Milliseconds):     ");Serial.println(lastmillis);    
+    
 }  // Setup ends here
 
 //========================Main Loop================================
@@ -179,9 +185,15 @@ void sensorValues()
   sensorData[4] = random(850,1024) / 4;  // Sensor 3
   sensorData[5] = random(0,100);         // Sensor 4
   
-   esp_err_t esp_base_mac_addr_set(uint8_t *sensorData);  // https://github.com/justcallmekoko/ESP32Marauder/issues/418
-   Serial.print("Probe request sent: ");for (int i = 0; i < 6; i++) {Serial.print(sensorData[i], HEX);if (i < 5)Serial.print(":");} Serial.println();
-
+  esp_err_t err = esp_wifi_set_mac(WIFI_IF_STA, &sensorData[0]);  //https://randomnerdtutorials.com/get-change-esp32-esp8266-mac-address-arduino/ https://github.com/justcallmekoko/ESP32Marauder/issues/418
+   Serial.println(); Serial.print("Probe request sent: "); 
+   uint8_t baseMac[6];
+   esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
+  if (ret == ESP_OK) {
+    Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X\n",
+                  baseMac[0], baseMac[1], baseMac[2],
+                  baseMac[3], baseMac[4], baseMac[5]);
+  } 
   
   //Functions for all sensors used on this device goes here.
   //Values received from sensors replaces 4 random values of sensorData array.
