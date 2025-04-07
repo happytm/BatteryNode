@@ -1,4 +1,3 @@
-
 #define FIRSTTIME  false  // Define true if setting up Gateway for first time.
 
 #include <WiFi.h>
@@ -21,7 +20,7 @@ struct tm timeinfo;
 //========================================================================================================================//
 //              USER-SPECIFIED VARIABLES                                                                                  //
 //========================================================================================================================//
-const char* apSSID = "ESP"; const char* apPassword = ""; const int apChannel = 7; const int hidden = 0;                   // If hidden is 1 probe request event handling does not work ?
+const char* apSSID = "ESP"; const char* apPassword = ""; const int apChannel = 7; const int hidden = 0;                   // If hidden is 0 change show hidden to true in remote code.
 
 String dataFile = "/data.json";       // File to store sensor data.
 
@@ -135,10 +134,6 @@ const char webpage[] PROGMEM = R"raw(
 <section class="command">
 <form id="formElem">
   
-  <input name="SSID" type="text" size="12" placeholder="SSID"/>
-  <input name="Password" type="password" size="12" placeholder="Password"/>
-  <button type="submit">Enter WiFi Config</button>
-  <br><br>
   
   <SELECT class="combine" id ="device" name = "Device">
     
@@ -185,9 +180,11 @@ const char webpage[] PROGMEM = R"raw(
 <input id="command2" name="command2" type="number" size="4" min="0" max="250">
 <input id="command3" name="command3" type="number" size="4" min="0" max="250">
 <input id="command4" name="command4" type="number" size="4" min="0" max="250">  
-
-<button type="submit">Send Command</button>
-<br>
+<br><br>
+<input name="SSID" type="text" size="12" placeholder="SSID"/>
+  <input name="Password" type="password" size="12" placeholder="Password"/>
+  <button type="submit">Send Command</button>
+  <br>
 
 </form>
 </section>
@@ -273,9 +270,10 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       timeSynch();
       if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 107; mac[2] = apChannel; timeSynch();}
                      
-      esp_err_t esp_base_mac_addr_set(uint8_t *mac);  // https://github.com/justcallmekoko/ESP32Marauder/issues/418
+      esp_err_t err = esp_wifi_set_mac(WIFI_IF_AP, &mac[0]);  //https://randomnerdtutorials.com/get-change-esp32-esp8266-mac-address-arduino/ https://github.com/justcallmekoko/ESP32Marauder/issues/418
+      int n = WiFi.scanNetworks(true);
       Serial.print("Command sent to remote device :  "); Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
-          
+                
       rssi = info.wifi_ap_probereqrecved.rssi;         
       voltage = info.wifi_ap_probereqrecved.mac[1];
       voltage = voltage * 2 / 100;
@@ -378,7 +376,7 @@ void loop()
         
   mqtt.subscribe("command", [](const char * payload) {if (payload && strlen(payload)) {Serial.println(payload);Serial.printf("Received message in topic 'command' & message is:- %s\n", payload); 
      
-  auto result = sscanf(payload, R"(["%10[^"]","%10[^"]","%u","%u","%u","%u","%u","%u"])", &ssid, &password, &receivedCommand[0], &receivedCommand[1], &receivedCommand[2], &receivedCommand[3], &receivedCommand[4], &receivedCommand[5]);
+  auto result = sscanf(payload, R"(["%u","%u","%u","%u","%u","%u",%10[^"]","%10[^"]"])", &receivedCommand[0], &receivedCommand[1], &receivedCommand[2], &receivedCommand[3], &receivedCommand[4], &receivedCommand[5], &ssid, &password);
   
   Serial.println(receivedCommand[0]);Serial.println(receivedCommand[1]);Serial.println(receivedCommand[2]);Serial.println(receivedCommand[3]);Serial.println(receivedCommand[4]);Serial.println(receivedCommand[5]);Serial.println(ssid.c_str());Serial.println(password.c_str()); 
 }
