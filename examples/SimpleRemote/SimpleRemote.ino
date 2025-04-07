@@ -50,7 +50,7 @@ void setup() {
   
   Serial.begin(115200);
   
-  Serial.print("Sensors values data sent to controller: ");Serial.println(WiFi.macAddress());
+  Serial.print("Sensor values sent to gateway: ");Serial.println(WiFi.macAddress());
   
   delay(10);  // Minimum 10 milliseonds delay required to reliably receive message from Gateway.
      
@@ -58,9 +58,6 @@ void setup() {
   WiFi.mode(WIFI_OFF); // WiFi transmit & receive work finished so turn it off to save power.
   esp_wifi_stop();     // WiFi transmit & receive work finished so turn it off to save power.
 
-  lastmillis = millis()-lastmillis;
-  Serial.println();Serial.print("Transmit & receive Time (Milliseconds):     ");Serial.println(lastmillis);    
-   
   Serial.println("Contents of EEPROM for this device below: ");
   EEPROM.readBytes(0, showConfig,19);for(int i=0;i<19;i++){ 
   Serial.printf("%d ", showConfig[i]);}
@@ -147,11 +144,11 @@ void setup() {
     
     Serial.println("Resending sensor values..."); 
     
-    ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
+   // ESP.restart();   // Seems like gateway did not receive sensor values let's try again.
   }
 
    lastmillis = millis()-lastmillis;
-   Serial.println();Serial.print("Transmit & receive Time (Milliseconds):     ");Serial.println(lastmillis);    
+   Serial.println();Serial.print("Setup function complted  (Milliseconds):     ");Serial.println(lastmillis);    
     
 }  // Setup ends here
 
@@ -171,7 +168,7 @@ void loop() {
    //esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);             // see https://esp32.com/viewtopic.php?t=9681
    //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);    // see https://esp32.com/viewtopic.php?t=9681
    //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);       // see https://esp32.com/viewtopic.php?t=9681
-  esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 6000000);            // 60000000 for 1 minute.
+  esp_sleep_enable_timer_wakeup(EEPROM.readByte(16) * 10000000);            // 60000000 for 1 minute.
   esp_deep_sleep_start();
 }     
 //=========================Main Loop ends==========================
@@ -186,7 +183,7 @@ void sensorValues()
   sensorData[5] = random(0,100);         // Sensor 4
   
   esp_err_t err = esp_wifi_set_mac(WIFI_IF_STA, &sensorData[0]);  //https://randomnerdtutorials.com/get-change-esp32-esp8266-mac-address-arduino/ https://github.com/justcallmekoko/ESP32Marauder/issues/418
-   Serial.println(); Serial.print("Probe request sent: "); 
+/*   Serial.println(); Serial.print("Probe request sent: "); 
    uint8_t baseMac[6];
    esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
   if (ret == ESP_OK) {
@@ -194,7 +191,7 @@ void sensorValues()
                   baseMac[0], baseMac[1], baseMac[2],
                   baseMac[3], baseMac[4], baseMac[5]);
   } 
-  
+  */
   //Functions for all sensors used on this device goes here.
   //Values received from sensors replaces 4 random values of sensorData array.
 }
