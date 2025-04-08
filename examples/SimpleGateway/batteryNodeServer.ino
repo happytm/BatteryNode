@@ -1,3 +1,4 @@
+
 #define FIRSTTIME  false  // Define true if setting up Gateway for first time.
 
 #include <WiFi.h>
@@ -20,7 +21,7 @@ struct tm timeinfo;
 //========================================================================================================================//
 //              USER-SPECIFIED VARIABLES                                                                                  //
 //========================================================================================================================//
-const char* apSSID = "ESP"; const char* apPassword = ""; const int apChannel = 7; const int hidden = 0;                   // If hidden is 0 change show hidden to true in remote code.
+const char* apSSID = "ESP"; const char* apPassword = ""; const int apChannel = 6; const int hidden = 0;                   // If hidden is 0 change show hidden to true in remote code.
 
 String dataFile = "/data.json";       // File to store sensor data.
 
@@ -253,12 +254,15 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
   Serial.println();
   Serial.print("Probe Received :  ");for (int i = 0; i < 6; i++) {Serial.printf("%02X", info.wifi_ap_probereqrecved.mac[i]);if (i < 5)Serial.print(":");}Serial.println();
   Serial.print("Connect at IP: ");Serial.print(WiFi.localIP()); Serial.println(" to monitor and control whole network");
-  // Allow data from device ID ending in number 6 and voltage value between 2.4V and 3.6V.
-  for (int i = 6; i < 256; i = i+10) if (info.wifi_ap_probereqrecved.mac[0] == i && (info.wifi_ap_probereqrecved.mac[1] > 120 || info.wifi_ap_probereqrecved.mac[1] < 180))
-   {
-    // This helps reduce interference from unknown devices from far away with weak signals.
-    if (info.wifi_ap_probereqrecved.rssi > -70)  
+  
+  // Allow data from device ID ending in number 6, voltage value between 2.4V and 3.6V. and signal is stonger than -70.
+  for (int i = 6; i < 256; i = i+10) if (info.wifi_ap_probereqrecved.mac[0] == i )
+  {
+    if (info.wifi_ap_probereqrecved.mac[1] > 120 && info.wifi_ap_probereqrecved.mac[1] < 180)
     {
+      // This helps reduce interference from unknown devices from far away with weak signals.
+      if (info.wifi_ap_probereqrecved.rssi > -70)  
+      {
       
       device = info.wifi_ap_probereqrecved.mac[0];
       Serial.println("Contents of command data saved in EEPROM for this device: "); EEPROM.readBytes(0, showConfig,256);for(int i=0;i<10;i++){Serial.printf("%d ", showConfig[i+device]);}
@@ -268,11 +272,11 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+6]; // Assign sensor types to the particular device.
                     
       timeSynch();
-      if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 107; mac[2] = apChannel; timeSynch();}
+      //if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 107; mac[2] = apChannel; timeSynch();}
                      
       esp_err_t err = esp_wifi_set_mac(WIFI_IF_AP, &mac[0]);  //https://randomnerdtutorials.com/get-change-esp32-esp8266-mac-address-arduino/ https://github.com/justcallmekoko/ESP32Marauder/issues/418
-      int n = WiFi.scanNetworks(true);
-      Serial.print("Command sent to remote device :  "); Serial.print(mac[0]);Serial.print("/");Serial.print(mac[1]);Serial.print("/");Serial.print(mac[2]);Serial.print("/");Serial.print(mac[3]);Serial.print("/");Serial.print(mac[4]);Serial.print("/");Serial.print(mac[5]);Serial.println("/");        
+      Serial.print("Command sent to remote device: "); Serial.println(WiFi.macAddress());
+      Serial.print("Command sent to remote device :  "); for (int i = 0; i < 6; i++) { Serial.print(mac[i]);} Serial.println();        
                 
       rssi = info.wifi_ap_probereqrecved.rssi;         
       voltage = info.wifi_ap_probereqrecved.mac[1];
@@ -294,11 +298,11 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       f.close(); 
                     
       if (voltage < 2.50) { mqtt.publish("Low battery for device: ", String(device)); }      // if voltage of battery gets to low, print the warning below.
-                 
+      }           
     }
   }    
        // In some cases send command only once.
-       if (mac[1] == 105 || mac[1] == 106 || mac[1] == 108 || mac[1] == 110){for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}}
+       //if (mac[1] == 105 || mac[1] == 106 || mac[1] == 108 || mac[1] == 110){for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}}
 } // End of Proberequest function.
 
 //========================================================================================================================//
