@@ -1,5 +1,5 @@
 
-#define FIRSTTIME  false  // Define true if setting up Gateway for first time.
+#define FIRSTTIME  true  // Define true if setting up Gateway for first time.
 
 #include <WiFi.h>
 #include <esp_wifi.h>
@@ -39,8 +39,7 @@ int device, rssi, sleepTime, lastLevel, sensorValues[4], sensorTypes[4];
 float voltage;
 uint8_t mac[6],receivedCommand[6],showConfig[256];
 const char* ntpServer = "pool.ntp.org";
-unsigned long currentMillis, lastMillis, lastDetected;
-unsigned long epoch; 
+unsigned long epoch, currentMillis, lastMillis, lastDetected;
 
 unsigned long getTime() {time_t now;if (!getLocalTime(&timeinfo)) {Serial.println("Failed to obtain time");return(0);}Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");time(&now);return now;}
 
@@ -238,6 +237,7 @@ const char webpage[] PROGMEM = R"raw(
 </html>
 )raw";
 
+
 //========================================================================================================================//
 //                FUNCTIONS                                                                                               //
 //========================================================================================================================//
@@ -265,24 +265,24 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       {
       
       device = info.wifi_ap_probereqrecved.mac[0];
-      Serial.println("Contents of command data saved in EEPROM for this device: "); EEPROM.readBytes(0, showConfig,256);for(int i=0;i<10;i++){Serial.printf("%d ", showConfig[i+device]);}
+            
       
-      Serial.println();
-      for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device];   // Prepare command to be sent to remote device.
+      for (int i = 0; i < 6; i++) mac[i] = showConfig[i+device];           // Prepare command to be sent to remote device.
       for (int j = 0; j < 4; j++) sensorTypes[j] = showConfig[j+device+6]; // Assign sensor types to the particular device.
-                    
+      Serial.println("Contents of command data saved in EEPROM for this device: "); EEPROM.readBytes(0, showConfig,256);for(int i=0;i<10;i++){Serial.printf("%d ", showConfig[i+device]);} Serial.println();
+             
       timeSynch();
-      //if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 107; mac[2] = apChannel; timeSynch();}
+      if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 107; mac[2] = apChannel; timeSynch();}
                      
       esp_err_t err = esp_wifi_set_mac(WIFI_IF_AP, &mac[0]);  //https://randomnerdtutorials.com/get-change-esp32-esp8266-mac-address-arduino/ https://github.com/justcallmekoko/ESP32Marauder/issues/418
-      Serial.print("Command sent to remote device: "); Serial.println(WiFi.macAddress());
-      Serial.print("Command sent to remote device :  "); for (int i = 0; i < 6; i++) { Serial.print(mac[i]);} Serial.println();        
+      Serial.print("Command HEX sent to remote device: "); Serial.println(WiFi.macAddress());
+      Serial.print("Command DEC sent to remote device :  "); for (int i = 0; i < 6; i++) { Serial.print(mac[i]);} Serial.println();        
                 
       rssi = info.wifi_ap_probereqrecved.rssi;         
       voltage = info.wifi_ap_probereqrecved.mac[1];
       voltage = voltage * 2 / 100;
       sensorValues[0] = info.wifi_ap_probereqrecved.mac[2];sensorValues[1] = info.wifi_ap_probereqrecved.mac[3];sensorValues[2] = info.wifi_ap_probereqrecved.mac[4];sensorValues[3] = info.wifi_ap_probereqrecved.mac[5];
-           
+            
       sprintf (str, "{");sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);sprintf (s, "}"); strcat (str, s);
                     
       Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);
@@ -300,9 +300,9 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       if (voltage < 2.50) { mqtt.publish("Low battery for device: ", String(device)); }      // if voltage of battery gets to low, print the warning below.
       }           
     }
-  }    
+  }     
        // In some cases send command only once.
-       //if (mac[1] == 105 || mac[1] == 106 || mac[1] == 108 || mac[1] == 110){for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}}
+       if (mac[1] == 105 || mac[1] == 106 || mac[1] == 108 || mac[1] == 110){for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);EEPROM.commit();}}
 } // End of Proberequest function.
 
 //========================================================================================================================//
@@ -349,13 +349,14 @@ void setup(){
   if (WiFi.SSID(0) == ssid && WiFi.encryptionType(0) == WIFI_AUTH_OPEN) {WiFi.begin(ssid.c_str(), password.c_str());}
   
   mqtt.begin();
-    
   server.on("/", []() {server.send(200, "text/html", webpage);});
+  
   server.onNotFound(handleNotFound);
   server.begin();
   
   configTime(0, 0, ntpServer); setenv("TZ", MY_TZ, 1); tzset(); // Set environment variable with your time zone
   epoch = getTime(); Serial.print("Epoch Time: "); Serial.println(epoch); delay(500);
+
 
   WiFi.onEvent(probeRequest,WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED);
   Serial.print("Waiting for probe requests ... ");
@@ -388,7 +389,7 @@ void loop()
       { for (int i = 0; i < 4; i++) {uint8_t tempSensortypes[4]; tempSensortypes[i] = receivedCommand[i+2]; EEPROM.writeBytes(receivedCommand[0]+6, tempSensortypes,4);}
 
       } else if (receivedCommand[1] >= 101 && receivedCommand[1] <= 120) // Set everything else on devices based on command received from website or mqtt client.
-      {for (int i = 0; i < 6; i++){ uint8_t tempCommand[6]; tempCommand[i] = receivedCommand[i];EEPROM.writeBytes(receivedCommand[0], tempCommand,6);}}
+      {for (int i = 0; i < 6; i++){ EEPROM.writeBytes(receivedCommand[0], receivedCommand,6);}}
 
       EEPROM.commit();Serial.println();Serial.println("Command or sensor types saved to EEPROM.");
       EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
