@@ -1,6 +1,3 @@
-
-#define FIRSTTIME  true  // Define true if setting up Gateway for first time.
-
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <EEPROM.h>
@@ -275,8 +272,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       if (mac[1] == 0 || mac[1] == 255) {mac[0] = device; mac[1] = 107; mac[2] = apChannel; timeSynch();}
                      
       esp_err_t err = esp_wifi_set_mac(WIFI_IF_AP, &mac[0]);  //https://randomnerdtutorials.com/get-change-esp32-esp8266-mac-address-arduino/ https://github.com/justcallmekoko/ESP32Marauder/issues/418
-      Serial.print("Command HEX sent to remote device: "); Serial.println(WiFi.macAddress());
-      Serial.print("Command DEC sent to remote device :  "); for (int i = 0; i < 6; i++) { Serial.print(mac[i]);} Serial.println();        
+      Serial.print("Command sent to remote device :  "); for (int i = 0; i < 6; i++) { Serial.print(mac[i]);} Serial.println();        
                 
       rssi = info.wifi_ap_probereqrecved.rssi;         
       voltage = info.wifi_ap_probereqrecved.mac[1];
@@ -316,13 +312,13 @@ void setup(){
   EEPROM.begin(512);
   SPIFFS.begin();
   
-#if FIRSTTIME  
+  EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
+  
+  if (showConfig[0] == 0 || showConfig[0] == 255){
   // Setup device numbers and wifi Channel for remote devices in EEPROM permanantly.
   for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i, i);EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);}
   EEPROM.writeByte(0, apChannel);EEPROM.commit();
-#endif  
-  
-  EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
+  }
   
   motionDetector_init();  // initializes the storage arrays in internal RAM
   motionDetector_config(64, 16, 3, 3, true);  // (samplesize,filter size,trigger threshold,variance samples,autoregressive filter) 
