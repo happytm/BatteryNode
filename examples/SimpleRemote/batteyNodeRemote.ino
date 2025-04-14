@@ -1,7 +1,5 @@
 // 45 ms transmit & receive time and 82 ms total uptime required in two way mode.Confirm and try to reduce this time.
 
-#define FIRSTTIME  false        // Define true if setting up remote device for first time.
-
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <HTTPClient.h>
@@ -32,10 +30,13 @@ void setup() {
 
   EEPROM.begin(25);
   
-#if FIRSTTIME  
-  // Setup device ID,  AP wifi Channel, device mode and sleep time in minutes for remote device in EEPROM permanantly.
+  EEPROM.readBytes(0, showConfig,20);for(int i=0;i<20;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
+  
+  if (showConfig[0] == 0 || showConfig[0] == 255){
+ // Setup device ID,  AP wifi Channel, device mode and sleep time in minutes for remote device in EEPROM permanantly.
   EEPROM.writeByte(0, 246); EEPROM.writeByte(16, 6); EEPROM.writeByte(17, 0); EEPROM.writeByte(18, 1); EEPROM.commit(); apChannel = EEPROM.readByte(16);
-#endif 
+  EEPROM.commit();
+  }
   
   WiFi.mode(WIFI_STA);
   
