@@ -1,4 +1,4 @@
-// 45 ms transmit & receive time and 82 ms total uptime required in two way mode.Confirm and try to reduce this time.
+// 45 ms transmit & receive time and 110 ms total uptime required in two way mode.Confirm and try to reduce this time.
 
 #include <WiFi.h>
 #include <esp_wifi.h>
@@ -7,14 +7,13 @@
 #include <EEPROM.h>
 //#include "driver/adc.h"
 
-
 const char* ssid = "ESP";
 const char* password = "";
-int apChannel = 6;          // AP WiFi channel
+int apChannel = 6;              // AP WiFi channel
 //==================User configuration generally not required below this line ================================================
 
 String binFile = "http://192.168.4.1/device_246.bin";
-
+int rssi;
 int Hour;               // Hour received from Gateway. More reliable source than internal RTC of local device
 int Minute;             // Minute received from Gateway. More reliable source than internal RTC of local device.
 
@@ -46,13 +45,13 @@ void setup() {
   sensorValues();
   startWiFiScan();
   
-  delay(10);  // ***Very Important***  Minimum 10 milliseonds delay required to reliably receive message from Gateway.
+  delay(10);                // ***Very Important***  Minimum 10 milliseonds delay required to reliably receive message from Gateway.
    
   Serial.print("Sensor values sent to gateway: ");Serial.println(WiFi.macAddress());
-
+  
      //adc_power_off();     // ADC work finished so turn it off to save power.
-  WiFi.mode(WIFI_OFF); // WiFi transmit & receive work finished so turn it off to save power.
-  esp_wifi_stop();     // WiFi transmit & receive work finished so turn it off to save power.
+  WiFi.mode(WIFI_OFF);      // WiFi transmit & receive work finished so turn it off to save power.
+  esp_wifi_stop();          // WiFi transmit & receive work finished so turn it off to save power.
    
   lastmillis = millis()-lastmillis;
   Serial.print("Setup function complted in(ms):  ");Serial.println(lastmillis);    
@@ -64,11 +63,11 @@ void setup() {
 void loop() {
   
   if ( WiFi.scanComplete() > 0) { printScannedNetworks(WiFi.scanComplete()); startWiFiScan(); } 
- 
+  
   Serial.print("I will wakeup in: ");
   Serial.print(EEPROM.readByte(18));   // Sleeptime in minutes.
-  
   Serial.println(" Minutes");
+ 
   int upTime = (millis());  
   Serial.print("Total time I spent before going to sleep: ");
   Serial.println(upTime);
@@ -79,26 +78,31 @@ void loop() {
    //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);    // see https://esp32.com/viewtopic.php?t=9681
    //esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);       // see https://esp32.com/viewtopic.php?t=9681
  
-  esp_sleep_enable_timer_wakeup(EEPROM.readByte(18) * 10000000);            // 60000000 for 1 minute.
+  esp_sleep_enable_timer_wakeup(EEPROM.readByte(18) * 1000000);            // 60000000 for 1 minute.
   esp_deep_sleep_start();
  
   delay(500);
 }     
 //=========================Main Loop ends==========================
 
-void startWiFiScan() { WiFi.scanNetworks(true, false, false, 5, apChannel, ssid);}   // (async, show_hidden, passive, max_ms_per_chan, Target_Channel, ssid)
+void startWiFiScan() { WiFi.scanNetworks(true, false, false, 5, apChannel, ssid); }   // (async, show_hidden, passive, max_ms_per_chan, Target_Channel, ssid)
 
 void printScannedNetworks(uint16_t networksFound) {
       
     Serial.print("Command received from Gateway: ");Serial.println(&WiFi.BSSIDstr(0)[0]);
     Serial.print(networksFound);
     Serial.println(" probeResponse received. ");
+    rssi = WiFi.RSSI(0);
+    Serial.print("RSSI: ");
+    Serial.println(rssi);
     for (int i = 0; i < networksFound ; ++i) { for (int j = 0; j < 6; j++) {
     command[j] = WiFi.BSSID(i)[j];}}
 
+    
+
     EEPROM.writeByte(1, command[1]);EEPROM.commit();   // Save command type at EEPROM address 1. 
     
-    Serial.println("Contents of EEPROM for this device below: ");
+    //Serial.println("Contents of EEPROM for this device below: ");
     EEPROM.readBytes(0, showConfig,20);for(int i=0;i<20;i++){Serial.printf("%d ", showConfig[i]);}
       
       if ( EEPROM.readByte(1) > 100 && EEPROM.readByte(1) < 121)  {   // If commandType is 101 to 120.
@@ -218,7 +222,7 @@ void synchTime(){
     Hour = command[4];     // New hour value received from Gateway.
     Minute = command[5];   // New minute value received from Gateway.
   }
-  Serial.print("Time received from Gateway: ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
+  Serial.println();Serial.print("Time received from Gateway: ");Serial.print(Hour); Serial.print(":"); Serial.println(Minute);
 }
 
 
