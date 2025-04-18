@@ -3,32 +3,31 @@
 #include <EEPROM.h>
 #include "FS.h"
 #include <SPIFFS.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #include <PicoMQTT.h>
 #include <PicoWebsocket.h>
-#include <WebServer.h>
-#include <motionDetector.h> // Manually install this library from https://github.com/happytm/MotionDetector/tree/main/motionDetector
+//#include <motionDetector.h> // Manually install this library from https://github.com/happytm/MotionDetector/tree/main/motionDetector
 #include "time.h"
 
-WebServer server(80);WiFiServer websocket_underlying_server(81);WiFiServer tcp_server(1883);
+AsyncWebServer server(80);WiFiServer websocket_underlying_server(81);WiFiServer tcp_server(1883);
 PicoWebsocket::Server<::WiFiServer> websocket_server(websocket_underlying_server);PicoMQTT::Server mqtt(tcp_server, websocket_server);
-
-struct tm timeinfo;
-#define MY_TZ "EST5EDT,M3.2.0,M11.1.0" //(New York) https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
 
 //========================================================================================================================//
 //              USER-SPECIFIED VARIABLES                                                                                  //
 //========================================================================================================================//
-const char* apSSID = "ESP"; const char* apPassword = ""; const int apChannel = 6; const int hidden = 0;                   // If hidden is 0 change show hidden to true in remote code.
 
-String dataFile = "/data.json";       // File to store sensor data.
-
-int enableAlarm = 1;             // Enable/Disable alarm.
-int motionTrigger = 10;          // Adjust alarm trigger lower the number more sensetive alarm is
-int enableCSVgraphOutput = 1;    // 0 disable, 1 enable // if enabled, you may use Tools-> Serial Plotter to plot the variance output for each transmitter. 
-int scanInterval = 5000;          // in milliseconds
-int motionLevel = RADAR_BOOTING; // initial value = -1, any values < 0 are errors, see motionDetector.h , ERROR LEVELS sections for details on how to intepret any errors.
+int sensitivity = 30;  // Adujust sensitivity of motion sensor.
+int sampleBufSize = 64, AvgSize = 32, varThreshold = 3, varIntegratorLimit = 3; // Tweak according to requirement.
 
 //==================User configuration not required below this line =============================================
+
+struct tm timeinfo;
+#define MY_TZ "EST5EDT,M3.2.0,M11.1.0" //(New York) https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
+
+const char* apSSID = "ESP"; const char* apPassword = ""; const int apChannel = 6; const int hidden = 0;                   // If hidden is 0 change show hidden to true in remote code.
+
+String dataFile = "/data.json";  // File to store sensor data.
 
 char str [256], s [70];
 String ssid,password, graphData, Hour, Minute;
@@ -40,206 +39,42 @@ unsigned long epoch, currentMillis, lastMillis, lastDetected;
 
 unsigned long getTime() {time_t now;if (!getLocalTime(&timeinfo)) {Serial.println("Failed to obtain time");return(0);}Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");time(&now);return now;}
 
-//========================================================================================================================//
-//              WebPage                                                                                                   //
-//========================================================================================================================//
+// ==== MOTION DETECTOR SETTINGS ====
+#define MAX_sampleSize 256
+#define MAX_AVERAGEBUFFERSIZE 64
+#define MAX_VARIANCE 65535
+#define ABSOLUTE_RSSI_LIMIT -100
 
-const char webpage[] PROGMEM = R"raw(
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MQTT.js Websocket Example</title>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js" type="text/javascript"></script>
-</head>
+int *sampleBuffer = nullptr, *averageBuffer = nullptr, *varianceBuffer = nullptr;
 
-<body>
-
-<script type="text/javascript">
-        
-        const clientId = 'MQTTJS CONNECTED' 
-        const host = 'ws://' + location.host + ':81';
-        const options = {keepalive: 60,clientId: clientId,protocolId: 'MQTT',protocolVersion: 4,clean: true,reconnectPeriod: 1000,connectTimeout: 30 * 1000,}
-        console.log('Connecting mqtt client');
-        const client = mqtt.connect(host, options)
-        client.on('error', (err) => {console.log('Connection error: ', err) 
-        client.end()})
-        client.on('reconnect', () => {console.log('Reconnecting...')})
-        client.on('connect', () => {console.log(`${clientId}`) 
-        client.subscribe('#', { qos: 0 })})
-        client.on('message', (topic, message, packet) => {
-        console.log(`Received Message:- ${message.toString()} in topic:- ${topic}`) })
-
-        var attachEvent = function(node, event, listener, useCapture) {
-       // Method for FF, Opera, Chrome, Safari
-        if ( window.addEventListener ) {
-        node.addEventListener(event, listener, useCapture || false);
-        }
-       // IE has its own method
-       else {
-       node.attachEvent('on'+event, listener);
-       }
-     };
-
-      // Once the window loads and the DOM is ready, attach the event to the main
-      attachEvent(window, "load", function() {
-      var select_command = document.getElementById("command");
-
-      var selectHandler = function() {
-      option1 = document.getElementById("device"),
-      option2 = document.getElementById("command1");
-      option3 = document.getElementById("command2");
-      option4 = document.getElementById("command3");
-      option5 = document.getElementById("command4");
-      
-      // Show and hide the appropriate select's
-      if (this.value == "105" || this.value == "106" || this.value == "121") {
-       
-      option1.style.display = "";
-      option2.style.display = "";
-      option3.style.display = "";
-      option4.style.display = "";
-      option5.style.display = "";
-       
-      } else if (this.value == "103" || this.value == "104" || this.value == "107" || this.value == "108" || this.value == "109"|| this.value == "110" ) {
-       
-      option1.style.display = "";
-      option2.style.display = "";
-      option3.style.display = "none";
-      option4.style.display = "none";
-      option5.style.display = "none";
-       
-      } else if (this.value == "101" || this.value == "102") {
-       
-      option1.style.display = "";
-      option2.style.display = "";
-      option3.style.display = "";
-      option4.style.display = "none";
-      option5.style.display = "none";
-     } 
-  };
-  
-       // Use the onchange and onkeypress events to detect when the 
-       // value of select_command has changed
-       attachEvent(select_command, "change", selectHandler);
-       attachEvent(select_command, "keypress", selectHandler);
-       });
- 
-</script>
-
-<h3>Send Command to ESP32 Gateway Server</h3>
-
-<section class="command">
-<form id="formElem">
-  
-  
-  <SELECT class="combine" id ="device" name = "Device">
-    
-    <option value="">Select Device</option>
-    <option value="246">New Device(246)</option>
-    <option value="256">Gateway(256)</option>
-    <option value="6">Livingroom(6)</option>
-    <option value="16">Kitchen(16)</option>
-    <option value="26">Bedroom1(26)</option>
-    <option value="36">Bedroom2(36)</option>
-    <option value="46">Bedroom3(46)</option>
-    <option value="56">Bedroom4(56)</option>
-    <option value="66">Bathroom1(66)</option>
-    <option value="76">Bathroom2(76)</option>
-    <option value="86">Bathroom3(86)</option>
-    <option value="96">Bathroom4(96)</option>
-    <option value="106">Laundry(106)</option>
-    <option value="116">Boiler(116)</option>
-    <option value="126">Workshop(126)</option>
-    <option value="136">Garage(136)</option>
-    <option value="146">Office(146)</option>
-    <option value="156">WaterTank(156)</option>
-    <option value="166">SolarTracker(166)</option>
-    <option value="176">WeatherStation(176)</option>
-    <option value="186">Greenhouse(186)</option>
-</SELECT>
-
-<SELECT class="combine" id ="command" name = "Command">
-    <option value="">Select Command Type</option>
-    <option value="101">Digital Write(101)</option>
-    <option value="102">Analog Write(102)</option>
-    <option value="103">Digital Read(103)</option>
-    <option value="104">Analog Read(104)</option>
-    <option value="105">Neopixel(105)</option>
-    <option value="106">Set Target Values(106)</option>
-    <option value="107">Set AP Channel(107)</option>
-    <option value="108">Set Device Mode(108)</option>
-    <option value="109">Set Sleep Time(109)</option>
-    <option value="110">Set Device ID(110)</option>
-    <option value="121">Set Sensor Types(121)</option>
-</SELECT>
-
-<input id="command1" name="command1" type="number" size="4" min="0" max="250">   
-<input id="command2" name="command2" type="number" size="4" min="0" max="250">
-<input id="command3" name="command3" type="number" size="4" min="0" max="250">
-<input id="command4" name="command4" type="number" size="4" min="0" max="250">  
-<br><br>
-<input name="SSID" type="text" size="12" placeholder="SSID"/>
-  <input name="Password" type="password" size="12" placeholder="Password"/>
-  <button type="submit">Send Command</button>
-  <br>
-
-</form>
-</section>
-
-<div class="results">
-  <p>Command Sent via MQTT:</p>
-  <pre></pre>
-</div>
-
-<div style="border: 1px solid #FFFFFF; overflow: hidden; margin-left: 5px; max-width: 820px;">  
-<textarea rows="10" cols="75" id="Console" value="" spellcheck="false"  readonly="true" style="font-size:16px;line-height: 1em;">
-</textarea>
-</div>
-
-<script>     
-  // Process command via MQTT
-  // https://codetv.dev/blog/get-form-values-as-json#get-multi-select-values-like-checkboxes-as-json-with-the-formdata-api
-  function handleFormSubmit(event) {
-  event.preventDefault();
-  
-  const data = new FormData(event.target);
-  const formJSON = Object.fromEntries(data.entries());
-  const results = document.querySelector('.results pre');
-  results.innerText = JSON.stringify(formJSON, null, 2);
-   
-  // Publish a message
-  var values = Object.keys(formJSON).map(function (key) { return formJSON[key]; });
-  
-  console.log(values);
-  client.publish('command', JSON.stringify(values))
-}
-
-  const form = document.querySelector('.command');
-  form.addEventListener('submit', handleFormSubmit);
-
-</script> 
-
-<script>
- const consoleOutput = document.getElementById("Console") 
- const originalConsoleLog = console.log;
- 
-      console.log = function() {
-      let message = Array.from(arguments).join(' ');
-      consoleOutput.innerHTML += `${message}`;
-      originalConsoleLog.apply(console, arguments); // Keep the original console.log functionality
-    };
-</script>
-
-</body>
-</html>
-)raw";
-
+int sampleSize = MAX_sampleSize;
+int averageFilterSize = MAX_sampleSize;
+int averageBufferSize = MAX_AVERAGEBUFFERSIZE;
+int average = 0;
+int averageTemp = 0;
+int sampleBufferIndex = 0;
+int sampleBufferValid = 0;
+int averageBufferIndex = 0;
+int averageBufferValid = 0;
+int variance = 0;
+int variancePrev = 0;
+int varianceSample = 0;
+int varianceAR = 0;
+int varianceIntegral = 0;
+int varianceThreshold = 3;
+int varianceIntegratorLimitMax = MAX_sampleSize;
+int varianceIntegratorLimit = 3;
+int varianceBufferSize = MAX_sampleSize;
+int detectionLevel = 0;
+int varianceBufferIndex = 0;
+int varianceBufferValid = 0;
+int enableCSVout = 0;
+int minimumRSSI = ABSOLUTE_RSSI_LIMIT;
 
 //========================================================================================================================//
 //                FUNCTIONS                                                                                               //
 //========================================================================================================================//
 
-void handleNotFound() {String message = "File Not Found\n\n";message += "URI: ";message += server.uri();message += "\nMethod: ";message += (server.method() == HTTP_GET) ? "GET" : "POST";message += "\nArguments: ";message += server.args();message += "\n";for (uint8_t i = 0; i < server.args(); i++) {message += " " + server.argName(i) + ": " + server.arg(i) + "\n";}server.send(404, "text/plain", message);log_i("reply: %s", message.c_str());}
 
 // Had to move all functions above setup function to compile the sketch successfully.
 // See: https://forum.arduino.cc/t/exit-status-1-was-not-declared-in-this-scope-error-message/632717
@@ -279,7 +114,7 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
       voltage = voltage * 2 / 100;
       sensorValues[0] = info.wifi_ap_probereqrecved.mac[2];sensorValues[1] = info.wifi_ap_probereqrecved.mac[3];sensorValues[2] = info.wifi_ap_probereqrecved.mac[4];sensorValues[3] = info.wifi_ap_probereqrecved.mac[5];
             
-      sprintf (str, "{");sprintf (s, "\"%s\":\"%i\"", "Location", device);    strcat (str, s);sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);    strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);sprintf (s, "}"); strcat (str, s);
+      sprintf (str, "{");sprintf (s, "\"%s\":\"%i\"", "Location", device);strcat (str, s);sprintf (s, ",\"%s\":\"%.2f\"", "Voltage", voltage);strcat (str, s);sprintf (s, ",\"%s\":\"%i\"", "RSSI", rssi);strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[0], sensorValues[0]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[1], sensorValues[1]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[2], sensorValues[2]); strcat (str, s);sprintf (s, ",\"%i\":\"%i\"", sensorTypes[3], sensorValues[3]); strcat (str, s);sprintf (s, "}"); strcat (str, s);
                     
       Serial.println("Following ## Sensor Values ## receiced from remote device  & published via MQTT: ");Serial.println(str);
       
@@ -301,6 +136,13 @@ void probeRequest(WiFiEvent_t event, WiFiEventInfo_t info)
        if (mac[1] == 105 || mac[1] == 106 || mac[1] == 108 || mac[1] == 110){for (int i = 6; i < 256; i = i+10) {EEPROM.writeByte(i+1, 107);EEPROM.writeByte(i+2, apChannel);EEPROM.commit();}}
 } // End of Proberequest function.
 
+
+int motionSensor(int sample) {sampleBuffer[sampleBufferIndex++] = sample; if (sampleBufferIndex >= sampleSize) {sampleBufferIndex = 0; sampleBufferValid = 1;} if (sampleBufferValid) {averageTemp = 0; for (int i = 0; i < averageFilterSize; i++) {int idx = sampleBufferIndex - i; if (idx < 0) idx += sampleSize; averageTemp += sampleBuffer[idx];} average = averageTemp / averageFilterSize; averageBuffer[averageBufferIndex++] = average; if (averageBufferIndex >= averageBufferSize) {averageBufferIndex = 0; averageBufferValid = 1;} varianceSample = (sample - average)*(sample - average); varianceBuffer[varianceBufferIndex++] = varianceSample; if (varianceBufferIndex >= sampleSize) { varianceBufferIndex = 0; varianceBufferValid = 1;} varianceIntegral = 0; for (int i = 0; i < varianceIntegratorLimit; i++) {int idx = varianceBufferIndex - i; if (idx < 0) idx += sampleSize; varianceIntegral += varianceBuffer[idx];} variance = varianceIntegral;}
+
+  return variance;
+} // End of motion sensor function.
+
+
 //========================================================================================================================//
 //                 SETUP                                                                                                  //
 //========================================================================================================================//
@@ -320,16 +162,18 @@ void setup(){
   EEPROM.writeByte(0, apChannel);EEPROM.commit();
   }
   
-  motionDetector_init();  // initializes the storage arrays in internal RAM
-  motionDetector_config(64, 16, 3, 3, true);  // (samplesize,filter size,trigger threshold,variance samples,autoregressive filter) 
-    
-  if (enableCSVgraphOutput > 0) {      // USE THE Tools->Serial Plotter to graph the live data!
-      motionDetector_enable_serial_CSV_graph_data(enableCSVgraphOutput); // output CSV data only
-  }
+  //=============Setup motion sensor===================================================================================================// 
+  if (sampleBufSize > MAX_sampleSize) { sampleBufSize = MAX_sampleSize; } sampleSize = sampleBufSize; varianceBufferSize = sampleBufSize;
+  if (AvgSize > MAX_sampleSize) { AvgSize = MAX_sampleSize; } averageFilterSize = AvgSize;
+  if (varThreshold > MAX_VARIANCE) { varThreshold = MAX_VARIANCE; } varianceThreshold = varThreshold;
+  if (varIntegratorLimit > varianceIntegratorLimitMax) { varIntegratorLimit = varianceIntegratorLimitMax; } varianceIntegratorLimit = varIntegratorLimit;
+  
+  // Allocate memory based on config
+  sampleBuffer = (int*)malloc(sizeof(int) * sampleSize); for (int i = 0; i < sampleSize; i++) sampleBuffer[i] = 0;
+  averageBuffer = (int*)malloc(sizeof(int) * averageBufferSize); for (int i = 0; i < averageBufferSize; i++) averageBuffer[i] = 0;
+  varianceBuffer = (int*)malloc(sizeof(int) * varianceBufferSize); for (int i = 0; i < varianceBufferSize; i++) varianceBuffer[i] = 0;
+ //=====================================================================================================================================//
 
-  if (enableAlarm > 0) {      
-      motionDetector_set_alarm_threshold(enableAlarm); // Enable/Disable alarm.
-  }
   Serial.setTimeout(100);
   WiFi.mode(WIFI_AP_STA);
   
@@ -338,16 +182,32 @@ void setup(){
   Serial.print("AP started with SSID: ");Serial.println(apSSID);
 
   int n = WiFi.scanNetworks();
-  int strongestRSSI = -100;
+  int strongestRSSI = -80;
   
   for (int i = 0; i < n; i++) {if (WiFi.RSSI(i) > strongestRSSI) {strongestRSSI = WiFi.RSSI(i); ssid = WiFi.SSID(i);}}
 
   if (WiFi.SSID(0) == ssid && WiFi.encryptionType(0) == WIFI_AUTH_OPEN) {WiFi.begin(ssid.c_str(), password.c_str());}
   
   mqtt.begin();
-  server.on("/", []() {server.send(200, "text/html", webpage);});
-  
-  server.onNotFound(handleNotFound);
+  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+/*  
+  server.on("/data.json", HTTP_GET, [](AsyncWebServerRequest *request){
+    int rssi = WiFi.RSSI();
+    int val = motionDetector_process(rssi);
+    String json = "{";
+    json += "\"rssi\":" + String(rssi) + ", ";
+    json += "\"variance\":" + String(val);
+    json += "}";
+    request->send(200, "application/json", json);
+  });
+
+  server.on("/config.json", HTTP_GET, [](AsyncWebServerRequest *request){
+    String json = "{";
+    json += "\"threshold\":" + String(varianceThreshold) ;
+    json += "}";
+    request->send(200, "application/json", json);
+  });
+*/
   server.begin();
   
   configTime(0, 0, ntpServer); setenv("TZ", MY_TZ, 1); tzset(); // Set environment variable with your time zone
@@ -357,7 +217,7 @@ void setup(){
   WiFi.onEvent(probeRequest,WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED);
   Serial.print("Waiting for probe requests ... ");
  
- } // End of Setup function
+ }  // End of Setup function
 
 //========================================================================================================================//
 //                     LOOP                                                                                               //
@@ -365,33 +225,33 @@ void setup(){
 
 void loop()
 {
-   delay(scanInterval);
+   
    if (WiFi.waitForConnectResult() != WL_CONNECTED) { ESP.restart(); }
    
-   if (motionLevel > motionTrigger) {lastDetected = getTime(); lastLevel = motionLevel; mqtt.publish("Motion", String(motionLevel)); }
-   
-    motionLevel = motionDetector_esp();  // if the connection fails, the radar will automatically try to switch to different operating modes by using ESP32 specific calls. 
-    if (enableCSVgraphOutput == 0) {  // for the graph via serial, we just let the library do the job. 
-      Serial.print("motionLevel: "); Serial.println(motionLevel);
-    }
-        
-  mqtt.subscribe("command", [](const char * payload) {if (payload && strlen(payload)) {Serial.println(payload);Serial.printf("Received message in topic 'command' & message is:- %s\n", payload); 
-     
-  auto result = sscanf(payload, R"(["%u","%u","%u","%u","%u","%u",%10[^"]","%10[^"]"])", &receivedCommand[0], &receivedCommand[1], &receivedCommand[2], &receivedCommand[3], &receivedCommand[4], &receivedCommand[5], &ssid, &password);
+   int rssi = WiFi.RSSI();
+   int motion = motionSensor(rssi); 
+  //Serial.print("RSSI: "); Serial.print(rssi); Serial.print(" -> Detection: "); Serial.println(motion);
   
-  Serial.println(receivedCommand[0]);Serial.println(receivedCommand[1]);Serial.println(receivedCommand[2]);Serial.println(receivedCommand[3]);Serial.println(receivedCommand[4]);Serial.println(receivedCommand[5]);Serial.println(ssid.c_str());Serial.println(password.c_str()); 
-}
+   if (motion > sensitivity) {Serial.print(" Motion level detected: "); Serial.println(motion);}
+   delay(100); // Adjust as needed
+        
+   mqtt.subscribe("command", [](const char * payload) {if (payload && strlen(payload)) {Serial.println(payload);Serial.printf("Received message in topic 'command' & message is:- %s\n", payload); 
+     
+   auto result = sscanf(payload, R"(["%u","%u","%u","%u","%u","%u",%10[^"]","%10[^"]"])", &receivedCommand[0], &receivedCommand[1], &receivedCommand[2], &receivedCommand[3], &receivedCommand[4], &receivedCommand[5], &ssid, &password);
+  
+   Serial.println(receivedCommand[0]);Serial.println(receivedCommand[1]);Serial.println(receivedCommand[2]);Serial.println(receivedCommand[3]);Serial.println(receivedCommand[4]);Serial.println(receivedCommand[5]);Serial.println(ssid.c_str());Serial.println(password.c_str()); 
+    }
       if (receivedCommand[1] == 121) // Set sensor types on devices based on command received from website or mqtt client.
       { for (int i = 0; i < 4; i++) {uint8_t tempSensortypes[4]; tempSensortypes[i] = receivedCommand[i+2]; EEPROM.writeBytes(receivedCommand[0]+6, tempSensortypes,4);}
-
       } else if (receivedCommand[1] >= 101 && receivedCommand[1] <= 120) // Set everything else on devices based on command received from website or mqtt client.
       {for (int i = 0; i < 6; i++){ EEPROM.writeBytes(receivedCommand[0], receivedCommand,6);}}
 
       EEPROM.commit();Serial.println();Serial.println("Command or sensor types saved to EEPROM.");
       EEPROM.readBytes(0, showConfig,256);for(int i=0;i<256;i++){Serial.printf("%d ", showConfig[i]);}Serial.println();
-        });
+      });
   
-        mqtt.loop();
-        server.handleClient();
-        yield(); 
-}//End of loop Function 
+      mqtt.loop();
+   
+      yield();
+       
+}  // End of loop Function 
