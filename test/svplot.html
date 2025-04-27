@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SVPlot Fancy Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f2f5;
+        }
+        #plot {
+            width: 90%;
+            max-width: 800px;
+            height: 400px;
+            margin: 20px auto;
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .controls label {
+            margin: 0 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">SVPlot.js Fancy Demo (Multiple Sensors)</h1>
+    <div class="controls">
+        <label><input type="checkbox" id="sensor1" checked> Sensor 1</label>
+        <label><input type="checkbox" id="sensor2" checked> Sensor 2</label>
+    </div>
+    <div id="plot"></div>
+
+    <script src="SVPlot.js"></script>
+    <script>
+        let plot;
+
+        async function loadCSV(url) {
+            const response = await fetch(url);
+            const text = await response.text();
+            const rows = text.trim().split("\n");
+            const headers = rows[0].split(",");
+            const time = [], sensor1 = [], sensor2 = [];
+            for (const row of rows.slice(1)) {
+                const cols = row.split(",");
+                time.push(parseFloat(cols[0]));
+                sensor1.push(parseFloat(cols[1]));
+                sensor2.push(parseFloat(cols[2]));
+            }
+            return { time, sensor1, sensor2 };
+        }
+
+        async function start() {
+            const data = await loadCSV("data.csv");
+            plot = new SVPlot("plot");
+            plot.addGraph("Sensor 1", data.time, data.sensor1);
+            plot.addGraph("Sensor 2", data.time, data.sensor2);
+
+            document.getElementById('sensor1').addEventListener('change', (e) => {
+                plot.toggleGraph("Sensor 1", e.target.checked);
+            });
+            document.getElementById('sensor2').addEventListener('change', (e) => {
+                plot.toggleGraph("Sensor 2", e.target.checked);
+            });
+        }
+
+        start();
+    </script>
+</body>
+</html>
