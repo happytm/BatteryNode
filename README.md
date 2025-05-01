@@ -188,6 +188,14 @@ commands are issued via MQTT payload with topic name "command/" or using dropdow
 - https://ayushsharma82.github.io/file2raw/      
 - https://gchq.github.io/CyberChef/#recipe=Gzip('Dynamic%20Huffman%20Coding','index.html.gz','',false)To_Hex('0x',0)Split('0x',',0x')&input=PGh0bWw%2BC
 
+## Ideas worth exploring
+
+- Digital potentiometer using built in LED and photoresister to control diac/triac dimmer or use FL5150 based dimmer.
+- AC-DC power converter using BP2525F.
+- ACS712 for energy measurement.
+- IR wakeup using https://www.vishay.com/docs/80067/appoverview.pdf
+- Battery as a switch for door window sensor.
+
 ## Acknowledgments
 
 This project was possible thanks to creators of following libraries used for this project:
