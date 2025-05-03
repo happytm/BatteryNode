@@ -7,6 +7,68 @@
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.20/dist/uPlot.iife.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/uplot@1.6.20/dist/uPlot.min.css" rel="stylesheet">
+  <style>
+    body { font-family: sans-serif; margin: 1em; background: #f4f4f4; }
+    #chart { margin-top: 1em; background: white; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+    .u-tooltip { font-size: 14px; }
+    @media (max-width: 768px) {
+      #chart { width: 100% !important; height: 300px !important; }
+      .u-tooltip { font-size: 12px !important; }
+    }
+    form.command { margin: 1em 0; background: #fff; padding: 1em; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+
+<h2>ESP32 Sensor Dashboard + Control</h2>
+
+<!-- Command Form -->
+<form class="command" id="formElem">
+    <select id="room" name="Room">
+    <option value="">Select Room</option>
+  </select>
+
+    <select id="command" name="Command">
+    <option value="">Select Command</option>
+    <option value="101">Digital Write</option>
+    <option value="102">Analog Write</option>
+    <option value="103">Digital Read</option>
+    <option value="104">Analog Read</option>
+    <option value="105">Neopixel</option>
+    <option value="106">Set Target Values</option>
+    <option value="107">Set AP Channel</option>
+    <option value="108">Set Room Mode</option>
+    <option value="109">Set Sleep Time</option>
+    <option value="110">Set Room ID</option>
+    <option value="121">Set Sensor Types</option>
+  </select>
+
+  <input id="command1" name="command1" min="0" max="255" type="number" placeholder="Comm1">
+  <input id="command2" name="command2" min="0" max="255" type="number" placeholder="Comm2">
+  <input id="command3" name="command3" min="0" max="255" type="number" placeholder="Comm3">
+  <input id="command4" name="command4" min="0" max="255" type="number" placeholder="Comm4">
+  <br><br>
+  <input name="SSID" type="text" size="12" placeholder="SSID">
+  <input name="Password" type="password" size="12" placeholder="Password">
+  <button type="submit">Send Command</button>
+  
+</form>
+
+<pre class="results"></pre>
+
+<!-- Chart & Controls -->
+
+<div id="chart"></div>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 Sensor Dashboard + Control</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.20/dist/uPlot.iife.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/uplot@1.6.20/dist/uPlot.min.css" rel="stylesheet">
 <style>
   
 body { font-family: sans-serif; margin: 1em; background: #f4f4f4; }
