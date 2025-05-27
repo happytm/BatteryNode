@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 Sensor Dashboard + Control</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.20/dist/uPlot.iife.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/uplot@1.6.20/dist/uPlot.min.css" rel="stylesheet">
+<style>
+  
+body { font-family: sans-serif; margin: 1em; background: #f4f4f4; }
+form.command { margin: 1em 0; background: #f5f5f5; padding: 1em; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+#floorplan-wrapper { display: none; position: relative; max-width: 768px; margin-bottom: 1em; }
+#floorplan { width: 100%; height: auto; display: block; }
+#sensor-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#sensor-map {display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; padding: 10px; }
+#map-tooltip { position: absolute; display: none; z-index: 9999; pointer-events: none; font-size: 14px; background: rgba(255, 249, 196, 0.95); padding: 6px 10px; border-radius: 6px; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); white-space: pre-line; max-width: 240px; }
+.u-tooltip { font-size: 12px !important; }
+.room-tooltip { position: absolute; background: rgb(230 217 104 / 95%); padding: 6px; border-radius: 6px; font-size: 13px; max-width: 200px; transform:translate(-50%, -50%); box-shadow: 2px 2px 8px rgba(0,0,0,0.3); }
+
+</style>
+</head>
+<body>
+
+<h3>ESP32 Sensor Dashboard + Control</h3>
+
+<!-- Command Form -->
+
+<details style="margin-bottom:1em;"><summary><strong>📘 Command Help</strong></summary>
+  <ul>
+    <li><strong>101 - Digital Write</strong>: Comm1 = pin, Comm2 = 0/1</li>
+    <li><strong>102 - Analog Write</strong>: Comm1 = pin, Comm2 = 0-255</li>
+    <li><strong>105 - Neopixel</strong>: Comm1 = color index, Comm2 = brightness, Comm3/4 optional</li>
+    <li><strong>106 - Set Target Values</strong>: Comm1-4 = values depending on sensors</li>
+    <li><strong>107-110</strong>: Varying AP/channel/room/sleep config (Comm1/2)</li>
+    <li><strong>121 - Set Sensor Types</strong>: Comm1-4 = type codes for sensors</li>
+    <li>SSID & Password: Optional WiFi credentials</li>
+  </ul>
+  </details>
+
+<form class="command" id="formElem">
+  <select id="room" name="Room" title="Choose which room/device this command applies to.">
+    <option value="">Select Room</option>
+  </select>
+
+  <select id="command" name="Command" title="Select a command to send to the selected room.">
+    <option value="">Select Command</option>
+    <option value="101">Digital Write</option>
+    <option value="102">Analog Write</option>
+    <option value="103">Digital Read</option>
+    <option value="104">Analog Read</option>
+    <option value="105">Neopixel</option>
+    <option value="106">Set Target Values</option>
+    <option value="107">Set AP Channel</option>
+    <option value="108">Set Room Mode</option>
+    <option value="109">Set Sleep Time</option>
+    <option value="110">Set Room ID</option>
+    <option value="121">Set Sensor Types</option>
+  </select>
+
+  <input id="command1" name="command1" type="number" placeholder="Comm1" title="Enter the first command parameter based on selected command.">
+  <input id="command2" name="command2" type="number" placeholder="Comm2" title="Enter the second command parameter if required.">
+  <input id="command3" name="command3" type="number" placeholder="Comm3" title="Third value (e.g., neopixel color, target range, etc.).">
+  <input id="command4" name="command4" type="number" placeholder="Comm4" title="Fourth value depending on context (sensor type, color index, etc.).">
+  
+  <br><br>
+  <input name="SSID" type="text" size="12" placeholder="SSID" title="Optional WiFi SSID to send to ESP32.">
+  <input name="Password" type="password" size="12" placeholder="Password" title="Optional WiFi password for SSID.">
+  <button type="submit">Send Command</button>
+  <pre class="results"></pre>
+  
+</form>
+
+
+<!--------------------- Chart & Controls ----------------------------------->
+
+<textarea id="log" name="log" rows="5" cols="80"></textarea><br><br>
+<label><input type="radio" name="graphMode" value="historic" checked> Historical</label>
+<label><input type="radio" name="graphMode" value="live"> Live</label>
+<label><input type="radio" name="graphMode" value="floorplan"> Floorplan</label>
+
+<div id="chart"></div><br><br>
+
+<div id="floorplan-wrapper">
+  <img src="floorplan.jpg" id="floorplan">
+  <div id="sensor-overlay"></div>
+</div>
+
+<div id="map-tooltip"></div>
+
+<script>
+
+const log = (msg) => document.getElementById("log").textContent += msg + "\n";
+
+
+// Handle Command Form via MQTT
+const clientId = 'MQTTJS_' + Math.random().toString(16).substr(2, 8);
+
+const client = mqtt.connect("ws://" + location.hostname + ":81", {
+//const client = mqtt.connect("ws://10.1.10.189:81", {
+  keepalive: 60, clientId, protocolId: 'MQTT', protocolVersion: 4,
+  clean: true, reconnectPeriod: 1000, connectTimeout: 30 * 1000
+});
+client.on("connect", () => client.subscribe("#"));
+client.on("error", (err) => console.error("MQTT error", err));
+client.on("message", (topic, message) => {
+console.log(`Received MQTT Message:- ${message.toString()} in topic:- ${topic}`) 
+log(`Received MQTT Message:- ${message.toString()} in topic:- ${topic}`) ;
+});
+
+var attachEvent = function(node, event, listener, useCapture) {
+  if ( window.addEventListener ) {
+    node.addEventListener(event, listener, useCapture || false);
+  }
+};
+
+// Once the window loads and the DOM is ready, attach the event to the main
+  attachEvent(window, "load", function() {
+  var select_command = document.getElementById("command");
+
+  var selectHandler = function() {option1 = document.getElementById("room"),option2 = document.getElementById("command1");option3 = document.getElementById("command2");option4 = document.getElementById("command3");option5 = document.getElementById("command4");
+      
+// Show and hide the appropriate select's
+     if (this.value == "105" || this.value == "106" || this.value == "121" ) {option1.style.display = "";option2.style.display = "";option3.style.display = "";option4.style.display = "";option5.style.display = "";} else if (this.value == "103" || this.value == "104" || this.value == "107" ||this.value == "108" || this.value == "109"|| this.value == "110" ) {option1.style.display = "";option2.style.display = "";option3.style.display = "none";option4.style.display = "none";option5.style.display = "none";} else if (this.value == "101" || this.value == "102") {option1.style.display = "";option2.style.display = "";option3.style.display = "";option4.style.display = "none";option5.style.display = "none";} };
+
+// Use the onchange and onkeypress events to detect when the 
+// value of select_command has changed
+  attachEvent(select_command, "change", selectHandler);
+  attachEvent(select_command, "keypress", selectHandler);
+});
+
+// Send command via MQTT
+document.getElementById("formElem").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const data = new FormData(this);
+  const formJSON = Object.fromEntries(data.entries());
+  document.querySelector('.results').textContent = JSON.stringify(formJSON, null, 2);
+  client.publish('command', JSON.stringify(Object.values(formJSON)));
+  console.log(JSON.stringify(Object.values(formJSON)));
+  
+});
+
+</script>
+
+<script>
+// === Dashboard JavaScript Start ===
+
+let fullData;
+let lastRoomName = "All Rooms";
+let selectedRoomId = null;
+const roomState = {};
+
+// Define fixed floorplan coordinates per roomId
+const floorplanCoords = {
+  6:  { x: 30, y: 50 }, 16: { x: 65, y: 10 }, 26: { x: 50, y: 10 },
+  36: { x: 75, y: 30 }, 46: { x: 75, y: 60 }, 56: { x: 85, y: 20 },
+  66: { x: 30, y: 25 }, 76: { x: 15, y: 90 }, 86: { x: 15, y: 90 }
+};
+
+const roomNames = {256: "Gateway",6: "Livingroom",16: "Kitchen",26: "Diningroom",36: "Bedroom1",46: "Bedroom2",56: "Bedroom3",66: "Bedroom4",76: "Bathroom1",86: "Bathroom2",96: "Bathroom3",106: "Bathroom4",116: "Laundry",126: "Boiler",136: "Workshop",146: "Garage",156: "Office",166: "WaterTank",176: "SolarTracker",186: "WeatherStation",196: "Greenhouse",246: "New Room"};
+
+const userSettings = {
+  selectedSensors: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],
+};
+
+function getSensorMeta(idx) {
+  const meta = [["Timestamp", "", "⏱️"],["Location", "", "📍"],["Voltage", "V", "🔋"],["RSSI", "dBm", "📶"],["Motion", "", "🏃"],["Temperature", "°C", "🌡️"],["Humidity", "%", "💧"],["Pressure", "hPa", "📏"],["Light", "lx", "💡"],["Water Level", "%", "🌊"],["Switch", "", "🔘"],["Distance", "cm", "📐"],["Bearing", "°", "🧭"],["Azimuth", "°", "🌍"],["Elevation", "°", "⛰️"],["Soil Moisture", "%", "🌱"],["Wind Speed", "m/s", "💨"],["Wind Dir", "°", "🧭"],["Rainfall", "mm", "🌧️"],["Air Quality", "AQI", "🌫️"]];
+  return meta[idx] || ["Sensor " + idx, "", "🔧"];
+}
+
+function getSensorColor(idx) {
+  const colors = ["#22cc88", "#332233", "#660066", "#333399", "#007766", "#ff0000", "#0077ff", "#00cc88", "#cccc00", "#ff9900", "#9900cc", "#006666", "#660066", "#339933", "#ff8866", "#662200", "#003399", "#555555", "#113399", "#225555"];
+  return colors[idx] || "#112233";
+}
+
+function filterByRoom(data, targetRoomId) {
+  const indices = data[1].map((id, idx) => id === targetRoomId ? idx : -1).filter(idx => idx !== -1);
+  return data.map(arr => indices.map(i => arr[i]));
+}
+
+document.getElementById("room").addEventListener("change", function () {
+  const selected = this.value;
+  selectedRoomId = selected === "" ? null : Number(selected);
+
+  if (chartMode === "historic" && fullData) {
+    if (selectedRoomId == null) {
+      historicChart(fullData, userSettings.selectedSensors, "All Rooms");
+    } else {
+      const filtered = filterByRoom(fullData, selectedRoomId);
+      const roomName = roomNames[selectedRoomId] || `Room ${selectedRoomId}`;
+      historicChart(filtered, userSettings.selectedSensors, roomName);
+    }
+  }
+});
+
+//---------------------- Tooltip plugin -------------------------------------
+
+function legendAsTooltipPlugin() {
+  let legendEl;
+  return {
+    hooks: {
+      init: (u) => {
+        legendEl = document.createElement("div");
+        legendEl.className = "u-tooltip";
+        Object.assign(legendEl.style, {
+          position: "absolute",
+          display: "none",
+          pointerEvents: "none",
+          zIndex: 100,
+          fontSize: "14px",
+          padding: "6px 10px",
+          borderRadius: "6px",
+          boxShadow: "2px 2px 10px rgba(0,0,0,0.3)",
+          backgroundColor: "rgba(255,249,196,0.92)",
+          maxWidth: "300px",
+          whiteSpace: "normal"
+        });
+        u.root.querySelector(".u-over").appendChild(legendEl);
+        },
+        setCursor: (u) => {const { left, top, idx } = u.cursor;
+        if (idx == null) {legendEl.style.display = "none";return;}
+
+        const timestamp = u.data[0][idx] * 1000;
+        let html = `<div><b>${new Date(timestamp).toLocaleString()}</b></div>`;
+        if (chartMode === 'live' && selectedRoomId == null) {
+        const room = fullData[1][idx] || "Unknown";
+        const label = roomNames[room] || `Room ${room}`;
+        html += `<div><b>${label}</b></div>`;
+        } else {
+        html += `<div><b>${lastRoomName}</b></div>`;
+        }
+
+        for (let i = 1; i < u.series.length; i++) {
+        const s = u.series[i];
+        const val = u.data[i][idx];
+		if (s.idx === 1) {
+        const roomName = roomNames[val] || `Room ${val}`;
+        html += `<div><span style='color:${getSensorColor(1)}; font-weight:bold;'>■</span> 🏠 Room: ${roomName}</div>`;
+        continue;
+    }
+        if (typeof val === "number" && !isNaN(val)) {
+        let label, unit, icon;
+        if (s.idx === 1) {
+        label = "Room";
+        unit = "";
+        icon = "🏠";
+        } else {
+        [label, unit, icon] = getSensorMeta(s.idx);
+    }
+        const color = getSensorColor(s.idx);  // <-- Get the correct color
+        html += `<div><span style='color:${color}; font-weight:bold;'>■</span> ${icon} ${label}: ${val.toFixed(1)} ${unit}</div>`;
+    }
+}
+        legendEl.innerHTML = html;
+        legendEl.style.display = "block";
+
+        const offsetX = Math.min(window.innerWidth - 260, left + 20);
+        legendEl.style.left = `${Math.min(window.innerWidth - 260, left + 20)}px`;
+        legendEl.style.top = `${top}px`;
+        legendEl.style.transform = "none";
+      }
+    }
+  };
+}
+
+
+//-------------------- Data preparation -------------------------------------
+
+//fetch("http://10.1.10.189/data.json").then(res => res.json()).then(packed => {
+fetch("data.json").then(res => res.json()).then(packed => {
+    const numFields = packed[0];
+	console.log("Raw data.json file from server", packed);
+    const rowData = packed.slice(1); // only skip the first value if it's the field count
+    const rowCount = rowData.length / numFields;
+	
+    fullData = Array.from({ length: 20 }, () => []);
+    for (let i = 0; i < rowCount; i++) {
+      const offset = i * numFields;
+      const row = rowData.slice(offset, offset + numFields);
+      const unpacked = decodeSingleRow(row);
+      unpacked.forEach((val, idx) => fullData[idx].push(val));
+	  
+    }
+
+    // Populate dropdown once
+	console.log("Data received from server(data.json file) :", fullData);
+    const roomIDs = [...new Set(fullData[1])];
+    const roomSelect = document.getElementById("room");
+    roomIDs.forEach(id => {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = roomNames[id] ? `${roomNames[id]} (${id})` : `Room ${id}`;
+      roomSelect.appendChild(opt);
+    });
+
+    // Show full chart initially
+    historicChart(fullData, userSettings.selectedSensors, "All Rooms");
+});
+
+let chartMode = 'historic';
+let liveChart;
+let lastUpdateTime = 5000;
+const maxLivePoints = 100;
+let liveData = Array.from({ length: 20 }, () => []);  // Same format as fullData
+
+client.on("message", (topic, message) => { 
+  try {
+    const parsed = JSON.parse(message.toString());
+    if (chartMode !== 'live') return;
+    if (selectedRoomId != null && Number(parsed.Location) !== selectedRoomId) return;
+	
+    const now = Math.floor(Date.now() / 1000);
+
+    // Build a packed MQTT row compatible with decodeSingleRow
+    const mqttRow = [
+      now,                        // Timestamp
+      parsed.Location,            // Room ID
+      parsed.Voltage,             // Voltage
+      parsed.RSSI,                // RSSI
+      parsed.Motion               // Motion
+    ];
+
+    // Append all available sensor type/value pairs
+    let count = 0;
+    for (let key in parsed) {
+      const type = Number(key);
+      if (!isNaN(type) && type >= 1 && type <= 20) {
+        mqttRow.push(type, Number(parsed[key]));
+        count++;
+        if (count >= 20) break;
+      }
+    }
+
+    // Pad to ensure decodeSingleRow doesn't break
+    while (mqttRow.length < 21) mqttRow.push(0);
+
+    const decoded = decodeSingleRow(mqttRow);
+
+    decoded.forEach((val, idx) => {
+      if (val != null) {
+        liveData[idx].push(val);
+        if (liveData[idx].length > maxLivePoints) liveData[idx].shift();
+      }
+    });
+
+    const selectedIndices = selectedRoomId == null
+      ? [1, ...userSettings.selectedSensors]
+      : userSettings.selectedSensors;
+
+    const aligned = [liveData[0], ...selectedIndices.map(idx => liveData[idx])];
+    liveChart.setData(aligned);
+
+    roomState[parsed.Location] = decoded;
+    lastUpdateTime[parsed.Location] = Date.now();
+	
+  } catch (e) {
+    console.warn("Invalid MQTT data", e);
+  }
+});
+
+function decodeSingleRow(row) {
+  const data = Array.from({ length: 20 }, () => null);
+  data[0] = Number(row[0]);  // timestamp
+  data[1] = Number(row[1]);  // roomId
+  data[2] = Number(row[2]);  // voltage
+  data[3] = Number(row[3]);  // RSSI
+  data[4] = Number(row[4]);  // motion
+
+  for (let k = 5; k <= 15; k += 2) {
+    const type = Number(row[k]);
+    const value = Number(row[k + 1]);
+    if (type >= 1 && type <= 15) data[4 + type] = value;
+  }
+  return data;
+}
+
+
+//---------------------- Chart drawing functions ----------------------------
+
+function historicChart(data, selectedIndices = [], roomName = "All Rooms") {
+   
+   document.getElementById("chart").innerHTML = "";
+   lastRoomName = roomName;
+   const showRoomId = lastRoomName === "All Rooms";
+
+   const indicesToPlot = showRoomId
+   ? [1, ...selectedIndices]  // include Room ID
+   : selectedIndices;
+
+   const alignedData = [ data[0], ...indicesToPlot.map(idx => data[idx]) ];
+
+   const series = [
+   {},  // time
+   ...indicesToPlot.map(idx => {
+    if (idx === 1) {
+      return {
+        idx,
+        label: "Room ID",
+        stroke: "#888",
+        width: 1,
+        dash: [5, 5],
+        show: true,
+        value: (u, val) => roomNames[val] || `Room ${val}`
+      };
+    }
+
+    return {
+      idx,
+      label: getSensorMeta(idx)[0],
+      stroke: getSensorColor(idx),
+      width: 2,
+      value: (u, val) => (typeof val === "number" ? val.toFixed(1) : "-"),
+      show: true
+    };
+  })
+];
+
+const u = new uPlot({
+    width: window.innerWidth < 768 ? window.innerWidth - 30 : 640,
+    height: window.innerWidth < 768 ? 300 : 480,
+    title: `Sensor Data - ${roomName}`,
+    scales: { x: { time: true } },
+    series,
+    legend: { show: false, live: true },
+    plugins: [legendAsTooltipPlugin()]
+  }, alignedData, document.getElementById("chart"));
+}
+
+function initLiveChart() {
+  
+  document.getElementById("chart").innerHTML = "";
+
+  const selectedIndices = selectedRoomId == null
+    ? [1, ...userSettings.selectedSensors]  // Show Room ID + sensors
+    : userSettings.selectedSensors;
+
+  const series = [
+    {},  // Timestamp
+    ...selectedIndices.map(idx => ({
+      idx,
+      label: idx === 1 ? "Room ID" : getSensorMeta(idx)[0],
+      stroke: idx === 1 ? "#888" : getSensorColor(idx),
+      width: idx === 1 ? 1 : 2,
+      dash: idx === 1 ? [5, 5] : undefined,
+      value: (u, val) => (typeof val === "number" ? val.toFixed(1) : "-"),
+      show: true
+    }))
+  ];
+
+  const aligned = [liveData[0], ...selectedIndices.map(idx => liveData[idx])];
+
+  liveChart = new uPlot({
+    width: window.innerWidth < 768 ? window.innerWidth - 30 : 640,
+    height: window.innerWidth < 768 ? 300 : 480,
+    title: "Live Sensor Data",
+    scales: { x: { time: true } },
+    series,
+	legend: { show: false, live: true },
+    plugins: [legendAsTooltipPlugin()],
+  }, aligned, document.getElementById("chart"));
+}
+
+setInterval(renderFloorplanOverlay, 1000);
+
+function renderFloorplanOverlay() {
+  const overlay = document.getElementById("sensor-overlay");
+  if (chartMode === 'floorplan') document.getElementById("chart").innerHTML = "";
+  overlay.innerHTML = "";
+
+  Object.entries(roomState).forEach(([roomId, data]) => {
+    const coords = floorplanCoords[roomId];
+    if (!coords) return;
+
+    const div = document.createElement("div");
+    div.className = "room-tooltip";
+    div.style.left = coords.x + "%";
+    div.style.top = coords.y + "%";
+    const timestamp = data[0] * 1000;
+        
+    let content = `<div><b>${new Date(timestamp).toLocaleString()}</b></div><strong>${roomNames[roomId] || "Room " + roomId}</strong><br>
+`;
+	    for (let i = 2; i < 20; i++) {
+      const [label, unit, icon] = getSensorMeta(i);
+      const val = data[i];
+      if (typeof val === "number") {
+        content += `${icon} ${label}: ${val.toFixed(1)} ${unit}<br>`;
+      }
+    }
+    div.innerHTML = content;
+    overlay.appendChild(div);
+  });
+}
+
+//--------------------- Radio button switching logic ------------------------
+
+document.querySelectorAll('[name="graphMode"]').forEach(input => {
+  input.addEventListener('change', () => {
+    chartMode = input.value;
+    document.getElementById("floorplan-wrapper").style.display = chartMode === 'floorplan' ? "block" : "none";
+    if (chartMode === 'live') initLiveChart();
+    if (chartMode === 'floorplan') renderFloorplanOverlay();
+	if (chartMode === 'historic') historicChart(fullData, userSettings.selectedSensors, lastRoomName);
+   });
+});
+
+</script>
+</body>
+</html>
