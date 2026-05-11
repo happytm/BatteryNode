@@ -1,0 +1,127 @@
+#include <WiFi.h>
+#include <WiFiUdp.h>
+#include <EEPROM.h>
+
+// ---------------- Config ----------------
+const char* ssid = "ESP";
+const char* password = "";
+const char* gatewayIP = "192.168.4.1";
+const uint16_t gatewayPort = 4210;
+
+// ---------------- RTC Variables ----------------
+RTC_DATA_ATTR uint8_t sensorData[6];  // Sensor values
+RTC_DATA_ATTR uint8_t command[6];     // Last command received
+RTC_DATA_ATTR uint8_t deviceID = 246;
+RTC_DATA_ATTR uint8_t sleepTime = 10; // minutes
+RTC_DATA_ATTR bool newCommand = false;
+
+// ---------------- UDP ----------------
+WiFiUDP udp;
+
+// ---------------- Setup ----------------
+void setup() {
+  Serial.begin(115200);
+  long start = millis();
+
+  // EEPROM init on first boot
+  EEPROM.begin(25);
+  if (EEPROM.readByte(0) == 0xFF) {
+    EEPROM.writeByte(0, deviceID);
+    EEPROM.writeByte(18, sleepTime);
+    EEPROM.commit();
+  }
+
+  // Generate sensor values if first run
+  if (sensorData[0] == 0) generateSensorValues();
+
+  // Fast WiFi connect with predefined AP + MAC
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  WiFi.setHostname("ESP32_Sensor");
+
+  // Generate unique MAC from sensorData
+  esp_wifi_set_mac(WIFI_IF_STA, sensorData);
+
+  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    ESP.restart();
+  }
+
+  // Send sensor data and receive command via UDP
+  fastUDP();
+
+  // Disconnect WiFi to save power
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+
+  // Deep sleep for configured minutes
+  uint64_t sleepUs = (uint64_t)sleepTime * 60 * 1000000ULL;
+  esp_sleep_enable_timer_wakeup(sleepUs);
+  esp_deep_sleep_start();
+
+  Serial.print("Wake cycle duration (ms): ");
+  Serial.println(millis() - start);
+}
+
+void loop() {}
+
+// ---------------- Generate Sensor Data ----------------
+void generateSensorValues() {
+  sensorData[0] = deviceID;
+  sensorData[1] = 165;
+  sensorData[2] = random(70, 74);
+  sensorData[3] = random(40, 100);
+  sensorData[4] = random(850, 1024) / 4;
+  sensorData[5] = random(0, 100);
+}
+
+// ---------------- Ultra-Fast UDP TX/RX ----------------
+void IRAM_ATTR fastUDP() {
+  udp.begin(4210); // Local port
+
+  // Send sensor data to gateway
+  udp.beginPacket(gatewayIP, gatewayPort);
+  udp.write(sensorData, sizeof(sensorData));
+  udp.endPacket();
+
+  // Wait briefly for gateway response (non-blocking)
+  uint32_t startWait = millis();
+  while (millis() - startWait < 10) { // 10ms window
+    int len = udp.parsePacket();
+    if (len > 0) {
+      udp.read(command, sizeof(command));
+      processCommand();
+      break;
+    }
+  }
+
+  udp.stop();
+}
+
+// ---------------- Process Received Command ----------------
+void IRAM_ATTR processCommand() {
+  uint8_t cmdType = command[1];
+
+  switch (cmdType) {
+    case 101: gpioControl(command[2], command[3]); newCommand = true; break;
+    case 102: gpioControl(command[2], command[3]); newCommand = true; break;
+    case 107: /* AP Channel */ newCommand = true; break;
+    case 108: /* Mode */ newCommand = true; break;
+    case 109: sleepTime = command[2]; newCommand = true; break;
+    case 110: deviceID = command[2]; sensorData[0] = deviceID; newCommand = true; break;
+    default: break;
+  }
+
+  if (newCommand) {
+    EEPROM.writeByte(0, deviceID);
+    EEPROM.writeByte(18, sleepTime);
+    EEPROM.commit();
+    newCommand = false;
+  }
+}
+
+// ---------------- GPIO ----------------
+void IRAM_ATTR gpioControl(uint8_t pin, uint8_t val) {
+  if ((pin >= 1 && pin <= 5) || (pin >= 12 && pin <= 39)) {
+    digitalWrite(pin, val ? HIGH : LOW);
+  }
+}
