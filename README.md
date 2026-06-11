@@ -191,7 +191,10 @@ commands are issued via MQTT payload with topic name "command/" or using dropdow
 ## Ideas worth exploring
 
 - Digital potentiometer using built in LED and photoresister to control diac/triac dimmer or use FL5150 based dimmer.
-- AC-DC power converter using BP2525F or LP2178 or FT8430 https://www.youtube.com/watch?v=_MwQRQSlA0k and https://www.youtube.com/watch?v=ZJlFmDhU2dA.
+- AC-DC power converter using BP2525F or LP2178 or FT8430
+  - https://www.youtube.com/watch?v=_MwQRQSlA0k
+  - https://www.youtube.com/watch?v=n7LFucXbQzM
+  - https://www.youtube.com/watch?v=ZJlFmDhU2dA.
 - ACS712 for energy measurement.
 - IR wakeup using https://www.vishay.com/docs/80067/appoverview.pdf
 - Battery as a switch for door window sensor.
