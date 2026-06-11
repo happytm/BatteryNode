@@ -7,7 +7,7 @@
 ### Ultra low power consumption 
 
 This is the main goal of this project. Proberequest protocol is used for data transfer to conserve power. 
-#### TODO : Implement BLE communication using CH582F for battery powered sensors for hardware/software simplicity, lower cost (less than $2) and power consumption (around 15 mA).
+#### TODO : Implement BLE or RF communication using CH582F or CH57X by using https://github.com/Witawat/CH570D-SimpleHAL for battery powered sensors for hardware/software simplicity, lower cost (less than $2) and power consumption (around 15 mA).
 #### TODO : Use IR for in-room control of devices.Implement IR wakeup when required using IR phototransistor/photodiode to wakeup microcontroller with sleep interrupt.
 #### TODO : https://github.com/mlesniew/PicoMQTT/blob/master/examples/websocket_server/websocket_server.ino
 ### KISS (Keep It Simple Stupid) design principle
@@ -29,7 +29,7 @@ some low cost sensor modules, LDO and/or battery charging IC, coin cell battery 
 - The mains powered single ESP32 Gateway device (may or may not be connected to internet) with SoftAP setting.This is the main brain and single point entry from a smartphone or a PC responsible for providing access to moniter and 
 control whole home automation network.
 - Maines powered room/zone sensors with WiFi station setting. There must be atleast 1 sensor for each room/zone. Ideally they should have IR transmitter/IR blaster to control any appliace with IR receiver within line of sight. Make any electric device IR controllable using https://www.youtube.com/watch?v=RdqzdMUO6QE
-- Battery powered sensors mostly for locations (indoor/outdoor) where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE communication using CH582F/CH570/CH572 for battery powered sensors for lower cost (less than $2) and power consumption (around 15 mA).
+- Battery powered sensors mostly for locations (indoor/outdoor) where mains power is not available. Mostly used for monitoring purpose but can be used for control purposes also. TODO : Implement BLE or RF communication using CH582F/CH570/CH572 using https://github.com/Witawat/CH570D-SimpleHAL for battery powered sensors for lower cost (less than $2) and power consumption (around 15 mA).
    
 ### Easily customisable with basic coding knowledge
 
@@ -45,7 +45,7 @@ No need to charge small 100 mAh LIR2450 coin cell battery or any chargable batte
 
 ### Very low cost DIY sensors (see ideas below)
 
-Average sensor node could be made for $2 to $5 (less than $2 using CH582F microcontroller) each including battery and/or small solar panel for charging. Use of IR transmitters recommended as much as possible for in room automation. 
+Average sensor node could be made for $2 to $5 (less than $2 using CH582F or CH57X microcontrollers) each including battery and/or small solar panel for charging. Use of IR transmitters recommended as much as possible for in room automation. 
 Average home can be automated with more than 10 remote sensors for below $100 total cost.
 
 ### Intruder alarm, presence detection and locator service for family members.
