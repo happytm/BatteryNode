@@ -1,5 +1,7 @@
 /*
- * CH582F Sensor Beacon
+ * CH582F Sensor Beacon using coded phy S8 implemented by ch32fun and make command for cmd console in windows to compile the code.
+ * Hardware wiring implented as below:
+
                  PA4 (AIN0)
                    |
       +------------+------------+
